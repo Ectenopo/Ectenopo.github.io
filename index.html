@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLAN_NET // SECURE</title>
+    <title>CLAN_NET // v2.0</title>
     <style>
         /* --- THEME: BLACK & NEON GREEN --- */
         :root {
@@ -23,50 +23,55 @@
             overflow-x: hidden;
         }
 
-        h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; }
+        h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--dim-color); padding-bottom: 5px; }
         
         /* --- UTILS --- */
         .hidden { display: none !important; }
-        .screen { max-width: 600px; margin: 0 auto; border: 1px solid var(--main-color); padding: 20px; box-shadow: 0 0 10px var(--dim-color); }
-        .full-width { width: 100%; box-sizing: border-box; }
+        .screen { max-width: 600px; margin: 0 auto; border: 1px solid var(--dim-color); padding: 20px; box-shadow: 0 0 15px rgba(0, 255, 0, 0.1); }
         
         /* --- CONTROLS --- */
         input, button, textarea {
-            background: #111;
-            border: 1px solid var(--main-color);
+            background: #0a0a0a;
+            border: 1px solid var(--dim-color);
             color: var(--main-color);
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 10px;
             font-family: var(--font-main);
             width: 100%;
             box-sizing: border-box;
+            outline: none;
         }
+
+        input:focus { border-color: var(--main-color); }
 
         button {
             background: var(--dim-color);
             cursor: pointer;
             font-weight: bold;
             transition: 0.2s;
+            text-transform: uppercase;
         }
 
-        button:hover { background: var(--main-color); color: black; }
-        button.danger { border-color: var(--err-color); color: var(--err-color); }
-        button.danger:hover { background: var(--err-color); color: white; }
+        button:hover { background: var(--main-color); color: black; box-shadow: 0 0 10px var(--main-color); }
+        button.danger { border-color: var(--err-color); color: var(--err-color); background: #200000; }
+        button.danger:hover { background: var(--err-color); color: white; box-shadow: 0 0 10px var(--err-color); }
+        button.secondary { background: transparent; border: 1px dashed var(--dim-color); color: #666; }
+        button.secondary:hover { border-color: var(--main-color); color: var(--main-color); }
 
-        /* --- SPECIFIC ELEMENTS --- */
-        #captcha-box {
-            border: 1px dashed var(--main-color);
-            padding: 10px;
-            text-align: center;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-        #captcha-box.verified { background: var(--dim-color); content: "VERIFIED"; }
+        /* --- GRID FOR SYMBOL EDIT --- */
+        .symbol-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .symbol-item { border: 1px solid #333; text-align: center; padding: 10px; cursor: pointer; }
+        .symbol-item:hover { background: var(--dim-color); }
 
-        .chat-msg { margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 5px; }
-        .chat-img { height: 20px; vertical-align: middle; filter: sepia(1) hue-rotate(70deg) saturate(5); } /* Forces green tint */
+        /* --- CHAT --- */
+        .chat-msg { margin-bottom: 10px; border-bottom: 1px solid #111; padding-bottom: 5px; word-wrap: break-word; }
+        .chat-img { height: 24px; vertical-align: middle; } 
         
-        canvas { border: 1px solid var(--main-color); cursor: crosshair; background: #050505; }
+        canvas { border: 1px solid var(--main-color); cursor: crosshair; background: #050505; display: block; margin: 0 auto 10px auto; }
+        
+        /* --- BOT CHECK --- */
+        #captcha-box { border: 1px dashed var(--main-color); padding: 15px; text-align: center; margin-bottom: 15px; cursor: pointer; }
+        #captcha-box.verified { background: var(--dim-color); border-style: solid; }
     </style>
 </head>
 <body>
@@ -75,40 +80,47 @@
         <h1>// SYSTEM_LOGIN</h1>
         <input type="text" id="auth-user" placeholder="USERNAME">
         <input type="password" id="auth-pass" placeholder="PASSWORD">
-        <input type="email" id="auth-email" placeholder="EMAIL (OPTIONAL - FOR RECOVERY)">
-        <p style="font-size: 0.8em; color: #666;">* No email = Account deletion after 37 days inactivity.</p>
+        <input type="email" id="auth-email" placeholder="EMAIL (RECOVERY)">
+        <p style="font-size: 0.7em; color: #666;">* INACTIVITY PURGE: 37 DAYS</p>
         <button onclick="app.login()">AUTHENTICATE</button>
-        <button onclick="app.register()">REGISTER NEW ID</button>
-        <p id="auth-error" style="color: red;"></p>
+        <button onclick="app.register()" class="secondary">REGISTER NEW ID</button>
     </div>
 
     <div id="screen-dash" class="screen hidden">
         <h2>// MAIN_MENU</h2>
-        <p>WELCOME, <span id="dash-username"></span></p>
-        <hr style="border-color: green;">
-        <button onclick="nav.to('create')">CREATE NEW CLAN</button>
-        <button onclick="nav.to('join')">JOIN EXISTING CLAN</button>
-        <button onclick="app.logout()" class="danger">TERMINATE SESSION</button>
+        <p>USER: <span id="dash-username" style="color:white;"></span></p>
+        <p>STATUS: <span id="dash-status"></span></p>
+        
+        <div id="dash-no-clan">
+            <button onclick="nav.to('create')">CREATE NEW CLAN</button>
+            <button onclick="nav.to('join')">JOIN EXISTING CLAN</button>
+        </div>
+
+        <div id="dash-in-clan" class="hidden">
+            <button onclick="app.enterClanInterface()" style="padding: 20px; font-size: 1.1em;">> ENTER CLAN NETWORK</button>
+            <br><br>
+            <button onclick="app.leaveOrDisband()" id="btn-leave" class="danger">LEAVE CLAN</button>
+        </div>
+
+        <button onclick="app.logout()" class="secondary">TERMINATE SESSION</button>
     </div>
 
     <div id="screen-create" class="screen hidden">
         <h2>// INITIALIZE_CLAN</h2>
         <input type="text" id="new-clan-name" placeholder="CLAN NAME (UNIQUE)">
         <input type="password" id="new-clan-pass" placeholder="CLAN PASSWORD">
-        
-        <div id="captcha-box" onclick="app.verifyCaptcha()">[ ] I AM NOT A ROBOT (CLICK TO VERIFY)</div>
-        
+        <div id="captcha-box" onclick="app.verifyCaptcha()">[ ] I AM NOT A ROBOT</div>
         <button onclick="app.createClanStart()">PROCEED TO SYMBOL CREATION</button>
-        <button onclick="nav.to('dash')">CANCEL</button>
+        <button onclick="nav.to('dash')" class="secondary">CANCEL</button>
     </div>
 
     <div id="screen-draw" class="screen hidden">
         <h3>// SYMBOL_GENERATOR</h3>
-        <p id="draw-instruction">DRAW SYMBOL FOR: A</p>
-        <canvas id="draw-canvas" width="300" height="300"></canvas>
-        <br>
+        <p id="draw-instruction" style="text-align: center;">DRAW SYMBOL FOR: A</p>
+        <canvas id="draw-canvas" width="280" height="280"></canvas>
         <button onclick="drawing.clear()">CLEAR CANVAS</button>
-        <button onclick="drawing.saveLetter()">SAVE & NEXT</button>
+        <button onclick="drawing.saveAction()">SAVE SYMBOL</button>
+        <button onclick="drawing.cancelEdit()" id="btn-cancel-draw" class="hidden secondary">CANCEL EDIT</button>
     </div>
 
     <div id="screen-join" class="screen hidden">
@@ -116,27 +128,30 @@
         <input type="text" id="join-name" placeholder="EXACT CLAN NAME">
         <input type="password" id="join-pass" placeholder="ACCESS PASSWORD">
         <button onclick="app.joinClan()">CONNECT</button>
-        <button onclick="nav.to('dash')">BACK</button>
+        <button onclick="nav.to('dash')" class="secondary">BACK</button>
     </div>
 
     <div id="screen-clan" class="screen hidden">
-        <h2 id="clan-title">// CLAN_NAME</h2>
-        <div style="text-align: right;">
-            <button style="width: auto; padding: 5px;" onclick="nav.to('dict')">DICTIONARY</button>
-            <button style="width: auto; padding: 5px;" onclick="nav.to('dash')">DISCONNECT</button>
-        </div>
-        
-        <div id="chat-history" style="height: 300px; overflow-y: scroll; border: 1px solid #333; margin: 10px 0; padding: 10px;">
-            </div>
-
-        <div style="display: flex;">
-            <input type="text" id="chat-input" placeholder="ENTER MESSAGE..." style="margin: 0;">
-            <button id="btn-trans" onclick="app.toggleTrans()" style="width: 80px; margin: 0; font-size: 10px;">ENC: ON</button>
-            <button onclick="app.sendMessage()" style="width: 80px; margin: 0;">SEND</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid green; margin-bottom: 10px;">
+            <span id="clan-title" style="font-weight: bold;">CLAN</span>
+            <button onclick="nav.to('dash')" style="width: auto; padding: 5px 10px; font-size: 0.8em;">EXIT</button>
         </div>
 
-        <div id="leader-tools" class="hidden" style="margin-top: 20px; border-top: 1px solid green; padding-top: 10px;">
-            <h3>LEADER_COMMANDS</h3>
+        <div id="chat-history" style="height: 300px; overflow-y: scroll; border: 1px solid #222; margin-bottom: 10px; padding: 10px; background: #050505;"></div>
+
+        <div style="display: flex; gap: 5px;">
+            <button id="btn-trans" onclick="app.toggleTrans()" style="width: 60px; font-size: 0.7em;">ENC: ON</button>
+            <input type="text" id="chat-input" placeholder="MESSAGE..." style="margin: 0;">
+            <button onclick="app.sendMessage()" style="width: 70px;">SEND</button>
+        </div>
+
+        <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button onclick="nav.to('dict')">DICTIONARY</button>
+            <button onclick="nav.to('editsym')">EDIT SYMBOLS</button>
+        </div>
+
+        <div id="leader-tools" class="hidden" style="margin-top: 20px; border-top: 1px dashed #333; padding-top: 10px;">
+            <p style="color: #666; font-size: 0.8em;">LEADER COMMANDS</p>
             <input type="text" id="blacklist-user" placeholder="USERNAME TO BLACKLIST">
             <button class="danger" onclick="app.blacklistUser()">BLACKLIST USER</button>
         </div>
@@ -144,16 +159,27 @@
 
     <div id="screen-dict" class="screen hidden">
         <h3>// CUSTOM_DICTIONARY</h3>
-        <p>Define custom words. E.g. "NO" -> "AWGOE"</p>
-        <input type="text" id="dict-orig" placeholder="ENGLISH WORD">
-        <input type="text" id="dict-new" placeholder="CLAN WORD">
+        <p style="font-size: 0.8em;">Define custom words. E.g. "NO" -> "AWGOE"</p>
+        <div style="display: flex; gap: 5px;">
+            <input type="text" id="dict-orig" placeholder="ENGLISH">
+            <input type="text" id="dict-new" placeholder="CLAN WORD">
+        </div>
         <button onclick="app.addWord()">ADD DEFINITION</button>
-        <ul id="dict-list" style="list-style: none; padding: 0;"></ul>
-        <button onclick="nav.to('clan')">RETURN TO COMMS</button>
+        <ul id="dict-list" style="list-style: none; padding: 0; color: #aaa;"></ul>
+        <button onclick="nav.to('clan')" class="secondary">RETURN</button>
+    </div>
+
+    <div id="screen-editsym" class="screen hidden">
+        <h3>// EDIT_SYMBOLS</h3>
+        <p>SELECT A LETTER TO REDRAW:</p>
+        <div class="symbol-grid" id="symbol-grid-container">
+            </div>
+        <br>
+        <button onclick="nav.to('clan')" class="secondary">RETURN</button>
     </div>
 
     <script>
-        /* --- SYSTEM CORE --- */
+        /* --- CORE DATABASE SIMULATION --- */
         const DB = {
             users: JSON.parse(localStorage.getItem('users') || '{}'),
             clans: JSON.parse(localStorage.getItem('clans') || '{}'),
@@ -171,9 +197,10 @@
                 document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
                 document.getElementById('screen-' + screenId).classList.remove('hidden');
                 
-                // Specific logic on screen load
+                if (screenId === 'dash') app.loadDashboard();
                 if (screenId === 'clan') app.loadChat();
                 if (screenId === 'dict') app.loadDict();
+                if (screenId === 'editsym') app.loadEditMenu();
             }
         };
 
@@ -185,54 +212,92 @@
             letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''),
             currentIndex: 0,
             tempSymbols: {},
+            mode: 'creation', // 'creation' or 'edit'
+            editingLetter: null,
 
             init: () => {
                 drawing.ctx.lineWidth = 4;
                 drawing.ctx.strokeStyle = '#00FF00';
                 drawing.ctx.lineCap = 'round';
                 
-                // Mouse Events
-                drawing.canvas.onmousedown = (e) => { drawing.isDrawing = true; drawing.ctx.beginPath(); drawing.ctx.moveTo(e.offsetX, e.offsetY); };
-                drawing.canvas.onmousemove = (e) => { if (drawing.isDrawing) { drawing.ctx.lineTo(e.offsetX, e.offsetY); drawing.ctx.stroke(); } };
-                drawing.canvas.onmouseup = () => { drawing.isDrawing = false; };
-                
-                // Touch Events (Mobile)
-                drawing.canvas.ontouchstart = (e) => { 
-                    e.preventDefault();
-                    drawing.isDrawing = true; 
-                    const touch = e.touches[0];
-                    const rect = drawing.canvas.getBoundingClientRect();
+                // Mouse & Touch Events
+                const startDraw = (x, y) => {
+                    drawing.isDrawing = true;
                     drawing.ctx.beginPath();
-                    drawing.ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                    drawing.ctx.moveTo(x, y);
+                };
+                const moveDraw = (x, y) => {
+                    if (!drawing.isDrawing) return;
+                    drawing.ctx.lineTo(x, y);
+                    drawing.ctx.stroke();
+                };
+                
+                drawing.canvas.onmousedown = (e) => startDraw(e.offsetX, e.offsetY);
+                drawing.canvas.onmousemove = (e) => moveDraw(e.offsetX, e.offsetY);
+                drawing.canvas.onmouseup = () => drawing.isDrawing = false;
+                
+                drawing.canvas.ontouchstart = (e) => {
+                    e.preventDefault();
+                    const r = drawing.canvas.getBoundingClientRect();
+                    startDraw(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
                 };
                 drawing.canvas.ontouchmove = (e) => {
                     e.preventDefault();
-                    if(!drawing.isDrawing) return;
-                    const touch = e.touches[0];
-                    const rect = drawing.canvas.getBoundingClientRect();
-                    drawing.ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
-                    drawing.ctx.stroke();
+                    const r = drawing.canvas.getBoundingClientRect();
+                    moveDraw(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
                 };
-                drawing.canvas.ontouchend = () => { drawing.isDrawing = false; };
+                drawing.canvas.ontouchend = () => drawing.isDrawing = false;
             },
 
-            clear: () => {
-                drawing.ctx.clearRect(0, 0, 300, 300);
+            clear: () => drawing.ctx.clearRect(0, 0, 300, 300),
+
+            startCreation: () => {
+                drawing.mode = 'creation';
+                drawing.currentIndex = 0;
+                drawing.tempSymbols = {};
+                drawing.clear();
+                document.getElementById('btn-cancel-draw').classList.add('hidden');
+                drawing.updateLabel();
+                nav.to('draw');
             },
 
-            saveLetter: () => {
-                let letter = drawing.letters[drawing.currentIndex];
-                // Save image as data URL string
-                drawing.tempSymbols[letter] = drawing.canvas.toDataURL();
-                
-                drawing.currentIndex++;
-                if (drawing.currentIndex < drawing.letters.length) {
-                    drawing.clear();
-                    document.getElementById('draw-instruction').innerText = "DRAW SYMBOL FOR: " + drawing.letters[drawing.currentIndex];
+            startEdit: (letter) => {
+                drawing.mode = 'edit';
+                drawing.editingLetter = letter;
+                drawing.clear();
+                document.getElementById('draw-instruction').innerText = "REDRAWING: " + letter;
+                document.getElementById('btn-cancel-draw').classList.remove('hidden');
+                nav.to('draw');
+            },
+
+            cancelEdit: () => {
+                nav.to('editsym');
+            },
+
+            saveAction: () => {
+                const imgData = drawing.canvas.toDataURL();
+
+                if (drawing.mode === 'creation') {
+                    let letter = drawing.letters[drawing.currentIndex];
+                    drawing.tempSymbols[letter] = imgData;
+                    drawing.currentIndex++;
+                    if (drawing.currentIndex < drawing.letters.length) {
+                        drawing.clear();
+                        drawing.updateLabel();
+                    } else {
+                        app.finalizeClan();
+                    }
                 } else {
-                    // Done
-                    app.finalizeClan();
+                    // Edit Mode
+                    DB.currentClan.symbols[drawing.editingLetter] = imgData;
+                    saveDB();
+                    alert("SYMBOL UPDATED");
+                    nav.to('editsym');
                 }
+            },
+
+            updateLabel: () => {
+                document.getElementById('draw-instruction').innerText = "DRAW SYMBOL FOR: " + drawing.letters[drawing.currentIndex];
             }
         };
         drawing.init();
@@ -241,46 +306,46 @@
         const app = {
             captchaVerified: false,
             autoTranslate: true,
+            tempClanData: {},
 
             verifyCaptcha: () => {
                 app.captchaVerified = true;
                 const box = document.getElementById('captcha-box');
                 box.innerText = "[X] VERIFIED HUMAN";
-                box.style.background = "#004400";
-                box.style.borderStyle = "solid";
+                box.classList.add('verified');
             },
 
             login: () => {
                 const u = document.getElementById('auth-user').value.trim();
                 const p = document.getElementById('auth-pass').value.trim();
-                const e = document.getElementById('auth-email').value.trim();
-
-                if (!DB.users[u]) {
-                    alert("USER NOT FOUND");
+                
+                if (!DB.users[u] || DB.users[u].pass !== p) {
+                    alert("ACCESS DENIED");
                     return;
                 }
                 
-                // Check inactivity (Simulated)
+                // Account Expiry Check
                 const lastLogin = new Date(DB.users[u].lastLogin);
-                const now = new Date();
-                const daysDiff = (now - lastLogin) / (1000 * 3600 * 24);
-                
-                if (!DB.users[u].email && daysDiff > 37) {
-                    alert("ACCOUNT DELETED DUE TO INACTIVITY (>37 DAYS)");
+                if (!DB.users[u].email && (new Date() - lastLogin) > (37 * 24 * 60 * 60 * 1000)) {
+                    alert("ACCOUNT PURGED (INACTIVITY)");
                     delete DB.users[u];
                     saveDB();
                     return;
                 }
 
-                if (DB.users[u].pass === p) {
-                    DB.currentUser = u;
-                    DB.users[u].lastLogin = new Date().toISOString();
-                    saveDB();
-                    document.getElementById('dash-username').innerText = u;
-                    nav.to('dash');
+                DB.currentUser = u;
+                DB.users[u].lastLogin = new Date().toISOString();
+                
+                // Load Clan if user is in one
+                const usersClanName = DB.users[u].clan;
+                if (usersClanName && DB.clans[usersClanName]) {
+                    DB.currentClan = DB.clans[usersClanName];
                 } else {
-                    alert("INVALID CREDENTIALS");
+                    DB.currentClan = null;
                 }
+                
+                saveDB();
+                nav.to('dash');
             },
 
             register: () => {
@@ -288,12 +353,12 @@
                 const p = document.getElementById('auth-pass').value.trim();
                 const e = document.getElementById('auth-email').value.trim();
                 
-                if (DB.users[u]) { alert("USERNAME TAKEN"); return; }
-                if (!u || !p) { alert("FIELDS REQUIRED"); return; }
+                if (DB.users[u]) { alert("ID TAKEN"); return; }
+                if (!u || !p) { alert("DATA REQUIRED"); return; }
 
-                DB.users[u] = { pass: p, email: e, lastLogin: new Date().toISOString() };
+                DB.users[u] = { pass: p, email: e, lastLogin: new Date().toISOString(), clan: null };
                 saveDB();
-                alert("IDENTITY CREATED. PLEASE LOGIN.");
+                alert("ID CREATED");
             },
 
             logout: () => {
@@ -302,27 +367,49 @@
                 nav.to('auth');
             },
 
+            loadDashboard: () => {
+                document.getElementById('dash-username').innerText = DB.currentUser;
+                
+                if (DB.currentClan) {
+                    document.getElementById('dash-status').innerText = "CONNECTED TO: " + DB.currentClan.name;
+                    document.getElementById('dash-no-clan').classList.add('hidden');
+                    document.getElementById('dash-in-clan').classList.remove('hidden');
+                    
+                    const btn = document.getElementById('btn-leave');
+                    if (DB.currentUser === DB.currentClan.leader) {
+                        btn.innerText = "DISBAND CLAN (DELETE)";
+                    } else {
+                        btn.innerText = "LEAVE CLAN";
+                    }
+                } else {
+                    document.getElementById('dash-status').innerText = "NO LINK";
+                    document.getElementById('dash-no-clan').classList.remove('hidden');
+                    document.getElementById('dash-in-clan').classList.add('hidden');
+                }
+            },
+
             createClanStart: () => {
                 const name = document.getElementById('new-clan-name').value.trim();
                 const pass = document.getElementById('new-clan-pass').value.trim();
                 
-                if (!name || !pass) { alert("MISSING DATA"); return; }
-                if (!app.captchaVerified) { alert("ROBOT DETECTED"); return; }
-                if (DB.clans[name]) { alert("CLAN NAME ALREADY EXISTS"); return; }
+                if (!name || !pass) { alert("INPUT REQUIRED"); return; }
+                if (!app.captchaVerified) { alert("BOT CHECK FAILED"); return; }
+                if (DB.clans[name]) { alert("NAME TAKEN"); return; }
 
                 app.tempClanData = { name, pass, leader: DB.currentUser, blacklist: [], words: {} };
-                drawing.currentIndex = 0;
-                drawing.tempSymbols = {};
-                drawing.clear();
-                nav.to('draw');
+                drawing.startCreation();
             },
 
             finalizeClan: () => {
                 const data = app.tempClanData;
                 data.symbols = drawing.tempSymbols;
+                
                 DB.clans[data.name] = data;
+                DB.users[DB.currentUser].clan = data.name; // Link user to clan
+                DB.currentClan = data;
+                
                 saveDB();
-                alert("CLAN ESTABLISHED.");
+                alert("CLAN ESTABLISHED");
                 nav.to('dash');
             },
 
@@ -330,26 +417,48 @@
                 const name = document.getElementById('join-name').value.trim();
                 const pass = document.getElementById('join-pass').value.trim();
                 
-                if (!DB.clans[name]) { alert("CLAN NOT FOUND"); return; }
-                
+                if (!DB.clans[name]) { alert("UNKNOWN CLAN"); return; }
                 const clan = DB.clans[name];
-                if (clan.pass !== pass) { alert("ACCESS DENIED"); return; }
-                if (clan.blacklist.includes(DB.currentUser)) { alert("YOU HAVE BEEN BLACKLISTED"); return; }
+                
+                if (clan.pass !== pass) { alert("BAD PASSWORD"); return; }
+                if (clan.blacklist.includes(DB.currentUser)) { alert("BLACKLISTED"); return; }
 
+                DB.users[DB.currentUser].clan = name; // Link user
                 DB.currentClan = clan;
-                app.enterClanInterface();
+                saveDB();
+                alert("LINK ESTABLISHED");
+                nav.to('dash');
+            },
+
+            leaveOrDisband: () => {
+                if (!DB.currentClan) return;
+                
+                if (DB.currentUser === DB.currentClan.leader) {
+                    if (confirm("WARNING: THIS WILL DELETE THE CLAN PERMANENTLY.")) {
+                        const name = DB.currentClan.name;
+                        delete DB.clans[name];
+                        // Reset clan for user (in real app, would need to loop all users)
+                        DB.users[DB.currentUser].clan = null;
+                        DB.currentClan = null;
+                        saveDB();
+                        alert("CLAN DELETED");
+                        nav.to('dash');
+                    }
+                } else {
+                    if (confirm("LEAVE CLAN?")) {
+                        DB.users[DB.currentUser].clan = null;
+                        DB.currentClan = null;
+                        saveDB();
+                        nav.to('dash');
+                    }
+                }
             },
 
             enterClanInterface: () => {
-                document.getElementById('clan-title').innerText = "// " + DB.currentClan.name;
-                
-                // Show leader tools if leader
-                if (DB.currentUser === DB.currentClan.leader) {
-                    document.getElementById('leader-tools').classList.remove('hidden');
-                } else {
-                    document.getElementById('leader-tools').classList.add('hidden');
-                }
-                
+                document.getElementById('clan-title').innerText = DB.currentClan.name;
+                const tools = document.getElementById('leader-tools');
+                if (DB.currentUser === DB.currentClan.leader) tools.classList.remove('hidden');
+                else tools.classList.add('hidden');
                 nav.to('clan');
             },
 
@@ -362,6 +471,20 @@
                 }
             },
 
+            /* --- EDIT SYMBOLS --- */
+            loadEditMenu: () => {
+                const grid = document.getElementById('symbol-grid-container');
+                grid.innerHTML = '';
+                drawing.letters.forEach(letter => {
+                    const div = document.createElement('div');
+                    div.className = 'symbol-item';
+                    div.innerText = letter;
+                    div.onclick = () => drawing.startEdit(letter);
+                    grid.appendChild(div);
+                });
+            },
+
+            /* --- CHAT & TRANSLATION --- */
             toggleTrans: () => {
                 app.autoTranslate = !app.autoTranslate;
                 document.getElementById('btn-trans').innerText = app.autoTranslate ? "ENC: ON" : "ENC: OFF";
@@ -390,54 +513,45 @@
                 const rawMsg = input.value;
                 if (!rawMsg) return;
 
-                let displayHtml = `<span style='color: #888;'>[${DB.currentUser}]:</span> `;
-
+                let html = `<span style='color: #444; font-size:0.8em;'>[${DB.currentUser}]:</span> `;
+                
                 if (app.autoTranslate) {
-                    const words = rawMsg.split(' ');
-                    words.forEach(word => {
-                        let cleanWord = word.toLowerCase().replace(/[^a-z]/g, '');
-                        
-                        // 1. Check Custom Dictionary
-                        if (DB.currentClan.words[cleanWord]) {
-                            // If word exists in dict, use the custom word
-                            // Then we must translate THAT custom word into symbols? 
-                            // Or just display text? Prompt says "letters translated to custom letters"
-                            
-                            let customWord = DB.currentClan.words[cleanWord];
-                            displayHtml += app.wordToSymbols(customWord) + " ";
+                    rawMsg.split(' ').forEach(word => {
+                        let clean = word.toLowerCase().replace(/[^a-z]/g, '');
+                        if (DB.currentClan.words[clean]) {
+                            // Custom Word -> Symbols
+                            html += app.textToSym(DB.currentClan.words[clean]) + " ";
                         } else {
-                            // 2. Just translate standard letters
-                            displayHtml += app.wordToSymbols(word) + " ";
+                            // Normal Word -> Symbols
+                            html += app.textToSym(clean) + " ";
                         }
                     });
                 } else {
-                    displayHtml += rawMsg;
+                    html += `<span style="color:var(--main-color)">${rawMsg}</span>`;
                 }
-                
+
                 const history = document.getElementById('chat-history');
                 const div = document.createElement('div');
                 div.className = 'chat-msg';
-                div.innerHTML = displayHtml;
+                div.innerHTML = html;
                 history.appendChild(div);
                 history.scrollTop = history.scrollHeight;
-
                 input.value = "";
             },
 
-            wordToSymbols: (word) => {
-                let html = "";
-                for (let char of word) {
+            textToSym: (text) => {
+                let out = "";
+                for (let char of text) {
                     let upper = char.toUpperCase();
                     if (DB.currentClan.symbols[upper]) {
-                        html += `<img src="${DB.currentClan.symbols[upper]}" class="chat-img">`;
+                        out += `<img src="${DB.currentClan.symbols[upper]}" class="chat-img">`;
                     } else {
-                        html += char;
+                        out += char;
                     }
                 }
-                return html;
+                return out;
             }
         };
-
     </script>
 </body>
 </html>
