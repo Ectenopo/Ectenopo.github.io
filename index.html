@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLAN_NET // ONLINE</title>
+    <title>CLAN_NET // SYSTEM_ONLINE</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -33,7 +33,7 @@
 
         /* --- UI COMPONENTS --- */
         .hidden { display: none !important; }
-        .screen { max-width: 600px; margin: 0 auto; border: 1px solid var(--dim-color); padding: 15px; box-shadow: 0 0 10px rgba(0, 255, 0, 0.1); position: relative; margin-bottom: 20px; }
+        .screen { max-width: 600px; margin: 0 auto; border: 1px solid var(--dim-color); padding: 15px; box-shadow: 0 0 10px rgba(0, 255, 0, 0.1); position: relative; margin-bottom: 20px; background: rgba(0,0,0,0.9); }
         
         button, input, select, textarea {
             background: rgba(10, 10, 10, 0.8);
@@ -57,46 +57,46 @@
         
         /* SOCIAL ACTIONS */
         .social-actions { display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #333; padding-top: 5px; }
-        .social-btn { flex: 1; font-size: 10px; padding: 5px; background: transparent; border: 1px solid #333; }
-        .social-btn:hover { background: #111; border-color: var(--main-color); }
-        .active-action { color: var(--warn-color); border-color: var(--warn-color); }
+        .social-btn { flex: 1; font-size: 10px; padding: 5px; background: transparent; border: 1px solid #333; cursor: pointer; color: #888; }
+        .social-btn:hover { background: #111; border-color: var(--main-color); color: var(--main-color); }
+        .active-action { color: var(--warn-color) !important; border-color: var(--warn-color) !important; font-weight: bold; }
 
         /* COMMENTS SECTION */
-        .comment-section { margin-top: 10px; padding: 10px; border: 1px solid #333; background: #050505; }
-        .comment-list { max-height: 150px; overflow-y: scroll; margin-bottom: 5px; }
-        .comment-item { border-bottom: 1px solid #222; padding: 4px 0; font-size: 0.9em; }
-
+        .comment-item { border-bottom: 1px solid #222; padding: 6px 0; font-size: 0.9em; word-wrap: break-word; }
+        
+        /* BADGES & LAYOUT */
         .verified-badge { display: inline-block; color: cyan; margin-left: 4px; font-size: 1.1em; text-shadow: 0 0 5px cyan; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .card { border: 1px dashed var(--dim-color); padding: 10px; margin-bottom: 10px; }
+        .card { border: 1px dashed var(--dim-color); padding: 10px; margin-bottom: 10px; position: relative; }
         .chat-box { height: 250px; overflow-y: scroll; border: 1px solid #222; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); }
         .chat-msg { margin-bottom: 8px; border-bottom: 1px solid #111; padding-bottom: 4px; font-size: 0.9em; word-wrap: break-word; }
         .chat-img { height: 20px; vertical-align: middle; filter: sepia(1) hue-rotate(50deg) saturate(5); }
         
         canvas { border: 1px solid var(--main-color); cursor: crosshair; background: #050505; display: block; margin: 0 auto 10px auto; }
-        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; color: var(--main-color); font-size: 1.5em; border: 2px solid var(--dim-color); }
 
         .poll-bar { height: 10px; background: #333; margin-top: 2px; position: relative; }
         .poll-fill { height: 100%; background: var(--main-color); width: 0%; transition: width 0.5s; }
         .post-header { display: flex; justify-content: space-between; font-size: 0.8em; color: #888; border-bottom: 1px solid #333; margin-bottom: 5px; }
 
-        /* KALI STYLE (Minified for space) */
+        /* KALI STYLE */
         #screen-kali { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'), #101010; z-index: 2000; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
         #kali-bar { height: 40px; background: var(--kali-bar); border-bottom: 1px solid #444; display: flex; align-items: center; padding: 0 10px; color: #ddd; justify-content: space-between; }
-        .kali-btn { background: transparent; border: none; color: #ddd; width: auto; padding: 5px 15px; } .kali-btn:hover { background: #444; }
+        .kali-btn { background: transparent; border: none; color: #ddd; width: auto; padding: 5px 15px; cursor: pointer; } .kali-btn:hover { background: #444; }
         #kali-desktop { flex: 1; position: relative; }
-        .window { position: absolute; width: 600px; height: 400px; background: #1e1e1e; border: 1px solid #444; display: flex; flex-direction: column; top: 50px; left: 50px; }
+        .window { position: absolute; width: 600px; height: 400px; background: #1e1e1e; border: 1px solid #444; display: flex; flex-direction: column; top: 50px; left: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .win-header { height: 30px; background: #333; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; cursor: move; }
         .win-body { flex: 1; background: #000; padding: 5px; color: #00ff00; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; }
         #py-console { flex: 1; overflow-y: auto; padding: 5px; white-space: pre-wrap; }
         #py-input-line { display: flex; margin-top: 5px; border-top: 1px solid #333; padding-top: 5px; }
-        #py-input { background: transparent; border: none; color: white; flex: 1; font-family: 'Courier New', monospace; }
+        #py-input { background: transparent; border: none; color: white; flex: 1; font-family: 'Courier New', monospace; outline: none; }
         .term-line { font-family: monospace; font-size: 12px; margin: 2px 0; }
+        .term-info { color: cyan; } .term-err { color: red; }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay" class="hidden">Accessing Neural Net...</div>
+    <div id="loading-overlay" class="hidden">>> INITIALIZING NEURAL LINK...</div>
 
     <div id="screen-auth" class="screen">
         <h1>// NET_LOGIN_ONLINE</h1>
@@ -199,24 +199,24 @@
             <div id="feed-polls" style="height: 400px; overflow-y: scroll; margin-top: 10px;"></div>
         </div>
         
-        <div id="comment-overlay" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;display:flex;justify-content:center;align-items:center;">
-            <div class="screen" style="width:90%; height:80%; display:flex; flex-direction:column;">
-                <h3>// COMMENTS</h3>
-                <div id="active-comment-list" style="flex:1; overflow-y:scroll; border:1px solid #333; padding:10px; margin-bottom:10px;"></div>
-                <input type="text" id="new-comment-input" placeholder="Add comment...">
-                <button onclick="social.submitComment()">POST</button>
-                <button onclick="document.getElementById('comment-overlay').classList.add('hidden')" class="warn">CLOSE</button>
-            </div>
-        </div>
-
         <button onclick="nav.to('hub')">BACK</button>
+    </div>
+
+    <div id="comment-overlay" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:3000;display:flex;justify-content:center;align-items:center;">
+        <div class="screen" style="width:90%; height:80%; display:flex; flex-direction:column; background: #000; border: 1px solid var(--main-color);">
+            <h3 style="border-bottom: 1px solid #333; padding-bottom: 10px;">// COMMENTS_THREAD</h3>
+            <div id="active-comment-list" style="flex:1; overflow-y:scroll; padding:10px; margin-bottom:10px; border: 1px solid #222;"></div>
+            <input type="text" id="new-comment-input" placeholder="Add comment...">
+            <button onclick="social.submitComment()">POST COMMENT</button>
+            <button onclick="document.getElementById('comment-overlay').classList.add('hidden')" class="warn">CLOSE THREAD</button>
+        </div>
     </div>
 
     <div id="screen-profile" class="screen hidden">
         <h2 id="prof-header">// USER_PROFILE</h2>
         <div class="card">
             <div style="display: flex; gap: 10px; align-items: center;">
-                <div id="prof-pfp-display" style="width: 50px; height: 50px; background: #222; border: 1px solid var(--main-color); background-size: cover;"></div>
+                <div id="prof-pfp-display" style="width: 50px; height: 50px; background: #222; border: 1px solid var(--main-color); background-size: cover; background-position: center;"></div>
                 <div>
                     <h3 id="prof-displayname" style="margin: 0;"></h3>
                     <small id="prof-username" style="color: #888;"></small>
@@ -280,8 +280,10 @@
     <div id="screen-draw" class="screen hidden"><h3 id="draw-title">DRAW: A</h3><canvas id="draw-canvas" width="280" height="280"></canvas><div class="grid-2"><button onclick="drawing.clear()">CLEAR</button><button onclick="drawing.save()">NEXT</button></div><button onclick="drawing.cancel()">CANCEL</button></div>
     <div id="screen-create" class="screen hidden"><h2>// NEW_CLAN</h2><input type="text" id="create-name" placeholder="NAME"><input type="password" id="create-pass" placeholder="PASS"><button onclick="app.createClanStart()">START DRAWING</button><button onclick="nav.to('hub')">CANCEL</button></div>
     <div id="screen-dict" class="screen hidden"><h3>// DICT</h3><div class="grid-2"><input type="text" id="dict-orig"><input type="text" id="dict-new"></div><button onclick="app.addWord()">ADD</button><div id="dict-list"></div><button onclick="nav.to('hub')">BACK</button></div>
+    
     <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2><div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU ]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
-    <div id="screen-kali" class="hidden"><div id="kali-bar"><div style="display:flex;align-items:center;"><span class="kali-logo">🐉 KALI_EMU</span><button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications</button></div></div><div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()"><div id="win-term" class="window" style="z-index:10;"><div class="win-header" onmousedown="kali.startDrag(event,'win-term')"><span class="win-title">root@kali:~/python_scripts</span><div class="win-controls"><button onclick="nav.to('soc')" style="background:#ff5f56;width:15px;height:15px;border-radius:50%;padding:0;"></button></div></div><div class="win-body"><div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div><div id="py-input-line"><span style="color:cyan;margin-right:5px;">>>></span><input type="text" id="py-input" onkeydown="kali.handleInput(event)"></div></div></div><div id="kali-menu" class="hidden" style="position:absolute;top:0;left:0;width:200px;background:#2d2d2d;z-index:50;border:1px solid #444;"><button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button><button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button></div></div></div>
+    
+    <div id="screen-kali" class="hidden"><div id="kali-bar"><div style="display:flex;align-items:center;"><span class="kali-logo">🐉 KALI_EMU</span><button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications</button></div></div><div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()"><div id="win-term" class="window" style="z-index:10;"><div class="win-header" onmousedown="kali.startDrag(event,'win-term')"><span class="win-title">root@kali:~/python_scripts</span><div class="win-controls"><button onclick="nav.to('soc')" style="background:#ff5f56;width:15px;height:15px;border-radius:50%;padding:0;cursor:pointer;"></button></div></div><div class="win-body"><div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div><div id="py-input-line"><span style="color:cyan;margin-right:5px;">>>></span><input type="text" id="py-input" onkeydown="kali.handleInput(event)"></div></div></div><div id="kali-menu" class="hidden" style="position:absolute;top:0;left:0;width:200px;background:#2d2d2d;z-index:50;border:1px solid #444;"><button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button><button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button></div></div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -294,7 +296,20 @@
 
         // --- UTILS ---
         const loading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
-        window.audioSys = { ctx: new (window.AudioContext||window.webkitAudioContext)(), playClick:()=>{}, playEnter:(){} }; 
+        
+        // Audio Engine
+        window.audioSys = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            playTone: (freq, type, dur) => {
+                if(audioSys.ctx.state==='suspended') audioSys.ctx.resume();
+                const o = audioSys.ctx.createOscillator();
+                const g = audioSys.ctx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioSys.ctx.destination);
+                o.start(); g.gain.exponentialRampToValueAtTime(0.0001, audioSys.ctx.currentTime + dur);
+                o.stop(audioSys.ctx.currentTime + dur);
+            }
+        };
 
         // --- STATE ---
         window.state = { user: null, clan: null, clanData: {}, viewedProfile: null, activeCommentId: null, activeCommentType: null, unsubComments: null };
@@ -320,6 +335,7 @@
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim();
                 const p = document.getElementById('auth-pass').value.trim();
+                if(!u || !p) return;
                 loading(true);
                 const docSnap = await getDoc(doc(db, "users", u));
                 loading(false);
@@ -356,7 +372,7 @@
                     document.getElementById('hub-rep').innerText = "REP: " + (data.rep || 0);
                 });
 
-                // Listen to Global Chat (FIXED)
+                // Listen to Global Chat
                 const q = query(collection(db, "global_chat"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => {
                     const d = document.getElementById('global-chat'); d.innerHTML = "";
@@ -405,7 +421,7 @@
             // CLAN CORE
             listenToClan: (cName) => {
                 document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText = cName;
-                onSnapshot(doc(db, "clans", cName), (doc) => { state.clanData = doc.data(); if(state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); else document.getElementById('btn-delete-clan').classList.add('hidden'); });
+                onSnapshot(doc(db, "clans", cName), (doc) => { state.clanData = doc.data(); if(state.clanData && state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); else document.getElementById('btn-delete-clan').classList.add('hidden'); });
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => { const d = document.getElementById('clan-chat'); d.innerHTML = ""; const msgs = []; snap.forEach(doc => msgs.push(doc.data())); msgs.reverse().forEach(m => { let txt = app.autoTrans ? app.translate(m.txt) : m.txt; d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${txt}</div>`; }); d.scrollTop = d.scrollHeight; });
             },
@@ -431,7 +447,7 @@
             translate: (txt) => { let out = ""; const words = state.clanData.words || {}; const syms = state.clanData.symbols || {}; txt.split(" ").forEach(w => { const c = w.toLowerCase().replace(/[^a-z]/g,''); if(words[c]) out += app.strToSym(words[c], syms) + " "; else out += app.strToSym(c, syms) + " "; }); return out; },
             strToSym: (str, syms) => { let html = ""; for(let c of str) { if(syms[c.toUpperCase()]) html += `<img src="${syms[c.toUpperCase()]}" class="chat-img">`; else html += c; } return html; },
             
-            // JOBS, EVENTS, KALI, ETC
+            // JOBS, EVENTS, ETC
             createEvent: async () => { const n = document.getElementById('evt-name').value; if(!n) return; await addDoc(collection(db, "events"), { name: n, desc: document.getElementById('evt-desc').value, start: document.getElementById('evt-start').value, end: document.getElementById('evt-end').value, creator: state.user, ts: serverTimestamp() }); alert("CREATED"); app.loadEvents(); },
             loadEvents: async () => { const list = document.getElementById('event-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "events"), orderBy("start", "asc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const e = d.data(); list.innerHTML += `<div class="card"><strong style="color:white;">${e.name}</strong><br><span>${e.start} // ${e.end || '?'}</span><br><p>${e.desc}</p><small>ORG: ${e.creator}</small></div>`; }); },
             createJob: async () => { const t = document.getElementById('job-title').value; if(!t) return; await addDoc(collection(db, "jobs"), { title: t, desc: document.getElementById('job-desc').value, owner: state.user, worker: null, status: 'OPEN', ts: serverTimestamp() }); alert("POSTED"); app.loadJobs(); },
@@ -448,13 +464,12 @@
             runSecurityScan: (type) => { const c=document.getElementById('soc-console'); c.innerHTML+=`<div>> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div>> COMPLETE. CLEAN.</div>`,1500); }
         };
 
-        // --- SOCIAL LOGIC ---
+        // --- SOCIAL LOGIC (LIKES/COMMENTS) ---
         window.social = {
             tab: (t) => {
                 document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden');
                 if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls();
             },
-            // ACTIONS
             like: async (id, type) => {
                 const col = type === 'post' ? 'posts' : 'polls';
                 const ref = doc(db, col, id);
@@ -491,7 +506,6 @@
                 const col = type === 'post' ? 'posts' : 'polls';
                 document.getElementById('comment-overlay').classList.remove('hidden');
                 
-                // Listen to comments
                 if(state.unsubComments) state.unsubComments();
                 const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc"));
                 state.unsubComments = onSnapshot(q, (snap) => {
@@ -511,7 +525,6 @@
                 await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() });
                 document.getElementById('new-comment-input').value = "";
             },
-            // POSTS
             createPost: async () => { const txt = document.getElementById('post-content').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; social.loadPosts(); },
             loadPosts: async () => {
                 const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED...";
@@ -526,7 +539,7 @@
 
                     div.innerHTML += `
                     <div class="card">
-                        <div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${new Date(p.ts?.toDate()).toLocaleTimeString()}</span></div>
+                        <div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div>
                         <div>${p.txt}</div>
                         <div class="social-actions">
                             <button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button>
@@ -536,7 +549,6 @@
                     </div>`;
                 });
             },
-            // POLLS
             createPoll: async () => {
                 const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value;
                 if(!q || !o1 || !o2) return;
@@ -578,8 +590,17 @@
         };
 
         window.drawing = { canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing: false, mode: 'create', init: () => { drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00'; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; }, clear: () => drawing.ctx.clearRect(0,0,300,300), cancel: () => nav.to('hub'), save: async () => { const char = drawing.letters[drawing.idx]; drawing.tempData.syms[char] = drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx < drawing.letters.length) { drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx]; } else { loading(true); if(drawing.mode === 'create') { await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } }); await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name }); } else if (drawing.mode === 'edit') { await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms }); } loading(false); nav.to('hub'); } } }; drawing.init();
-        window.kali = { toggleMenu: () => document.getElementById('kali-menu').classList.toggle('hidden'), dragTarget: null, offsetX: 0, offsetY: 0, vars: {}, openApp: (app) => { const con = document.getElementById('py-console'); con.innerHTML += `\n<span class="term-info">root@kali:~# start ${app}</span>\n`; setTimeout(() => con.scrollTop = con.scrollHeight, 100); }, handleInput: (e) => { if(e.key === 'Enter') { const inp = document.getElementById('py-input'); const cmd = inp.value.trim(); const con = document.getElementById('py-console'); con.innerHTML += `\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value = ""; con.scrollTop = con.scrollHeight; } }, startDrag: (e, id) => { kali.dragTarget = document.getElementById(id); const rect = kali.dragTarget.getBoundingClientRect(); kali.offsetX = e.clientX - rect.left; kali.offsetY = e.clientY - rect.top; }, drag: (e) => { if(kali.dragTarget) { kali.dragTarget.style.left = (e.clientX - kali.offsetX) + 'px'; kali.dragTarget.style.top = (e.clientY - kali.offsetY) + 'px'; } }, stopDrag: () => { kali.dragTarget = null; } };
+        window.kali = { toggleMenu: () => document.getElementById('kali-menu').classList.toggle('hidden'), dragTarget: null, offsetX: 0, offsetY: 0, vars: {}, openApp: (app) => { const con = document.getElementById('py-console'); con.innerHTML += `\n<span class="term-info">root@kali:~# start ${app}</span>\n`; setTimeout(() => con.scrollTop = con.scrollHeight, 100); }, handleInput: (e) => { if(e.key === 'Enter') { const inp = document.getElementById('py-input'); const cmd = inp.value.trim(); const con = document.getElementById('py-console'); con.innerHTML += `\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value = ""; con.scrollTop = con.scrollHeight; audioSys.playTone(600, 'sine', 0.1); } else { audioSys.playTone(800, 'sine', 0.05); } }, startDrag: (e, id) => { kali.dragTarget = document.getElementById(id); const rect = kali.dragTarget.getBoundingClientRect(); kali.offsetX = e.clientX - rect.left; kali.offsetY = e.clientY - rect.top; }, drag: (e) => { if(kali.dragTarget) { kali.dragTarget.style.left = (e.clientX - kali.offsetX) + 'px'; kali.dragTarget.style.top = (e.clientY - kali.offsetY) + 'px'; } }, stopDrag: () => { kali.dragTarget = null; } };
         window.settings = { apply: () => { const r = document.documentElement.style; r.setProperty('--bg-color', document.getElementById('col-bg').value); r.setProperty('--main-color', document.getElementById('col-main').value); }, load: () => {}, reset: () => { document.getElementById('col-bg').value="#000000"; document.getElementById('col-main').value="#00FF00"; settings.apply(); } };
+
+        // Keyboard Sounds (Global)
+        document.addEventListener('keydown', (e) => {
+             if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                if(e.key === 'Enter') audioSys.playTone(400, 'square', 0.1);
+                else if(e.key === 'Backspace') audioSys.playTone(300, 'sawtooth', 0.1);
+                else audioSys.playTone(800, 'sine', 0.05);
+             }
+        });
 
     </script>
 </body>
