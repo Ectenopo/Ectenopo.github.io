@@ -149,7 +149,8 @@
                 <h2 id="clan-header">CLAN_NAME</h2>
                 <div class="chat-box" id="clan-chat"></div>
                 <div style="display: flex; gap: 5px;">
-                    <button onclick="app.toggleTrans()" id="btn-trans" style="width: 50px; font-size: 10px;">ENC</button>
+                    <button onclick="app.toggleEnc()" id="btn-enc" style="width: 50px; font-size: 10px; color: #555;">ENC</button>
+                    <button onclick="app.toggleDict()" id="btn-dict" style="width: 50px; font-size: 10px; color: #555;">DICT</button>
                     <input type="text" id="clan-input" placeholder="Secure Message..." style="margin:0;">
                     <button onclick="app.sendClanMsg()" style="width: 60px;">SEND</button>
                 </div>
@@ -255,10 +256,29 @@
 
     <div id="screen-settings" class="screen hidden">
         <h2>// SYSTEM_CONFIG</h2>
-        <div class="grid-2"><div>BG: <input type="color" id="col-bg" onchange="settings.apply()"></div><div>MAIN: <input type="color" id="col-main" onchange="settings.apply()"></div></div>
+        
+        <label>MAIN THEME</label>
+        <div class="grid-2">
+            <div>BG: <input type="color" id="col-bg" onchange="settings.apply()"></div>
+            <div>MAIN: <input type="color" id="col-main" onchange="settings.apply()"></div>
+        </div>
+        <div class="grid-2">
+            <div>DIM: <input type="color" id="col-dim" onchange="settings.apply()"></div>
+            <div>WARN: <input type="color" id="col-warn" onchange="settings.apply()"></div>
+        </div>
+        
+        <hr style="border-color: #333">
+        <label>REPUTATION COLORS</label>
+        <div class="grid-2">
+            <div>GOOD: <input type="color" id="col-r-good" onchange="settings.apply()"></div>
+            <div>WATCH: <input type="color" id="col-r-watch" onchange="settings.apply()"></div>
+        </div>
+        <div>BAD/BLK: <input type="color" id="col-r-bad" onchange="settings.apply()"></div>
+
         <button onclick="settings.reset()" class="danger" style="margin-top:20px;">RETURN TO DEFAULT SETTINGS</button>
         <button onclick="nav.to('hub')">BACK</button>
     </div>
+
     <div id="screen-events" class="screen hidden">
         <h2>// EVENT_LOG</h2>
         <div style="border:1px solid #333;padding:10px;margin-bottom:10px;"><input type="text" id="evt-name" placeholder="EVENT NAME"><input type="text" id="evt-desc" placeholder="DESCRIPTION"><div class="grid-2"><input type="date" id="evt-start"><input type="date" id="evt-end"></div><button onclick="app.createEvent()">PUBLISH</button></div>
@@ -297,7 +317,6 @@
         // --- UTILS ---
         const loading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
         
-        // Audio Engine
         window.audioSys = {
             ctx: new (window.AudioContext || window.webkitAudioContext)(),
             playTone: (freq, type, dur) => {
@@ -331,7 +350,8 @@
 
         // --- APP LOGIC ---
         window.app = {
-            autoTrans: true,
+            encMode: false,
+            dictMode: false,
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim();
                 const p = document.getElementById('auth-pass').value.trim();
@@ -355,7 +375,6 @@
                 loading(false); alert("REGISTERED");
             },
             initHub: async () => {
-                // User & Profile Init
                 const docSnap = await getDoc(doc(db, "users", state.user));
                 const userData = docSnap.data();
                 let verifiedHTML = userData.verified ? `<span class="verified-badge">♦✓</span>` : '';
@@ -364,7 +383,6 @@
                 const admins = ["user1234", "user4321"];
                 if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
 
-                // Listen to User (Clan updates)
                 onSnapshot(doc(db, "users", state.user), (d) => {
                     const data = d.data();
                     if(data.clan) { state.clan = data.clan; app.listenToClan(data.clan); }
@@ -372,7 +390,6 @@
                     document.getElementById('hub-rep').innerText = "REP: " + (data.rep || 0);
                 });
 
-                // Listen to Global Chat
                 const q = query(collection(db, "global_chat"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => {
                     const d = document.getElementById('global-chat'); d.innerHTML = "";
@@ -386,7 +403,7 @@
                 if(t) { await addDoc(collection(db, "global_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('global-input').value=""; }
             },
 
-            // PROFILES
+            // PROFILES & CLAN
             searchUser: () => { const u = document.getElementById('search-user-input').value.trim(); if(u) app.openProfile(u); },
             openProfile: async (targetUser) => {
                 loading(true);
@@ -418,12 +435,11 @@
             },
             verifyUser: async () => { if(!confirm("VERIFY?")) return; await updateDoc(doc(db, "users", state.viewedProfile), { verified: true }); alert("VERIFIED"); app.openProfile(state.viewedProfile); },
 
-            // CLAN CORE
             listenToClan: (cName) => {
                 document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText = cName;
                 onSnapshot(doc(db, "clans", cName), (doc) => { state.clanData = doc.data(); if(state.clanData && state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); else document.getElementById('btn-delete-clan').classList.add('hidden'); });
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
-                onSnapshot(q, (snap) => { const d = document.getElementById('clan-chat'); d.innerHTML = ""; const msgs = []; snap.forEach(doc => msgs.push(doc.data())); msgs.reverse().forEach(m => { let txt = app.autoTrans ? app.translate(m.txt) : m.txt; d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${txt}</div>`; }); d.scrollTop = d.scrollHeight; });
+                onSnapshot(q, (snap) => { const d = document.getElementById('clan-chat'); d.innerHTML = ""; const msgs = []; snap.forEach(doc => msgs.push(doc.data())); msgs.reverse().forEach(m => { let txt = app.translate(m.txt); d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${txt}</div>`; }); d.scrollTop = d.scrollHeight; });
             },
             loadRoster: () => {
                 nav.to('ranks'); const list = document.getElementById('roster-list'); list.innerHTML = ""; const ranks = state.clanData.ranks || {}; const isLeader = state.clanData.leader === state.user;
@@ -443,8 +459,55 @@
             joinClan: async () => { const n = document.getElementById('join-name').value.trim(); const p = document.getElementById('join-pass').value.trim(); const s = await getDoc(doc(db, "clans", n)); if(s.exists() && s.data().pass === p) { await updateDoc(doc(db, "users", state.user), { clan: n }); await updateDoc(doc(db, "clans", n), { [`ranks.${state.user}`]: 'member' }); } else alert("INVALID"); },
             leaveClan: async () => { if(!confirm("LEAVE?")) return; await updateDoc(doc(db, "users", state.user), { clan: null }); await updateDoc(doc(db, "clans", state.clan), { [`ranks.${state.user}`]: deleteField() }); },
             sendClanMsg: async () => { const t = document.getElementById('clan-input').value; if(t) { await addDoc(collection(db, "clans", state.clan, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('clan-input').value=""; } },
-            toggleTrans: () => { app.autoTrans = !app.autoTrans; document.getElementById('btn-trans').style.color = app.autoTrans ? '#00FF00' : '#555'; },
-            translate: (txt) => { let out = ""; const words = state.clanData.words || {}; const syms = state.clanData.symbols || {}; txt.split(" ").forEach(w => { const c = w.toLowerCase().replace(/[^a-z]/g,''); if(words[c]) out += app.strToSym(words[c], syms) + " "; else out += app.strToSym(c, syms) + " "; }); return out; },
+            
+            // TRANS & DICT
+            toggleEnc: () => { 
+                app.encMode = !app.encMode; 
+                document.getElementById('btn-enc').style.color = app.encMode ? '#00FF00' : '#555'; 
+            },
+            toggleDict: () => {
+                app.dictMode = !app.dictMode;
+                document.getElementById('btn-dict').style.color = app.dictMode ? '#00FF00' : '#555';
+            },
+            translate: (txt) => { 
+                // Logic:
+                // 1. If ENC is ON: Symbols are used. Words swapped if found.
+                // 2. If ENC is OFF:
+                //    - If DICT is ON: Words swapped if found (TEXT).
+                //    - If DICT is OFF: Raw text.
+                
+                if (!app.encMode && !app.dictMode) return txt;
+
+                let out = "";
+                const words = state.clanData.words || {};
+                const syms = state.clanData.symbols || {};
+                
+                txt.split(" ").forEach(w => {
+                    const c = w.toLowerCase().replace(/[^a-z]/g,'');
+                    let finalWord = c;
+                    
+                    // Dictionary Swap Logic (Used if DICT is ON or ENC is ON, actually usually encryption implies dictionary use, but user asked for specific mode)
+                    // Let's assume standard behavior:
+                    // If DICT is ON, we swap.
+                    // If ENC is ON, we usually swap too. 
+                    // Let's allow independent toggles as requested.
+                    
+                    if (app.dictMode && words[c]) finalWord = words[c];
+                    else if (app.encMode && words[c]) finalWord = words[c]; // Assuming ENC implies using the codebook too
+                    else finalWord = w; // Keep original punctuation if not swapped, or use 'c' if strict
+
+                    // Render
+                    if (app.encMode) {
+                        // Strip punct for symbol lookup
+                        const clean = finalWord.toLowerCase().replace(/[^a-z]/g,'');
+                        out += app.strToSym(clean, syms) + " ";
+                    } else {
+                        // Just Text (Dict mode or Raw)
+                        out += finalWord + " ";
+                    }
+                });
+                return out; 
+            },
             strToSym: (str, syms) => { let html = ""; for(let c of str) { if(syms[c.toUpperCase()]) html += `<img src="${syms[c.toUpperCase()]}" class="chat-img">`; else html += c; } return html; },
             
             // JOBS, EVENTS, ETC
@@ -464,134 +527,109 @@
             runSecurityScan: (type) => { const c=document.getElementById('soc-console'); c.innerHTML+=`<div>> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div>> COMPLETE. CLEAN.</div>`,1500); }
         };
 
-        // --- SOCIAL LOGIC (LIKES/COMMENTS) ---
+        // --- SOCIAL (Same as before) ---
         window.social = {
             tab: (t) => {
                 document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden');
                 if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls();
             },
             like: async (id, type) => {
-                const col = type === 'post' ? 'posts' : 'polls';
-                const ref = doc(db, col, id);
-                const snap = await getDoc(ref);
-                const d = snap.data();
-                const likes = d.likes || [];
-                const dislikes = d.dislikes || [];
-                
+                const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data();
+                const likes = d.likes || []; const dislikes = d.dislikes || [];
                 if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) });
-                else {
-                    await updateDoc(ref, { likes: arrayUnion(state.user) });
-                    if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) });
-                }
+                else { await updateDoc(ref, { likes: arrayUnion(state.user) }); if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); }
                 type === 'post' ? social.loadPosts() : social.loadPolls();
             },
             dislike: async (id, type) => {
-                const col = type === 'post' ? 'posts' : 'polls';
-                const ref = doc(db, col, id);
-                const snap = await getDoc(ref);
-                const d = snap.data();
-                const likes = d.likes || [];
-                const dislikes = d.dislikes || [];
-
+                const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data();
+                const likes = d.likes || []; const dislikes = d.dislikes || [];
                 if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) });
-                else {
-                    await updateDoc(ref, { dislikes: arrayUnion(state.user) });
-                    if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) });
-                }
+                else { await updateDoc(ref, { dislikes: arrayUnion(state.user) }); if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); }
                 type === 'post' ? social.loadPosts() : social.loadPolls();
             },
             openComments: (id, type) => {
-                state.activeCommentId = id;
-                state.activeCommentType = type;
-                const col = type === 'post' ? 'posts' : 'polls';
-                document.getElementById('comment-overlay').classList.remove('hidden');
-                
+                state.activeCommentId = id; state.activeCommentType = type; const col = type === 'post' ? 'posts' : 'polls'; document.getElementById('comment-overlay').classList.remove('hidden');
                 if(state.unsubComments) state.unsubComments();
                 const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc"));
-                state.unsubComments = onSnapshot(q, (snap) => {
-                    const div = document.getElementById('active-comment-list');
-                    div.innerHTML = "";
-                    if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>";
-                    snap.forEach(d => {
-                        const c = d.data();
-                        div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`;
-                    });
-                });
+                state.unsubComments = onSnapshot(q, (snap) => { const div = document.getElementById('active-comment-list'); div.innerHTML = ""; if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; snap.forEach(d => { const c = d.data(); div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; }); });
             },
-            submitComment: async () => {
-                const txt = document.getElementById('new-comment-input').value.trim();
-                if(!txt || !state.activeCommentId) return;
-                const col = state.activeCommentType === 'post' ? 'posts' : 'polls';
-                await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() });
-                document.getElementById('new-comment-input').value = "";
-            },
+            submitComment: async () => { const txt = document.getElementById('new-comment-input').value.trim(); if(!txt || !state.activeCommentId) return; const col = state.activeCommentType === 'post' ? 'posts' : 'polls'; await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() }); document.getElementById('new-comment-input').value = ""; },
             createPost: async () => { const txt = document.getElementById('post-content').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; social.loadPosts(); },
             loadPosts: async () => {
                 const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED...";
                 const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20));
                 const snap = await getDocs(q); div.innerHTML = "";
                 snap.forEach(d => {
-                    const p = d.data();
-                    const likes = (p.likes || []).length;
-                    const dislikes = (p.dislikes || []).length;
-                    const userLiked = (p.likes || []).includes(state.user) ? "active-action" : "";
-                    const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : "";
-
-                    div.innerHTML += `
-                    <div class="card">
-                        <div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div>
-                        <div>${p.txt}</div>
-                        <div class="social-actions">
-                            <button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button>
-                            <button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button>
-                            <button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button>
-                        </div>
-                    </div>`;
+                    const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : "";
+                    div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div><div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`;
                 });
             },
-            createPoll: async () => {
-                const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value;
-                if(!q || !o1 || !o2) return;
-                await addDoc(collection(db, "polls"), { u: state.user, q: q, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() });
-                document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls();
-            },
+            createPoll: async () => { const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value; if(!q || !o1 || !o2) return; await addDoc(collection(db, "polls"), { u: state.user, q: q, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() }); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
             loadPolls: async () => {
                 const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS...";
                 const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10));
                 const snap = await getDocs(q); div.innerHTML = "";
                 snap.forEach(d => {
-                    const p = d.data();
-                    const likes = (p.likes || []).length;
-                    const dislikes = (p.dislikes || []).length;
-                    const userLiked = (p.likes || []).includes(state.user) ? "active-action" : "";
-                    const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : "";
-
-                    let optsHTML = "";
-                    p.opts.forEach((opt, idx) => {
-                        const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100);
-                        optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;
-                    });
-                    div.innerHTML += `
-                    <div class="card">
-                        <div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${optsHTML}
-                        <div class="social-actions">
-                            <button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button>
-                            <button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button>
-                            <button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button>
-                        </div>
-                    </div>`;
+                    const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let optsHTML = "";
+                    p.opts.forEach((opt, idx) => { const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100); optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`; });
+                    div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`;
                 });
             },
-            vote: async (id, optIdx) => {
-                const ref = doc(db, "polls", id); const snap = await getDoc(ref); const d = snap.data();
-                if(d.voters.includes(state.user)) return alert("ALREADY VOTED");
-                d.opts[optIdx].v++; d.voters.push(state.user); await updateDoc(ref, { opts: d.opts, voters: d.voters }); social.loadPolls();
-            }
+            vote: async (id, optIdx) => { const ref = doc(db, "polls", id); const snap = await getDoc(ref); const d = snap.data(); if(d.voters.includes(state.user)) return alert("ALREADY VOTED"); d.opts[optIdx].v++; d.voters.push(state.user); await updateDoc(ref, { opts: d.opts, voters: d.voters }); social.loadPolls(); }
         };
 
         window.drawing = { canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing: false, mode: 'create', init: () => { drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00'; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; }, clear: () => drawing.ctx.clearRect(0,0,300,300), cancel: () => nav.to('hub'), save: async () => { const char = drawing.letters[drawing.idx]; drawing.tempData.syms[char] = drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx < drawing.letters.length) { drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx]; } else { loading(true); if(drawing.mode === 'create') { await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } }); await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name }); } else if (drawing.mode === 'edit') { await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms }); } loading(false); nav.to('hub'); } } }; drawing.init();
         window.kali = { toggleMenu: () => document.getElementById('kali-menu').classList.toggle('hidden'), dragTarget: null, offsetX: 0, offsetY: 0, vars: {}, openApp: (app) => { const con = document.getElementById('py-console'); con.innerHTML += `\n<span class="term-info">root@kali:~# start ${app}</span>\n`; setTimeout(() => con.scrollTop = con.scrollHeight, 100); }, handleInput: (e) => { if(e.key === 'Enter') { const inp = document.getElementById('py-input'); const cmd = inp.value.trim(); const con = document.getElementById('py-console'); con.innerHTML += `\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value = ""; con.scrollTop = con.scrollHeight; audioSys.playTone(600, 'sine', 0.1); } else { audioSys.playTone(800, 'sine', 0.05); } }, startDrag: (e, id) => { kali.dragTarget = document.getElementById(id); const rect = kali.dragTarget.getBoundingClientRect(); kali.offsetX = e.clientX - rect.left; kali.offsetY = e.clientY - rect.top; }, drag: (e) => { if(kali.dragTarget) { kali.dragTarget.style.left = (e.clientX - kali.offsetX) + 'px'; kali.dragTarget.style.top = (e.clientY - kali.offsetY) + 'px'; } }, stopDrag: () => { kali.dragTarget = null; } };
-        window.settings = { apply: () => { const r = document.documentElement.style; r.setProperty('--bg-color', document.getElementById('col-bg').value); r.setProperty('--main-color', document.getElementById('col-main').value); }, load: () => {}, reset: () => { document.getElementById('col-bg').value="#000000"; document.getElementById('col-main').value="#00FF00"; settings.apply(); } };
+        
+        // --- SETTINGS LOGIC (RESTORED) ---
+        window.settings = {
+            apply: () => {
+                const r = document.documentElement.style;
+                const getVal = (id) => document.getElementById(id).value;
+                r.setProperty('--bg-color', getVal('col-bg'));
+                r.setProperty('--main-color', getVal('col-main'));
+                r.setProperty('--dim-color', getVal('col-dim'));
+                r.setProperty('--warn-color', getVal('col-warn'));
+                r.setProperty('--rep-good', getVal('col-r-good'));
+                r.setProperty('--rep-watch', getVal('col-r-watch'));
+                r.setProperty('--rep-black', getVal('col-r-bad'));
+                
+                // Save to local storage
+                const vals = {
+                    bg: getVal('col-bg'), main: getVal('col-main'), dim: getVal('col-dim'), warn: getVal('col-warn'),
+                    rGood: getVal('col-r-good'), rWatch: getVal('col-r-watch'), rBad: getVal('col-r-bad')
+                };
+                localStorage.setItem('clanNetSettings', JSON.stringify(vals));
+            },
+            load: () => {
+                const s = localStorage.getItem('clanNetSettings');
+                if(s) {
+                    const v = JSON.parse(s);
+                    document.getElementById('col-bg').value = v.bg || "#000000";
+                    document.getElementById('col-main').value = v.main || "#00FF00";
+                    document.getElementById('col-dim').value = v.dim || "#004400";
+                    document.getElementById('col-warn').value = v.warn || "#FFAA00";
+                    document.getElementById('col-r-good').value = v.rGood || "#00FF00";
+                    document.getElementById('col-r-watch').value = v.rWatch || "#D000FF";
+                    document.getElementById('col-r-bad').value = v.rBad || "#FF0000";
+                    // Apply immediately without saving again
+                    const r = document.documentElement.style;
+                    r.setProperty('--bg-color', v.bg); r.setProperty('--main-color', v.main);
+                    r.setProperty('--dim-color', v.dim); r.setProperty('--warn-color', v.warn);
+                    r.setProperty('--rep-good', v.rGood); r.setProperty('--rep-watch', v.rWatch);
+                    r.setProperty('--rep-black', v.rBad);
+                }
+            },
+            reset: () => {
+                if(!confirm("RESET?")) return;
+                localStorage.removeItem('clanNetSettings');
+                document.getElementById('col-bg').value = "#000000"; document.getElementById('col-main').value = "#00FF00";
+                document.getElementById('col-dim').value = "#004400"; document.getElementById('col-warn').value = "#FFAA00";
+                document.getElementById('col-r-good').value = "#00FF00"; document.getElementById('col-r-watch').value = "#D000FF";
+                document.getElementById('col-r-bad').value = "#FF0000";
+                settings.apply();
+            }
+        };
 
         // Keyboard Sounds (Global)
         document.addEventListener('keydown', (e) => {
@@ -601,6 +639,9 @@
                 else audioSys.playTone(800, 'sine', 0.05);
              }
         });
+        
+        // Load settings on boot
+        settings.load();
 
     </script>
 </body>
