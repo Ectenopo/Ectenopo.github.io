@@ -33,7 +33,7 @@
 
         /* --- UI COMPONENTS --- */
         .hidden { display: none !important; }
-        .screen { max-width: 600px; margin: 0 auto; border: 1px solid var(--dim-color); padding: 15px; box-shadow: 0 0 10px rgba(0, 255, 0, 0.1); position: relative; margin-bottom: 20px; background: rgba(0,0,0,0.9); }
+        .screen { max-width: 800px; margin: 0 auto; border: 1px solid var(--dim-color); padding: 15px; box-shadow: 0 0 10px rgba(0, 255, 0, 0.1); position: relative; margin-bottom: 20px; background: rgba(0,0,0,0.9); }
         
         button, input, select, textarea {
             background: rgba(10, 10, 10, 0.8);
@@ -68,6 +68,9 @@
         /* BADGES & LAYOUT */
         .verified-badge { display: inline-block; color: cyan; margin-left: 4px; font-size: 1.1em; text-shadow: 0 0 5px cyan; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+
         .card { border: 1px dashed var(--dim-color); padding: 10px; margin-bottom: 10px; position: relative; }
         .chat-box { height: 250px; overflow-y: scroll; border: 1px solid #222; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); }
         .chat-msg { margin-bottom: 8px; border-bottom: 1px solid #111; padding-bottom: 4px; font-size: 0.9em; word-wrap: break-word; }
@@ -79,6 +82,27 @@
         .poll-bar { height: 10px; background: #333; margin-top: 2px; position: relative; }
         .poll-fill { height: 100%; background: var(--main-color); width: 0%; transition: width 0.5s; }
         .post-header { display: flex; justify-content: space-between; font-size: 0.8em; color: #888; border-bottom: 1px solid #333; margin-bottom: 5px; }
+
+        /* COCKPIT SPECIFIC STYLES */
+        .switch-container { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 5px; border: 1px solid #333; margin-bottom: 5px; }
+        .switch-label { font-size: 0.8em; color: #888; }
+        .toggle-switch { position: relative; width: 40px; height: 20px; background: #333; cursor: pointer; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #555; transition: 0.2s; }
+        .toggle-active { background: var(--dim-color); }
+        .toggle-active::after { left: 22px; background: var(--main-color); }
+        
+        .dial-container { text-align: center; background: #111; padding: 5px; border: 1px solid #333; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 5px; background: #333; outline: none; margin: 10px 0; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; background: var(--main-color); cursor: pointer; }
+        
+        .action-btn { background: #001100; border: 1px solid var(--main-color); color: var(--main-color); font-size: 10px; padding: 15px 5px; text-align: center; cursor: pointer; transition: 0.1s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+        .action-btn:hover { background: var(--main-color); color: black; box-shadow: 0 0 10px var(--main-color); }
+        .action-btn:active { transform: scale(0.95); }
+        .led { width: 8px; height: 8px; background: #333; border-radius: 50%; border: 1px solid #555; }
+        .led.on { background: #00FF00; box-shadow: 0 0 5px #00FF00; border-color: #fff; }
+        .led.busy { background: #FFAA00; box-shadow: 0 0 5px #FFAA00; animation: blink 0.2s infinite; }
+        
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
         /* KALI STYLE */
         #screen-kali { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'), #101010; z-index: 2000; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
@@ -136,7 +160,7 @@
             <button onclick="nav.to('soc')" id="btn-soc" class="hidden admin" style="grid-column: span 2;">[ SECURITY OPS CENTER ]</button>
             
             <!-- VERIFIED EXPLOIT MENU -->
-            <button onclick="nav.to('payload')" id="btn-payload" class="hidden warn" style="grid-column: span 2; border-style: dashed;">[ ACCESS EXPLOIT PAYLOADS ]</button>
+            <button onclick="nav.to('cockpit')" id="btn-payload" class="hidden warn" style="grid-column: span 2; border-style: dashed;">[ CYBER_DECK COMMAND ]</button>
         </div>
 
         <div id="tab-clans">
@@ -178,6 +202,7 @@
         <button onclick="location.reload()" style="margin-top: 20px; border: none; opacity: 0.5;">LOGOUT</button>
     </div>
 
+    <!-- DICTIONARY SCREEN -->
     <div id="screen-dict" class="screen hidden">
         <h3>// DICTIONARY_EDIT</h3>
         <div class="grid-2">
@@ -185,18 +210,17 @@
             <input type="text" id="dict-new" placeholder="CLAN WORD">
         </div>
         <button onclick="app.addWord()">ADD/UPDATE WORD</button>
-        <div id="dict-list" style="height: 250px; overflow-y: scroll; border: 1px solid var(--dim-color); padding: 5px; margin-bottom: 10px;">
-            </div>
+        <div id="dict-list" style="height: 250px; overflow-y: scroll; border: 1px solid var(--dim-color); padding: 5px; margin-bottom: 10px;"></div>
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
+    <!-- SOCIAL SCREEN -->
     <div id="screen-social" class="screen hidden">
         <h2>// NET_SOCIAL</h2>
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
             <button onclick="social.tab('posts')">POSTS</button>
             <button onclick="social.tab('polls')">POLLS</button>
         </div>
-
         <div id="soc-tab-posts">
             <div style="border-bottom: 1px dashed #333; padding-bottom: 10px; margin-bottom: 10px;">
                 <textarea id="post-content" placeholder="What's happening?" style="height: 60px;"></textarea>
@@ -204,7 +228,6 @@
             </div>
             <div id="feed-posts" style="height: 400px; overflow-y: scroll;"></div>
         </div>
-
         <div id="soc-tab-polls" class="hidden">
             <button onclick="document.getElementById('poll-creator').classList.remove('hidden')">CREATE NEW POLL</button>
             <div id="poll-creator" class="hidden card">
@@ -215,10 +238,10 @@
             </div>
             <div id="feed-polls" style="height: 400px; overflow-y: scroll; margin-top: 10px;"></div>
         </div>
-        
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
+    <!-- COMMENT OVERLAY -->
     <div id="comment-overlay" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:3000;display:flex;justify-content:center;align-items:center;">
         <div class="screen" style="width:90%; height:80%; display:flex; flex-direction:column; background: #000; border: 1px solid var(--main-color);">
             <h3 style="border-bottom: 1px solid #333; padding-bottom: 10px;">// COMMENTS_THREAD</h3>
@@ -229,6 +252,7 @@
         </div>
     </div>
 
+    <!-- PROFILE SCREEN -->
     <div id="screen-profile" class="screen hidden">
         <h2 id="prof-header">// USER_PROFILE</h2>
         <div class="card">
@@ -241,12 +265,10 @@
             </div>
             <div id="prof-verified" class="hidden" style="color: cyan; margin-top: 5px;">⚠ VERIFIED IDENTITY ⚠</div>
         </div>
-
         <div id="prof-details">
             <p>CLAN: <span id="prof-clan">LOADING...</span></p>
             <p>STATUS: <span id="prof-rep">LOADING...</span></p>
         </div>
-
         <div id="prof-edit-panel" class="hidden" style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
             <input type="text" id="edit-disp" placeholder="New Display Name">
             <input type="text" id="edit-pfp" placeholder="PFP Image URL">
@@ -255,24 +277,23 @@
             </div>
             <button onclick="app.saveProfile()">SAVE CHANGES</button>
         </div>
-
         <div id="prof-admin-panel" class="hidden" style="border: 1px solid cyan; padding: 10px; margin-top: 10px;">
             <strong style="color: cyan;">SUPERUSER CONTROLS</strong>
             <button onclick="app.verifyUser()" class="admin">GRANT VERIFICATION BADGE</button>
         </div>
-
         <button onclick="nav.to('hub')" style="margin-top: 10px;">BACK</button>
     </div>
 
+    <!-- RANKS SCREEN -->
     <div id="screen-ranks" class="screen hidden">
         <h3>// ROSTER_CONTROL</h3>
         <div id="roster-list" style="height: 300px; overflow-y: scroll;"></div>
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
+    <!-- SETTINGS SCREEN -->
     <div id="screen-settings" class="screen hidden">
         <h2>// SYSTEM_CONFIG</h2>
-        
         <label>MAIN THEME</label>
         <div class="grid-2">
             <div>BG: <input type="color" id="col-bg" onchange="settings.apply()"></div>
@@ -282,7 +303,6 @@
             <div>DIM: <input type="color" id="col-dim" onchange="settings.apply()"></div>
             <div>WARN: <input type="color" id="col-warn" onchange="settings.apply()"></div>
         </div>
-        
         <hr style="border-color: #333">
         <label>REPUTATION COLORS</label>
         <div class="grid-2">
@@ -290,16 +310,18 @@
             <div>WATCH: <input type="color" id="col-r-watch" onchange="settings.apply()"></div>
         </div>
         <div>BAD/BLK: <input type="color" id="col-r-bad" onchange="settings.apply()"></div>
-
         <button onclick="settings.reset()" class="danger" style="margin-top:20px;">RETURN TO DEFAULT SETTINGS</button>
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
+    <!-- EVENTS SCREEN -->
     <div id="screen-events" class="screen hidden">
         <h2>// EVENT_LOG</h2>
         <div style="border:1px solid #333;padding:10px;margin-bottom:10px;"><input type="text" id="evt-name" placeholder="EVENT NAME"><input type="text" id="evt-desc" placeholder="DESCRIPTION"><div class="grid-2"><input type="date" id="evt-start"><input type="date" id="evt-end"></div><button onclick="app.createEvent()">PUBLISH</button></div>
         <div id="event-list" style="height:200px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">BACK</button>
     </div>
+    
+    <!-- JOBS SCREEN -->
     <div id="screen-jobs" class="screen hidden">
         <h2>// GIG_NETWORK</h2>
         <div class="grid-2"><button onclick="document.getElementById('job-create-panel').classList.remove('hidden');">POST JOB</button><button onclick="app.loadJobs()">BROWSE</button></div>
@@ -308,53 +330,106 @@
         <div id="job-chat-panel" class="hidden" style="position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bg-color);z-index:10;padding:15px;"><div id="job-chat-box" class="chat-box" style="height:300px;"></div><input type="text" id="job-msg-input"><button onclick="app.sendJobMsg()">SEND</button><button onclick="app.closeJobChat()" class="warn">CLOSE</button></div>
         <button onclick="nav.to('hub')">BACK</button>
     </div>
+    
+    <!-- ECTOTAPE SCREEN -->
     <div id="screen-ectotape" class="screen hidden">
         <h2 style="color:var(--rep-watch);text-align:center;">// ECTOTAPE_STREAM</h2>
         <div id="upload-zone" class="hidden"><input type="text" id="vid-title" placeholder="TITLE"><input type="text" id="vid-url" placeholder="URL"><button onclick="app.uploadVideo()">BROADCAST</button></div>
         <div id="video-feed" style="height:400px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">EXIT</button>
     </div>
+    
+    <!-- DRAW SCREEN -->
     <div id="screen-draw" class="screen hidden"><h3 id="draw-title">DRAW: A</h3><canvas id="draw-canvas" width="280" height="280"></canvas><div class="grid-2"><button onclick="drawing.clear()">CLEAR</button><button onclick="drawing.save()">NEXT</button></div><button onclick="drawing.cancel()">CANCEL</button></div>
+    
+    <!-- CREATE CLAN SCREEN -->
     <div id="screen-create" class="screen hidden"><h2>// NEW_CLAN</h2><input type="text" id="create-name" placeholder="NAME"><input type="password" id="create-pass" placeholder="PASS"><button onclick="app.createClanStart()">START DRAWING</button><button onclick="nav.to('hub')">CANCEL</button></div>
     
+    <!-- SOC SCREEN -->
     <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2><div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU ]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
     
-    <!-- NEW: EXPLOIT PAYLOAD SCREEN (For Wii Hacking Simulation) -->
-    <div id="screen-payload" class="screen hidden" style="border-color: var(--warn-color); box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);">
-        <h2 style="color: var(--warn-color);">// EXPLOIT_DELIVERY</h2>
-        <p style="color: #888; font-size: 0.8em;">TARGET: LEGACY_HARDWARE (CONSOLE)</p>
-        
-        <div class="card" style="border-color: var(--warn-color);">
-            <label>TARGET ARCHITECTURE</label>
-            <select id="exp-target">
-                <option value="wii">NINTENDO_WII (5.5.U - PPC)</option>
-                <option value="ps3">PLAYSTATION_3 (4.82 - CELL)</option>
-                <option value="xb360">XBOX_360 (RGH - PPC)</option>
-                <option value="webkit">GENERIC_WEBKIT (USERLAND)</option>
-            </select>
-            
-            <label>EXPLOIT VECTOR</label>
-            <select id="exp-type">
-                <option value="stack">BUFFER_OVERFLOW (STACK)</option>
-                <option value="heap">HEAP_SPRAY / GROOMING</option>
-                <option value="rop">ROP_CHAIN_LOADER</option>
-                <option value="int">INTEGER_OVERFLOW</option>
-            </select>
+    <!-- NEW: CYBERDECK COCKPIT -->
+    <div id="screen-cockpit" class="screen hidden" style="border-color: var(--warn-color); box-shadow: 0 0 20px rgba(255, 170, 0, 0.2); max-width: 750px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--warn-color); margin-bottom: 10px; padding-bottom: 5px;">
+            <h2 style="color: var(--warn-color); margin:0;">// CYBER_DECK_V2.0</h2>
+            <div style="font-size: 10px; color: var(--warn-color); animation: blink 2s infinite;">[ SYSTEM: ONLINE ]</div>
+        </div>
 
-            <textarea id="exp-code" placeholder="ENTER SHELLCODE / HEX PAYLOAD OR HOST URL..." style="height: 100px; font-family: monospace; color: var(--warn-color); border-color: var(--warn-color);"></textarea>
-            
-            <div class="grid-2">
-                <button onclick="exploit.run()" class="warn">INJECT PAYLOAD</button>
-                <button onclick="exploit.host()" class="warn" style="border-style: dashed;">HOST LOCALLY</button>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+            <!-- LEFT COLUMN: CONTROLS -->
+            <div>
+                <!-- TOGGLE BANK -->
+                <div class="grid-3">
+                    <div class="switch-container">
+                        <span class="switch-label">PROXY CHAIN</span>
+                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
+                    </div>
+                    <div class="switch-container">
+                        <span class="switch-label">FIREWALL BYPASS</span>
+                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
+                    </div>
+                    <div class="switch-container">
+                        <span class="switch-label">ROOT MASK</span>
+                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
+                    </div>
+                </div>
+
+                <!-- SLIDERS -->
+                <div class="grid-2" style="margin-bottom: 10px;">
+                    <div class="dial-container">
+                        <span class="switch-label">SIGNAL GAIN</span>
+                        <input type="range" min="0" max="100" value="50" oninput="cockpit.updateGain(this.value)">
+                    </div>
+                    <div class="dial-container">
+                        <span class="switch-label">DECRYPTION RATE</span>
+                        <input type="range" min="0" max="100" value="30" oninput="cockpit.updateRate(this.value)">
+                    </div>
+                </div>
+
+                <!-- MAIN VISUALIZER -->
+                <div style="background: #000; border: 1px solid var(--warn-color); height: 120px; position: relative; overflow: hidden; margin-bottom: 10px;">
+                    <canvas id="cockpit-canvas" width="450" height="120"></canvas>
+                    <div id="visual-text" style="position: absolute; top: 5px; left: 5px; font-size: 10px; color: rgba(255,170,0,0.7); font-family: monospace;"></div>
+                </div>
+
+                <!-- ACTION GRID (BUTTONS) -->
+                <div class="grid-4">
+                    <div class="action-btn" onclick="cockpit.runAction('PING_SWEEP')"><div class="led"></div>PING</div>
+                    <div class="action-btn" onclick="cockpit.runAction('PORT_SCAN')"><div class="led"></div>SCAN</div>
+                    <div class="action-btn" onclick="cockpit.runAction('PACKET_SNIFF')"><div class="led"></div>SNIFF</div>
+                    <div class="action-btn" onclick="cockpit.runAction('TRACE_ROUTE')"><div class="led"></div>TRACE</div>
+                    <div class="action-btn" onclick="cockpit.runAction('BRUTE_FORCE')"><div class="led"></div>BRUTE</div>
+                    <div class="action-btn" onclick="cockpit.runAction('INJECT_SQL')"><div class="led"></div>INJECT</div>
+                    <div class="action-btn" onclick="cockpit.runAction('OVERFLOW')"><div class="led"></div>OVRFLW</div>
+                    <div class="action-btn warn" onclick="cockpit.runAction('EXECUTE_PAYLOAD')" style="border-style: dashed;"><div class="led busy"></div>EXECUTE</div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: LOGS & TARGET -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="card" style="border-color: var(--warn-color); margin: 0;">
+                    <label style="font-size: 10px; color: var(--warn-color);">TARGET IP / URL</label>
+                    <input type="text" id="cockpit-target" value="192.168.1.1" style="font-family: monospace; color: var(--warn-color); border-color: var(--warn-color);">
+                    <label style="font-size: 10px; color: var(--warn-color);">PROTOCOL</label>
+                    <select id="cockpit-proto" style="color: var(--warn-color); border-color: var(--warn-color);">
+                        <option>SSH (22)</option>
+                        <option>HTTP (80)</option>
+                        <option>HTTPS (443)</option>
+                        <option>FTP (21)</option>
+                        <option>TELNET (23)</option>
+                    </select>
+                </div>
+                
+                <div class="chat-box" id="cockpit-log" style="flex: 1; border-color: var(--warn-color); font-size: 10px; color: var(--warn-color); font-family: monospace; margin: 0;">
+                    <div class="term-line">>> DECK INITIALIZED...</div>
+                    <div class="term-line">>> WAITING FOR INPUT...</div>
+                </div>
             </div>
         </div>
-
-        <div id="exp-console" class="chat-box" style="height: 150px; color: var(--warn-color); font-size: 11px; font-family: monospace; border-color: var(--warn-color);">
-            <span class="term-line">>> PAYLOAD SYSTEM READY. WAITING FOR TARGET...</span>
-        </div>
         
-        <button onclick="nav.to('hub')">ABORT MISSION</button>
+        <button onclick="nav.to('hub')" style="margin-top: 10px; border-color: var(--warn-color); color: var(--warn-color);">DISCONNECT</button>
     </div>
 
+    <!-- KALI OVERLAY -->
     <div id="screen-kali" class="hidden"><div id="kali-bar"><div style="display:flex;align-items:center;"><span class="kali-logo">🐉 KALI_EMU</span><button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications</button></div></div><div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()"><div id="win-term" class="window" style="z-index:10;"><div class="win-header" onmousedown="kali.startDrag(event,'win-term')"><span class="win-title">root@kali:~/python_scripts</span><div class="win-controls"><button onclick="nav.to('soc')" style="background:#ff5f56;width:15px;height:15px;border-radius:50%;padding:0;cursor:pointer;"></button></div></div><div class="win-body"><div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div><div id="py-input-line"><span style="color:cyan;margin-right:5px;">>>></span><input type="text" id="py-input" onkeydown="kali.handleInput(event)"></div></div></div><div id="kali-menu" class="hidden" style="position:absolute;top:0;left:0;width:200px;background:#2d2d2d;z-index:50;border:1px solid #444;"><button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button><button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button></div></div></div>
 
     <script type="module">
@@ -396,53 +471,38 @@
                 if(id === 'jobs') app.loadJobs();
                 if(id === 'social') social.loadPosts();
                 if(id === 'settings') settings.load();
-                if(id === 'dict') app.renderDict(); // NEW: Render Dict on load
+                if(id === 'dict') app.renderDict();
+                if(id === 'cockpit') cockpit.init(); // Init cockpit loop
             },
             tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-' + t).classList.remove('hidden'); }
         };
 
         // --- APP LOGIC ---
         window.app = {
-            encMode: false, // Default Enc Off
-            dictMode: false,
+            encMode: false, dictMode: false,
             login: async () => {
-                const u = document.getElementById('auth-user').value.trim();
-                const p = document.getElementById('auth-pass').value.trim();
-                if(!u || !p) return;
-                loading(true);
-                const docSnap = await getDoc(doc(db, "users", u));
-                loading(false);
-                if (docSnap.exists() && docSnap.data().pass === p) {
-                    state.user = u;
-                    nav.to('hub');
-                } else alert("INVALID");
+                const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
+                if(!u || !p) return; loading(true);
+                const docSnap = await getDoc(doc(db, "users", u)); loading(false);
+                if (docSnap.exists() && docSnap.data().pass === p) { state.user = u; nav.to('hub'); } else alert("INVALID");
             },
             register: async () => {
-                const u = document.getElementById('auth-user').value.trim();
-                const p = document.getElementById('auth-pass').value.trim();
-                if(!u || !p) return;
-                loading(true);
+                const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
+                if(!u || !p) return; loading(true);
                 const check = await getDoc(doc(db, "users", u));
                 if (check.exists()) { loading(false); return alert("TAKEN"); }
                 await setDoc(doc(db, "users", u), { pass: p, clan: null, rep: 0, displayName: u, verified: false, pfp: "", private: false });
                 loading(false); alert("REGISTERED");
             },
             initHub: async () => {
-                const docSnap = await getDoc(doc(db, "users", state.user));
-                const userData = docSnap.data();
+                const docSnap = await getDoc(doc(db, "users", state.user)); const userData = docSnap.data();
                 let verifiedHTML = userData.verified ? `<span class="verified-badge">♦✓</span>` : '';
                 document.getElementById('hub-user').innerHTML = `${userData.displayName || state.user} ${verifiedHTML}`;
-
                 const admins = ["user1234", "user4321"];
                 if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
                 
-                // NEW: EXPLOIT BUTTON LOGIC
-                // Only show if user is verified
-                if(userData.verified) {
-                    document.getElementById('btn-payload').classList.remove('hidden');
-                } else {
-                    document.getElementById('btn-payload').classList.add('hidden');
-                }
+                if(userData.verified) document.getElementById('btn-payload').classList.remove('hidden');
+                else document.getElementById('btn-payload').classList.add('hidden');
 
                 onSnapshot(doc(db, "users", state.user), (d) => {
                     const data = d.data();
@@ -450,7 +510,6 @@
                     else { state.clan = null; document.getElementById('panel-no-clan').classList.remove('hidden'); document.getElementById('panel-in-clan').classList.add('hidden'); }
                     document.getElementById('hub-rep').innerText = "REP: " + (data.rep || 0);
                 });
-
                 const q = query(collection(db, "global_chat"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => {
                     const d = document.getElementById('global-chat'); d.innerHTML = "";
@@ -459,123 +518,49 @@
                     d.scrollTop = d.scrollHeight;
                 });
             },
-            sendGlobalMsg: async () => {
-                const t = document.getElementById('global-input').value;
-                if(t) { await addDoc(collection(db, "global_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('global-input').value=""; }
-            },
-
+            sendGlobalMsg: async () => { const t = document.getElementById('global-input').value; if(t) { await addDoc(collection(db, "global_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('global-input').value=""; } },
+            
             // PROFILES & CLAN
             searchUser: () => { const u = document.getElementById('search-user-input').value.trim(); if(u) app.openProfile(u); },
             openProfile: async (targetUser) => {
-                loading(true);
-                const snap = await getDoc(doc(db, "users", targetUser));
-                loading(false);
+                loading(true); const snap = await getDoc(doc(db, "users", targetUser)); loading(false);
                 if(!snap.exists()) return alert("USER NOT FOUND");
-                const d = snap.data();
-                state.viewedProfile = targetUser;
-                document.getElementById('prof-username').innerText = "@" + targetUser;
-                document.getElementById('prof-displayname').innerText = d.displayName || targetUser;
-                const pfp = d.pfp || "";
-                document.getElementById('prof-pfp-display').style.backgroundImage = pfp ? `url('${pfp}')` : "none";
+                const d = snap.data(); state.viewedProfile = targetUser;
+                document.getElementById('prof-username').innerText = "@" + targetUser; document.getElementById('prof-displayname').innerText = d.displayName || targetUser;
+                const pfp = d.pfp || ""; document.getElementById('prof-pfp-display').style.backgroundImage = pfp ? `url('${pfp}')` : "none";
                 if(d.verified) document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
-                
                 if(d.private && targetUser !== state.user) { document.getElementById('prof-clan').innerText = "[REDACTED]"; document.getElementById('prof-rep').innerText = "[REDACTED]"; }
                 else { document.getElementById('prof-clan').innerText = d.clan || "NONE"; document.getElementById('prof-rep').innerText = d.rep || "0"; }
-                
                 if(targetUser === state.user) { document.getElementById('prof-edit-panel').classList.remove('hidden'); document.getElementById('edit-disp').value = d.displayName || ""; document.getElementById('edit-pfp').value = d.pfp || ""; document.getElementById('edit-private').checked = d.private || false; }
                 else { document.getElementById('prof-edit-panel').classList.add('hidden'); }
-                
                 const admins = ["user1234", "user4321"];
-                if(admins.includes(state.user.toLowerCase()) && targetUser !== state.user) document.getElementById('prof-admin-panel').classList.remove('hidden');
-                else document.getElementById('prof-admin-panel').classList.add('hidden');
+                if(admins.includes(state.user.toLowerCase()) && targetUser !== state.user) document.getElementById('prof-admin-panel').classList.remove('hidden'); else document.getElementById('prof-admin-panel').classList.add('hidden');
                 nav.to('profile');
             },
-            saveProfile: async () => {
-                const dn = document.getElementById('edit-disp').value.trim(); const pf = document.getElementById('edit-pfp').value.trim(); const priv = document.getElementById('edit-private').checked;
-                await updateDoc(doc(db, "users", state.user), { displayName: dn, pfp: pf, private: priv }); alert("SAVED"); app.openProfile(state.user);
-            },
+            saveProfile: async () => { const dn = document.getElementById('edit-disp').value.trim(); const pf = document.getElementById('edit-pfp').value.trim(); const priv = document.getElementById('edit-private').checked; await updateDoc(doc(db, "users", state.user), { displayName: dn, pfp: pf, private: priv }); alert("SAVED"); app.openProfile(state.user); },
             verifyUser: async () => { if(!confirm("VERIFY?")) return; await updateDoc(doc(db, "users", state.viewedProfile), { verified: true }); alert("VERIFIED"); app.openProfile(state.viewedProfile); },
 
             listenToClan: (cName) => {
                 document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText = cName;
-                onSnapshot(doc(db, "clans", cName), (doc) => { 
-                    state.clanData = doc.data(); 
-                    if(state.clanData && state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); 
-                    else document.getElementById('btn-delete-clan').classList.add('hidden'); 
-                    // Update dict list if open
-                    if(!document.getElementById('screen-dict').classList.contains('hidden')) app.renderDict();
-                });
+                onSnapshot(doc(db, "clans", cName), (doc) => { state.clanData = doc.data(); if(state.clanData && state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); else document.getElementById('btn-delete-clan').classList.add('hidden'); if(!document.getElementById('screen-dict').classList.contains('hidden')) app.renderDict(); });
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => { const d = document.getElementById('clan-chat'); d.innerHTML = ""; const msgs = []; snap.forEach(doc => msgs.push(doc.data())); msgs.reverse().forEach(m => { let txt = app.translate(m.txt); d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${txt}</div>`; }); d.scrollTop = d.scrollHeight; });
             },
-            loadRoster: () => {
-                nav.to('ranks'); const list = document.getElementById('roster-list'); list.innerHTML = ""; const ranks = state.clanData.ranks || {}; const isLeader = state.clanData.leader === state.user;
-                for (const [member, rank] of Object.entries(ranks)) {
-                    let controls = ""; if (isLeader && member !== state.user) controls = `<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:2px;" class="danger">KICK</button><button onclick="app.clanPromote('${member}')" style="width:auto;font-size:10px;padding:2px;">PROMOTE</button>`;
-                    list.innerHTML += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span>${member} <span style="color:yellow">[${rank.toUpperCase()}]</span></span><div>${controls}</div></div>`;
-                }
-            },
+            loadRoster: () => { nav.to('ranks'); const list = document.getElementById('roster-list'); list.innerHTML = ""; const ranks = state.clanData.ranks || {}; const isLeader = state.clanData.leader === state.user; for (const [member, rank] of Object.entries(ranks)) { let controls = ""; if (isLeader && member !== state.user) controls = `<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:2px;" class="danger">KICK</button><button onclick="app.clanPromote('${member}')" style="width:auto;font-size:10px;padding:2px;">PROMOTE</button>`; list.innerHTML += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span>${member} <span style="color:yellow">[${rank.toUpperCase()}]</span></span><div>${controls}</div></div>`; } },
             clanKick: async (target) => { if(!confirm(`KICK ${target}?`)) return; await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: deleteField() }); await updateDoc(doc(db, "users", target), { clan: null }); app.loadRoster(); },
             clanPromote: async (target) => { await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: 'admin' }); app.loadRoster(); },
-            deleteClan: async () => {
-                const cName = state.clan; if(!confirm("WARNING: DELETE CLAN?")) return; loading(true);
-                const cDoc = await getDoc(doc(db, "clans", cName)); const ranks = cDoc.data().ranks;
-                for(const member of Object.keys(ranks)) await updateDoc(doc(db, "users", member), { clan: null });
-                await deleteDoc(doc(db, "clans", cName)); loading(false); alert("DELETED"); nav.to('hub');
-            },
+            deleteClan: async () => { const cName = state.clan; if(!confirm("WARNING: DELETE CLAN?")) return; loading(true); const cDoc = await getDoc(doc(db, "clans", cName)); const ranks = cDoc.data().ranks; for(const member of Object.keys(ranks)) await updateDoc(doc(db, "users", member), { clan: null }); await deleteDoc(doc(db, "clans", cName)); loading(false); alert("DELETED"); nav.to('hub'); },
             joinClan: async () => { const n = document.getElementById('join-name').value.trim(); const p = document.getElementById('join-pass').value.trim(); const s = await getDoc(doc(db, "clans", n)); if(s.exists() && s.data().pass === p) { await updateDoc(doc(db, "users", state.user), { clan: n }); await updateDoc(doc(db, "clans", n), { [`ranks.${state.user}`]: 'member' }); } else alert("INVALID"); },
             leaveClan: async () => { if(!confirm("LEAVE?")) return; await updateDoc(doc(db, "users", state.user), { clan: null }); await updateDoc(doc(db, "clans", state.clan), { [`ranks.${state.user}`]: deleteField() }); },
             sendClanMsg: async () => { const t = document.getElementById('clan-input').value; if(t) { await addDoc(collection(db, "clans", state.clan, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('clan-input').value=""; } },
             
             // TRANS & DICT
-            toggleEnc: () => { 
-                app.encMode = !app.encMode; 
-                document.getElementById('btn-enc').style.color = app.encMode ? '#00FF00' : '#555'; 
-                // Refresh chat by grabbing latest (handled by snapshot usually, but visual update)
-                // For simplicity, it applies on next message or reload.
-            },
-            toggleDict: () => {
-                app.dictMode = !app.dictMode;
-                document.getElementById('btn-dict').style.color = app.dictMode ? '#00FF00' : '#555';
-            },
-            translate: (txt) => { 
-                if (!app.encMode && !app.dictMode) return txt;
-
-                let out = "";
-                const words = state.clanData.words || {};
-                const syms = state.clanData.symbols || {};
-                
-                txt.split(" ").forEach(w => {
-                    const c = w.toLowerCase().replace(/[^a-z]/g,'');
-                    let finalWord = w;
-                    
-                    if (app.dictMode && words[c]) finalWord = words[c];
-                    else if (app.encMode && words[c]) finalWord = words[c]; 
-
-                    if (app.encMode) {
-                        const clean = finalWord.toLowerCase().replace(/[^a-z]/g,'');
-                        out += app.strToSym(clean, syms) + " ";
-                    } else {
-                        out += finalWord + " ";
-                    }
-                });
-                return out; 
-            },
+            toggleEnc: () => { app.encMode = !app.encMode; document.getElementById('btn-enc').style.color = app.encMode ? '#00FF00' : '#555'; },
+            toggleDict: () => { app.dictMode = !app.dictMode; document.getElementById('btn-dict').style.color = app.dictMode ? '#00FF00' : '#555'; },
+            translate: (txt) => { if (!app.encMode && !app.dictMode) return txt; let out = ""; const words = state.clanData.words || {}; const syms = state.clanData.symbols || {}; txt.split(" ").forEach(w => { const c = w.toLowerCase().replace(/[^a-z]/g,''); let finalWord = w; if (app.dictMode && words[c]) finalWord = words[c]; else if (app.encMode && words[c]) finalWord = words[c]; if (app.encMode) { const clean = finalWord.toLowerCase().replace(/[^a-z]/g,''); out += app.strToSym(clean, syms) + " "; } else { out += finalWord + " "; } }); return out; },
             strToSym: (str, syms) => { let html = ""; for(let c of str) { if(syms[c.toUpperCase()]) html += `<img src="${syms[c.toUpperCase()]}" class="chat-img">`; else html += c; } return html; },
             
-            // DICTIONARY UI (NEW)
-            renderDict: () => {
-                const list = document.getElementById('dict-list');
-                list.innerHTML = "";
-                const words = state.clanData.words || {};
-                if(Object.keys(words).length === 0) { list.innerHTML = "<div style='color:#555;'>DICTIONARY EMPTY</div>"; return; }
-                for(const [k, v] of Object.entries(words)) {
-                    list.innerHTML += `<div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between;">
-                        <span>${k} <span style="color:var(--main-color);">-></span> ${v}</span>
-                        <button onclick="app.delWord('${k}')" style="width:20px;height:20px;padding:0;font-size:10px;border-color:red;color:red;">X</button>
-                    </div>`;
-                }
-            },
+            renderDict: () => { const list = document.getElementById('dict-list'); list.innerHTML = ""; const words = state.clanData.words || {}; if(Object.keys(words).length === 0) { list.innerHTML = "<div style='color:#555;'>DICTIONARY EMPTY</div>"; return; } for(const [k, v] of Object.entries(words)) { list.innerHTML += `<div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between;"><span>${k} <span style="color:var(--main-color);">-></span> ${v}</span><button onclick="app.delWord('${k}')" style="width:20px;height:20px;padding:0;font-size:10px;border-color:red;color:red;">X</button></div>`; } },
             addWord: async () => { const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan) await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]:v}); app.renderDict(); },
             delWord: async (k) => { if(!confirm("DELETE?")) return; await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]: deleteField()}); app.renderDict(); },
 
@@ -597,88 +582,92 @@
 
         // --- SOCIAL ---
         window.social = {
-            tab: (t) => { 
-                document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden'); 
-                if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls();
-            },
-            like: async (id, type) => {
-                const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data();
-                const likes = d.likes || []; const dislikes = d.dislikes || [];
-                if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) });
-                else { await updateDoc(ref, { likes: arrayUnion(state.user) }); if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); }
-                type === 'post' ? social.loadPosts() : social.loadPolls();
-            },
-            dislike: async (id, type) => {
-                const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data();
-                const likes = d.likes || []; const dislikes = d.dislikes || [];
-                if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) });
-                else { await updateDoc(ref, { dislikes: arrayUnion(state.user) }); if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); }
-                type === 'post' ? social.loadPosts() : social.loadPolls();
-            },
-            openComments: (id, type) => {
-                state.activeCommentId = id; state.activeCommentType = type; const col = type === 'post' ? 'posts' : 'polls'; document.getElementById('comment-overlay').classList.remove('hidden');
-                if(state.unsubComments) state.unsubComments();
-                const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc"));
-                state.unsubComments = onSnapshot(q, (snap) => { const div = document.getElementById('active-comment-list'); div.innerHTML = ""; if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; snap.forEach(d => { const c = d.data(); div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; }); });
-            },
+            tab: (t) => { document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden'); if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls(); },
+            like: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); else { await updateDoc(ref, { likes: arrayUnion(state.user) }); if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
+            dislike: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); else { await updateDoc(ref, { dislikes: arrayUnion(state.user) }); if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
+            openComments: (id, type) => { state.activeCommentId = id; state.activeCommentType = type; const col = type === 'post' ? 'posts' : 'polls'; document.getElementById('comment-overlay').classList.remove('hidden'); if(state.unsubComments) state.unsubComments(); const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc")); state.unsubComments = onSnapshot(q, (snap) => { const div = document.getElementById('active-comment-list'); div.innerHTML = ""; if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; snap.forEach(d => { const c = d.data(); div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; }); }); },
             submitComment: async () => { const txt = document.getElementById('new-comment-input').value.trim(); if(!txt || !state.activeCommentId) return; const col = state.activeCommentType === 'post' ? 'posts' : 'polls'; await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() }); document.getElementById('new-comment-input').value = ""; },
             createPost: async () => { const txt = document.getElementById('post-content').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; social.loadPosts(); },
-            loadPosts: async () => {
-                const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED...";
-                const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20));
-                const snap = await getDocs(q); div.innerHTML = "";
-                snap.forEach(d => {
-                    const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : "";
-                    div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div><div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`;
-                });
-            },
+            loadPosts: async () => { const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED..."; const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div><div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`; }); },
             createPoll: async () => { const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value; if(!q || !o1 || !o2) return; await addDoc(collection(db, "polls"), { u: state.user, q: q, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() }); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
-            loadPolls: async () => {
-                const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS...";
-                const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10));
-                const snap = await getDocs(q); div.innerHTML = "";
-                snap.forEach(d => {
-                    const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let optsHTML = "";
-                    p.opts.forEach((opt, idx) => { const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100); optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`; });
-                    div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`;
-                });
-            },
+            loadPolls: async () => { const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS..."; const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let optsHTML = ""; p.opts.forEach((opt, idx) => { const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100); optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`; }); div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`; }); },
             vote: async (id, optIdx) => { const ref = doc(db, "polls", id); const snap = await getDoc(ref); const d = snap.data(); if(d.voters.includes(state.user)) return alert("ALREADY VOTED"); d.opts[optIdx].v++; d.voters.push(state.user); await updateDoc(ref, { opts: d.opts, voters: d.voters }); social.loadPolls(); }
         };
 
-        // NEW: EXPLOIT SIMULATION LOGIC
-        window.exploit = {
-            run: () => {
-                const c = document.getElementById('exp-console');
-                const t = document.getElementById('exp-target').value;
-                const type = document.getElementById('exp-type').value;
-                c.innerHTML += `<div>>> INIT: ${type.toUpperCase()} EXPLOIT CHAIN FOR ${t.toUpperCase()}...</div>`;
-                
-                let steps = 0;
-                const interval = setInterval(() => {
-                    steps++;
-                    if(steps === 1) c.innerHTML += `<div>>> ALLOCATING HEAP MEMORY... [0x41414141]</div>`;
-                    if(steps === 2) c.innerHTML += `<div>>> BYPASSING ASLR...</div>`;
-                    if(steps === 3) c.innerHTML += `<div>>> INJECTING SHELLCODE...</div>`;
-                    if(steps === 4) c.innerHTML += `<div>>> TRIGGERING VULNERABILITY...</div>`;
-                    if(steps === 5) {
-                        clearInterval(interval);
-                        c.innerHTML += `<div>>> <span style="color:var(--bg-color); background: var(--warn-color);">PAYLOAD DELIVERED. TARGET SYSTEM COMPROMISED.</span></div>`;
-                        audioSys.playTone(1000, 'square', 0.5);
-                    }
-                    c.scrollTop = c.scrollHeight;
-                    audioSys.playTone(200, 'sawtooth', 0.1);
-                }, 800);
+        // NEW: CYBERDECK LOGIC
+        window.cockpit = {
+            running: false,
+            ctx: null,
+            canvas: null,
+            gain: 50,
+            rate: 30,
+            init: () => {
+                cockpit.canvas = document.getElementById('cockpit-canvas');
+                cockpit.ctx = cockpit.canvas.getContext('2d');
+                cockpit.running = true;
+                cockpit.animate();
             },
-            host: () => {
-                 const c = document.getElementById('exp-console');
-                 c.innerHTML += `<div>>> STARTING LOCAL SERVER ON PORT 1337...</div>`;
-                 setTimeout(() => {
-                    c.innerHTML += `<div>>> LISTENING... NAVIGATE TARGET BROWSER TO:</div>`;
-                    c.innerHTML += `<div>>> <a href="#" style="color:white;">http://${window.location.hostname}:1337/exploit.bin</a></div>`;
-                    audioSys.playTone(600, 'sine', 0.2);
-                    c.scrollTop = c.scrollHeight;
-                 }, 1000);
+            toggle: (el) => {
+                el.classList.toggle('toggle-active');
+                audioSys.playTone(600, 'square', 0.05);
+            },
+            updateGain: (v) => cockpit.gain = v,
+            updateRate: (v) => cockpit.rate = v,
+            log: (txt) => {
+                const l = document.getElementById('cockpit-log');
+                l.innerHTML += `<div class="term-line" style="color:#${Math.floor(Math.random()*999)}">${txt}</div>`;
+                l.scrollTop = l.scrollHeight;
+            },
+            runAction: (action) => {
+                audioSys.playTone(200, 'sawtooth', 0.1);
+                const t = document.getElementById('cockpit-target').value;
+                const p = document.getElementById('cockpit-proto').value;
+                const led = event.currentTarget.querySelector('.led');
+                led.classList.add('on');
+                
+                cockpit.log(`>> EXEC: ${action} ON ${t} (${p})...`);
+                
+                setTimeout(() => {
+                    if(action === 'PING_SWEEP') cockpit.log(`>> REPLY FROM ${t}: BYTES=32 TIME=${Math.floor(Math.random()*50)}ms TTL=54`);
+                    else if(action === 'PORT_SCAN') cockpit.log(`>> PORT ${Math.floor(Math.random()*65535)} [OPEN] SERVICE: UNKNOWN`);
+                    else if(action === 'BRUTE_FORCE') cockpit.log(`>> TRYING CREDENTIALS... [FAIL]`);
+                    else if(action === 'EXECUTE_PAYLOAD') {
+                         cockpit.log(`>> UPLOADING BINARY... [||||||||||] 100%`);
+                         cockpit.log(`>> <span style="background:var(--warn-color); color:black">ROOT ACCESS GRANTED</span>`);
+                         audioSys.playTone(1000, 'square', 0.5);
+                    }
+                    else cockpit.log(`>> PROCESS COMPLETE. DATA LOGGED.`);
+                    
+                    setTimeout(() => led.classList.remove('on'), 200);
+                }, 1000 + Math.random() * 2000);
+            },
+            animate: () => {
+                if(!cockpit.running || document.getElementById('screen-cockpit').classList.contains('hidden')) return;
+                
+                const w = cockpit.canvas.width;
+                const h = cockpit.canvas.height;
+                const ctx = cockpit.ctx;
+                
+                // Fade effect
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.fillRect(0, 0, w, h);
+                
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = `rgba(255, 170, 0, ${cockpit.gain / 100})`;
+                ctx.beginPath();
+                
+                for(let i=0; i<w; i+=5) {
+                    const y = h/2 + Math.sin(i * 0.05 + Date.now() * (cockpit.rate * 0.001)) * (h/3);
+                    ctx.lineTo(i, y);
+                }
+                ctx.stroke();
+                
+                // Random Hex Numbers
+                if(Math.random() > 0.8) {
+                   document.getElementById('visual-text').innerText = "HEX_DUMP: " + Math.random().toString(16).substr(2, 8).toUpperCase(); 
+                }
+                
+                requestAnimationFrame(cockpit.animate);
             }
         };
 
@@ -697,12 +686,7 @@
                 r.setProperty('--rep-good', getVal('col-r-good'));
                 r.setProperty('--rep-watch', getVal('col-r-watch'));
                 r.setProperty('--rep-black', getVal('col-r-bad'));
-                
-                // Save to local storage
-                const vals = {
-                    bg: getVal('col-bg'), main: getVal('col-main'), dim: getVal('col-dim'), warn: getVal('col-warn'),
-                    rGood: getVal('col-r-good'), rWatch: getVal('col-r-watch'), rBad: getVal('col-r-bad')
-                };
+                const vals = { bg: getVal('col-bg'), main: getVal('col-main'), dim: getVal('col-dim'), warn: getVal('col-warn'), rGood: getVal('col-r-good'), rWatch: getVal('col-r-watch'), rBad: getVal('col-r-bad') };
                 localStorage.setItem('clanNetSettings', JSON.stringify(vals));
             },
             load: () => {
@@ -716,7 +700,6 @@
                     document.getElementById('col-r-good').value = v.rGood || "#00FF00";
                     document.getElementById('col-r-watch').value = v.rWatch || "#D000FF";
                     document.getElementById('col-r-bad').value = v.rBad || "#FF0000";
-                    // Apply immediately without saving again
                     const r = document.documentElement.style;
                     r.setProperty('--bg-color', v.bg); r.setProperty('--main-color', v.main);
                     r.setProperty('--dim-color', v.dim); r.setProperty('--warn-color', v.warn);
@@ -744,9 +727,7 @@
              }
         });
         
-        // Load settings on boot
         settings.load();
-
     </script>
 </body>
 </html>
