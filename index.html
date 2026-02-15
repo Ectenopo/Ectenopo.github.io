@@ -117,6 +117,17 @@
         #py-input { background: transparent; border: none; color: white; flex: 1; font-family: 'Courier New', monospace; outline: none; }
         .term-line { font-family: monospace; font-size: 12px; margin: 2px 0; }
         .term-info { color: cyan; } .term-err { color: red; }
+
+        /* NEW: NETWORK SCAN STYLES */
+        #network-scan-panel { background: #000; border: 1px solid var(--warn-color); height: 200px; overflow-y: scroll; font-family: monospace; font-size: 10px; color: var(--warn-color); padding: 10px; margin: 10px 0; }
+        .device-card { border: 1px solid #333; padding: 8px; margin-bottom: 5px; background: rgba(255,170,0,0.05); }
+        .device-info { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 9px; }
+        .remote-shell { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 60%; background: #000; border: 2px solid var(--warn-color); z-index: 4000; padding: 10px; color: var(--main-color); font-family: monospace; }
+        .shell-output { height: 80%; overflow-y: scroll; border: 1px solid #333; padding: 5px; margin-bottom: 10px; }
+        .shell-input { display: flex; }
+        .shell-input input { flex: 1; background: transparent; border: none; color: var(--main-color); }
+        .stats-panel { background: #111; border: 1px solid var(--warn-color); padding: 10px; margin: 5px 0; font-size: 9px; }
+        .hack-btn { background: var(--err-color); color: white; font-size: 8px; padding: 3px; margin: 2px; }
     </style>
 </head>
 <body>
@@ -345,7 +356,7 @@
     <div id="screen-create" class="screen hidden"><h2>// NEW_CLAN</h2><input type="text" id="create-name" placeholder="NAME"><input type="password" id="create-pass" placeholder="PASS"><button onclick="app.createClanStart()">START DRAWING</button><button onclick="nav.to('hub')">CANCEL</button></div>
     
     <!-- SOC SCREEN -->
-    <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2><div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU ]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
+    <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2><div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
     
     <!-- NEW: CYBERDECK COCKPIT -->
     <div id="screen-cockpit" class="screen hidden" style="border-color: var(--warn-color); box-shadow: 0 0 20px rgba(255, 170, 0, 0.2); max-width: 750px;">
@@ -402,6 +413,9 @@
                     <div class="action-btn" onclick="cockpit.runAction('OVERFLOW')"><div class="led"></div>OVRFLW</div>
                     <div class="action-btn warn" onclick="cockpit.runAction('EXECUTE_PAYLOAD')" style="border-style: dashed;"><div class="led busy"></div>EXECUTE</div>
                 </div>
+
+                <!-- NEW: NETWORK DISCOVERY BUTTON -->
+                <button onclick="cockpit.scanNetwork()" class="warn" style="width: 100%; margin-top: 10px; padding: 10px; font-size: 12px;">LAN DISCOVERY (EDU MODE)</button>
             </div>
 
             <!-- RIGHT COLUMN: LOGS & TARGET -->
@@ -423,10 +437,30 @@
                     <div class="term-line">>> DECK INITIALIZED...</div>
                     <div class="term-line">>> WAITING FOR INPUT...</div>
                 </div>
+
+                <!-- NEW: NETWORK SCAN RESULTS PANEL -->
+                <div id="network-scan-panel" class="hidden">
+                    <div id="scan-results"></div>
+                </div>
             </div>
         </div>
         
         <button onclick="nav.to('hub')" style="margin-top: 10px; border-color: var(--warn-color); color: var(--warn-color);">DISCONNECT</button>
+    </div>
+
+    <!-- NEW: REMOTE SHELL OVERLAY -->
+    <div id="remote-shell-overlay" class="hidden">
+        <div class="remote-shell">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px;">
+                <h3 id="shell-title" style="margin: 0; color: var(--warn-color);">REMOTE SHELL: 192.168.1.X</h3>
+                <button onclick="cockpit.closeShell()" class="danger" style="width: auto; padding: 5px;">EXIT</button>
+            </div>
+            <div id="shell-output" class="shell-output"></div>
+            <div class="shell-input">
+                <span style="color: cyan; margin-right: 5px;">root@target:~#</span>
+                <input type="text" id="shell-input" onkeydown="cockpit.handleShellInput(event)" placeholder="Enter command...">
+            </div>
+        </div>
     </div>
 
     <!-- KALI OVERLAY -->
@@ -601,6 +635,8 @@
             canvas: null,
             gain: 50,
             rate: 30,
+            currentDevices: [],
+            currentShell: null,
             init: () => {
                 cockpit.canvas = document.getElementById('cockpit-canvas');
                 cockpit.ctx = cockpit.canvas.getContext('2d');
@@ -640,6 +676,92 @@
                     
                     setTimeout(() => led.classList.remove('on'), 200);
                 }, 1000 + Math.random() * 2000);
+            },
+            // NEW: LAN DISCOVERY (EDUCATIONAL SIMULATION)
+            scanNetwork: () => {
+                cockpit.log(`>> INITIATING LAN DISCOVERY... (EDU MODE: SIMULATED SCAN)`);
+                audioSys.playTone(400, 'sawtooth', 0.2);
+                setTimeout(() => {
+                    // Generate fake devices (educational simulation - in real scenarios, use tools like nmap on a local server)
+                    cockpit.currentDevices = [
+                        { ip: '192.168.1.1', mac: '00:11:22:33:44:55', os: 'Router (Firmware v2.1)', ports: '80(open), 443(open), 22(closed)', vuln: 'Low' },
+                        { ip: '192.168.1.10', mac: 'AA:BB:CC:DD:EE:FF', os: 'Windows 10', ports: '3389(open), 445(open)', vuln: 'Medium' },
+                        { ip: '192.168.1.15', mac: '11:22:33:44:55:66', os: 'iOS 17 (iPhone)', ports: '5353(open)', vuln: 'Low' },
+                        { ip: '192.168.1.20', mac: 'FF:EE:DD:CC:BB:AA', os: 'Linux Ubuntu 22.04', ports: '22(open), 80(closed)', vuln: 'High' },
+                        { ip: '192.168.1.50', mac: '77:88:99:00:11:22', os: 'Smart TV (Android)', ports: '8080(open)', vuln: 'Medium' }
+                    ];
+                    const resultsDiv = document.getElementById('scan-results');
+                    resultsDiv.innerHTML = '<div style="color: cyan; font-weight: bold;">DISCOVERED DEVICES:</div>';
+                    cockpit.currentDevices.forEach(device => {
+                        resultsDiv.innerHTML += `
+                            <div class="device-card">
+                                <div class="device-info">
+                                    <span>IP: ${device.ip}</span><span>MAC: ${device.mac}</span>
+                                    <span>OS: ${device.os}</span><span>Ports: ${device.ports}</span>
+                                    <span>Vuln: ${device.vuln}</span>
+                                </div>
+                                <div style="margin-top: 5px;">
+                                    <button onclick="cockpit.remoteInto('${device.ip}')" style="font-size: 8px; padding: 3px; margin: 1px;">REMOTE</button>
+                                    <button onclick="cockpit.showStats('${device.ip}')" style="font-size: 8px; padding: 3px; margin: 1px;">STATS</button>
+                                    <button class="hack-btn" onclick="cockpit.hackDevice('${device.ip}', '${device.vuln}')">HACK/DEFEND</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('network-scan-panel').classList.remove('hidden');
+                    cockpit.log(`>> SCAN COMPLETE: ${cockpit.currentDevices.length} DEVICES FOUND. USE BUTTONS FOR INTERACTION.`);
+                }, 2000);
+            },
+            remoteInto: (ip) => {
+                cockpit.currentShell = ip;
+                document.getElementById('shell-title').innerText = `REMOTE SHELL: ${ip}`;
+                document.getElementById('shell-output').innerHTML = `<div style="color: cyan;">Connected to ${ip}. Educational simulation active. Commands: ls, ps, netstat, whoami, etc.</div>`;
+                document.getElementById('remote-shell-overlay').classList.remove('hidden');
+                audioSys.playTone(800, 'sine', 0.3);
+            },
+            closeShell: () => {
+                document.getElementById('remote-shell-overlay').classList.add('hidden');
+                cockpit.currentShell = null;
+            },
+            handleShellInput: (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = document.getElementById('shell-input').value.trim();
+                    const output = document.getElementById('shell-output');
+                    output.innerHTML += `<div style="color: #ddd;">root@target:~# ${cmd}</div>`;
+                    // Simulate command output (educational)
+                    setTimeout(() => {
+                        if (cmd === 'ls') output.innerHTML += `<div style="color: green;">bin  etc  home  usr</div>`;
+                        else if (cmd === 'ps') output.innerHTML += `<div style="color: yellow;">PID  USER  CMD\n1   root  init\n123 root  sshd</div>`;
+                        else if (cmd === 'netstat') output.innerHTML += `<div style="color: cyan;">Proto  Local  Foreign  State\nTCP   0.0.0.0:22  *:*  LISTEN</div>`;
+                        else if (cmd === 'whoami') output.innerHTML += `<div style="color: red;">root</div>`;
+                        else output.innerHTML += `<div style="color: red;">Command not found: ${cmd}</div>`;
+                        output.scrollTop = output.scrollHeight;
+                        document.getElementById('shell-input').value = '';
+                        audioSys.playTone(600, 'sine', 0.1);
+                    }, 500);
+                }
+            },
+            showStats: (ip) => {
+                const device = cockpit.currentDevices.find(d => d.ip === ip);
+                if (!device) return;
+                cockpit.log(`>> STATS FOR ${ip}: OS=${device.os}, VULN=${device.vuln}, OPEN PORTS=${device.ports}. CHECK FOR HOLES: ${device.vuln === 'High' ? 'CRITICAL EXPLOIT DETECTED - EDUCATIONAL FIX NEEDED' : 'SECURE'}.`);
+                audioSys.playTone(500, 'square', 0.1);
+                // Simulate alert for defense
+                if (device.vuln === 'High') {
+                    setTimeout(() => {
+                        alert(`EDU MODE: Device ${ip} has high vuln. Simulate fix: Update firmware or close port 22.`);
+                    }, 1000);
+                }
+            },
+            hackDevice: (ip, vuln) => {
+                cockpit.log(`>> SIMULATED HACK/DEFEND ON ${ip} (VULN: ${vuln})...`);
+                audioSys.playTone(300, 'sawtooth', 0.2);
+                setTimeout(() => {
+                    if (vuln === 'Low') cockpit.log(`>> DEFENSE ACTIVE: No entry points. Device secure.`);
+                    else if (vuln === 'Medium') cockpit.log(`>> PARTIAL BREACH: Closed port 445. Run update to fix.`);
+                    else cockpit.log(`>> FULL ACCESS: Educational exploit successful. Now defend: Patch SSH key.`);
+                    cockpit.log(`>> <span style="background: var(--err-color); color: white;">SIMULATION END - ALWAYS ETHICAL HACK</span>`);
+                }, 1500);
             },
             animate: () => {
                 if(!cockpit.running || document.getElementById('screen-cockpit').classList.contains('hidden')) return;
