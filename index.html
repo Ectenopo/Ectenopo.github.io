@@ -52,6 +52,7 @@
         button.danger { border-color: var(--err-color); color: var(--err-color); }
         button.danger:hover { background: var(--err-color); color: white; }
         button.warn { border-color: var(--warn-color); color: var(--warn-color); }
+        button.warn:hover { background: var(--warn-color); color: black; } 
         button.admin { border-color: cyan; color: cyan; border-style: double; }
         button.admin:hover { background: cyan; color: black; }
         
@@ -133,6 +134,9 @@
             <button onclick="nav.tab('global')">GLOBAL COMMS</button>
             <button onclick="nav.to('ectotape')" style="border-color: var(--rep-watch); color: var(--rep-watch);">[ ECTOTAPE ]</button>
             <button onclick="nav.to('soc')" id="btn-soc" class="hidden admin" style="grid-column: span 2;">[ SECURITY OPS CENTER ]</button>
+            
+            <!-- VERIFIED EXPLOIT MENU -->
+            <button onclick="nav.to('payload')" id="btn-payload" class="hidden warn" style="grid-column: span 2; border-style: dashed;">[ ACCESS EXPLOIT PAYLOADS ]</button>
         </div>
 
         <div id="tab-clans">
@@ -314,6 +318,43 @@
     
     <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2><div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU ]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
     
+    <!-- NEW: EXPLOIT PAYLOAD SCREEN (For Wii Hacking Simulation) -->
+    <div id="screen-payload" class="screen hidden" style="border-color: var(--warn-color); box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);">
+        <h2 style="color: var(--warn-color);">// EXPLOIT_DELIVERY</h2>
+        <p style="color: #888; font-size: 0.8em;">TARGET: LEGACY_HARDWARE (CONSOLE)</p>
+        
+        <div class="card" style="border-color: var(--warn-color);">
+            <label>TARGET ARCHITECTURE</label>
+            <select id="exp-target">
+                <option value="wii">NINTENDO_WII (5.5.U - PPC)</option>
+                <option value="ps3">PLAYSTATION_3 (4.82 - CELL)</option>
+                <option value="xb360">XBOX_360 (RGH - PPC)</option>
+                <option value="webkit">GENERIC_WEBKIT (USERLAND)</option>
+            </select>
+            
+            <label>EXPLOIT VECTOR</label>
+            <select id="exp-type">
+                <option value="stack">BUFFER_OVERFLOW (STACK)</option>
+                <option value="heap">HEAP_SPRAY / GROOMING</option>
+                <option value="rop">ROP_CHAIN_LOADER</option>
+                <option value="int">INTEGER_OVERFLOW</option>
+            </select>
+
+            <textarea id="exp-code" placeholder="ENTER SHELLCODE / HEX PAYLOAD OR HOST URL..." style="height: 100px; font-family: monospace; color: var(--warn-color); border-color: var(--warn-color);"></textarea>
+            
+            <div class="grid-2">
+                <button onclick="exploit.run()" class="warn">INJECT PAYLOAD</button>
+                <button onclick="exploit.host()" class="warn" style="border-style: dashed;">HOST LOCALLY</button>
+            </div>
+        </div>
+
+        <div id="exp-console" class="chat-box" style="height: 150px; color: var(--warn-color); font-size: 11px; font-family: monospace; border-color: var(--warn-color);">
+            <span class="term-line">>> PAYLOAD SYSTEM READY. WAITING FOR TARGET...</span>
+        </div>
+        
+        <button onclick="nav.to('hub')">ABORT MISSION</button>
+    </div>
+
     <div id="screen-kali" class="hidden"><div id="kali-bar"><div style="display:flex;align-items:center;"><span class="kali-logo">🐉 KALI_EMU</span><button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications</button></div></div><div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()"><div id="win-term" class="window" style="z-index:10;"><div class="win-header" onmousedown="kali.startDrag(event,'win-term')"><span class="win-title">root@kali:~/python_scripts</span><div class="win-controls"><button onclick="nav.to('soc')" style="background:#ff5f56;width:15px;height:15px;border-radius:50%;padding:0;cursor:pointer;"></button></div></div><div class="win-body"><div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div><div id="py-input-line"><span style="color:cyan;margin-right:5px;">>>></span><input type="text" id="py-input" onkeydown="kali.handleInput(event)"></div></div></div><div id="kali-menu" class="hidden" style="position:absolute;top:0;left:0;width:200px;background:#2d2d2d;z-index:50;border:1px solid #444;"><button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button><button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button></div></div></div>
 
     <script type="module">
@@ -394,6 +435,14 @@
 
                 const admins = ["user1234", "user4321"];
                 if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
+                
+                // NEW: EXPLOIT BUTTON LOGIC
+                // Only show if user is verified
+                if(userData.verified) {
+                    document.getElementById('btn-payload').classList.remove('hidden');
+                } else {
+                    document.getElementById('btn-payload').classList.add('hidden');
+                }
 
                 onSnapshot(doc(db, "users", state.user), (d) => {
                     const data = d.data();
@@ -483,8 +532,6 @@
                 app.encMode = !app.encMode; 
                 document.getElementById('btn-enc').style.color = app.encMode ? '#00FF00' : '#555'; 
                 // Refresh chat by grabbing latest (handled by snapshot usually, but visual update)
-                // A full refresh happens on new message, to force refresh:
-                // We'd need to re-render the last snapshot data.
                 // For simplicity, it applies on next message or reload.
             },
             toggleDict: () => {
@@ -550,8 +597,8 @@
 
         // --- SOCIAL ---
         window.social = {
-            tab: (t) => {
-                document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden');
+            tab: (t) => { 
+                document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden'); 
                 if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls();
             },
             like: async (id, type) => {
@@ -597,6 +644,42 @@
                 });
             },
             vote: async (id, optIdx) => { const ref = doc(db, "polls", id); const snap = await getDoc(ref); const d = snap.data(); if(d.voters.includes(state.user)) return alert("ALREADY VOTED"); d.opts[optIdx].v++; d.voters.push(state.user); await updateDoc(ref, { opts: d.opts, voters: d.voters }); social.loadPolls(); }
+        };
+
+        // NEW: EXPLOIT SIMULATION LOGIC
+        window.exploit = {
+            run: () => {
+                const c = document.getElementById('exp-console');
+                const t = document.getElementById('exp-target').value;
+                const type = document.getElementById('exp-type').value;
+                c.innerHTML += `<div>>> INIT: ${type.toUpperCase()} EXPLOIT CHAIN FOR ${t.toUpperCase()}...</div>`;
+                
+                let steps = 0;
+                const interval = setInterval(() => {
+                    steps++;
+                    if(steps === 1) c.innerHTML += `<div>>> ALLOCATING HEAP MEMORY... [0x41414141]</div>`;
+                    if(steps === 2) c.innerHTML += `<div>>> BYPASSING ASLR...</div>`;
+                    if(steps === 3) c.innerHTML += `<div>>> INJECTING SHELLCODE...</div>`;
+                    if(steps === 4) c.innerHTML += `<div>>> TRIGGERING VULNERABILITY...</div>`;
+                    if(steps === 5) {
+                        clearInterval(interval);
+                        c.innerHTML += `<div>>> <span style="color:var(--bg-color); background: var(--warn-color);">PAYLOAD DELIVERED. TARGET SYSTEM COMPROMISED.</span></div>`;
+                        audioSys.playTone(1000, 'square', 0.5);
+                    }
+                    c.scrollTop = c.scrollHeight;
+                    audioSys.playTone(200, 'sawtooth', 0.1);
+                }, 800);
+            },
+            host: () => {
+                 const c = document.getElementById('exp-console');
+                 c.innerHTML += `<div>>> STARTING LOCAL SERVER ON PORT 1337...</div>`;
+                 setTimeout(() => {
+                    c.innerHTML += `<div>>> LISTENING... NAVIGATE TARGET BROWSER TO:</div>`;
+                    c.innerHTML += `<div>>> <a href="#" style="color:white;">http://${window.location.hostname}:1337/exploit.bin</a></div>`;
+                    audioSys.playTone(600, 'sine', 0.2);
+                    c.scrollTop = c.scrollHeight;
+                 }, 1000);
+            }
         };
 
         window.drawing = { canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing: false, mode: 'create', init: () => { drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00'; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; }, clear: () => drawing.ctx.clearRect(0,0,300,300), cancel: () => nav.to('hub'), save: async () => { const char = drawing.letters[drawing.idx]; drawing.tempData.syms[char] = drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx < drawing.letters.length) { drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx]; } else { loading(true); if(drawing.mode === 'create') { await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } }); await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name }); } else if (drawing.mode === 'edit') { await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms }); } loading(false); nav.to('hub'); } } }; drawing.init();
