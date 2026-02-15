@@ -54,8 +54,10 @@
         button.danger { border-color: var(--err-color); color: var(--err-color); }
         button.danger:hover { background: var(--err-color); color: white; }
         button.warn { border-color: var(--warn-color); color: var(--warn-color); }
+        button.admin { border-color: cyan; color: cyan; border-style: double; }
+        button.admin:hover { background: cyan; color: black; }
         
-        /* --- REPUTATION CLASSES (Now use vars) --- */
+        /* --- REPUTATION CLASSES --- */
         .rep-green { color: var(--rep-good); text-shadow: 0 0 5px var(--rep-good); }
         .rep-purple { color: var(--rep-watch); text-shadow: 0 0 5px var(--rep-watch); }
         .rep-red { color: var(--rep-black); text-shadow: 0 0 5px var(--rep-black); font-weight: bold; }
@@ -65,13 +67,9 @@
         .card { border: 1px dashed var(--dim-color); padding: 10px; margin-bottom: 10px; }
         .chat-box { height: 250px; overflow-y: scroll; border: 1px solid #222; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); }
         .chat-msg { margin-bottom: 8px; border-bottom: 1px solid #111; padding-bottom: 4px; font-size: 0.9em; word-wrap: break-word; }
-        .chat-img { height: 20px; vertical-align: middle; filter: sepia(1) hue-rotate(50deg) saturate(5); } /* Tint symbols to match theme roughly */
+        .chat-img { height: 20px; vertical-align: middle; filter: sepia(1) hue-rotate(50deg) saturate(5); }
         
         canvas { border: 1px solid var(--main-color); cursor: crosshair; background: #050505; display: block; margin: 0 auto 10px auto; }
-        
-        /* --- ALERTS & OVERLAYS --- */
-        @keyframes flashRed { 0% {background:var(--bg-color);} 50% {background:#330000;} 100% {background:var(--bg-color);} }
-        .alert-mode { animation: flashRed 1s infinite; }
         
         #loading-overlay {
             position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9);
@@ -82,12 +80,19 @@
         .video-card { border: 1px solid var(--dim-color); margin-bottom: 15px; }
         .video-thumb { width: 100%; height: 150px; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .video-info { padding: 10px; }
+
+        /* --- TERMINAL OUTPUT --- */
+        .term-line { font-family: monospace; font-size: 12px; margin: 2px 0; }
+        .term-success { color: #00FF00; }
+        .term-warn { color: #FFAA00; }
+        .term-err { color: #FF0000; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay" class="hidden">Accessing Neural Net...</div>
-    <div id="alert-overlay" class="hidden"></div> <div id="screen-auth" class="screen">
+
+    <div id="screen-auth" class="screen">
         <h1>// NET_LOGIN_ONLINE</h1>
         <input type="text" id="auth-user" placeholder="USERNAME">
         <input type="password" id="auth-pass" placeholder="PASSWORD">
@@ -109,6 +114,7 @@
             <button onclick="nav.to('jobs')">JOBS / GIGS</button>
             <button onclick="nav.to('events')">EVENTS</button>
             <button onclick="nav.to('ectotape')" style="grid-column: span 2; border-color: var(--rep-watch); color: var(--rep-watch);">[ ECTOTAPE ]</button>
+            <button onclick="nav.to('soc')" id="btn-soc" class="hidden admin" style="grid-column: span 2;">[ SECURITY OPS CENTER ]</button>
         </div>
 
         <div id="tab-clans">
@@ -170,8 +176,25 @@
         </div>
         <div>BAD/BLK: <input type="color" id="col-r-bad" value="#FF0000" onchange="settings.apply()"></div>
 
-        <button onclick="settings.reset()" style="margin-top: 20px;" class="warn">RESET DEFAULTS</button>
+        <button onclick="settings.reset()" style="margin-top: 20px;" class="danger">RETURN TO DEFAULT SETTINGS</button>
         <button onclick="nav.to('hub')">BACK</button>
+    </div>
+
+    <div id="screen-soc" class="screen hidden" style="border-color: cyan; box-shadow: 0 0 15px cyan;">
+        <h2 style="color: cyan;">// SECURITY_OPS_CENTER</h2>
+        <p style="font-size: 0.8em;">AUTHORIZED ACCESS ONLY. MONITORING ACTIVE THREATS.</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button>
+            <button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button>
+        </div>
+
+        <div id="soc-console" style="background: #000; border: 1px solid cyan; height: 300px; padding: 10px; overflow-y: scroll; font-family: monospace; font-size: 11px;">
+            <span class="term-line">> SOC_INIT... READY.</span><br>
+            <span class="term-line">> WAITING FOR COMMAND...</span>
+        </div>
+
+        <button onclick="nav.to('hub')" style="margin-top: 10px; border-color: cyan; color: cyan;">DISCONNECT</button>
     </div>
 
     <div id="screen-events" class="screen hidden">
@@ -222,14 +245,12 @@
 
     <div id="screen-ectotape" class="screen hidden">
         <h2 style="color: var(--rep-watch); text-align: center;">// ECTOTAPE_STREAM</h2>
-        
         <div id="upload-zone" class="hidden" style="border: 1px dashed var(--rep-watch); padding: 10px; margin-bottom: 20px;">
             <h3>UPLOAD TAPE</h3>
             <input type="text" id="vid-title" placeholder="VIDEO TITLE">
             <input type="text" id="vid-url" placeholder="EMBED URL (YouTube/MP4 Link)">
             <button onclick="app.uploadVideo()">BROADCAST</button>
         </div>
-
         <div id="video-feed" style="height: 400px; overflow-y: scroll;"></div>
         <button onclick="nav.to('hub')">EXIT STREAM</button>
     </div>
@@ -271,10 +292,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, limit, serverTimestamp, where, getDocs } 
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, limit, serverTimestamp, where, getDocs, deleteField } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDxb5GEGx9LZYD4Ijo-N6K849rsneYlgqk",
             authDomain: "ectenopo.firebaseapp.com",
@@ -287,67 +307,43 @@
         const fbApp = initializeApp(firebaseConfig);
         const db = getFirestore(fbApp);
 
-        // --- AUDIO ENGINE (MECHANICAL SOUNDS) ---
+        // --- AUDIO ENGINE ---
         window.audioSys = {
             ctx: new (window.AudioContext || window.webkitAudioContext)(),
-            
-            // Generate a click sound
             playClick: () => {
                 const t = audioSys.ctx.currentTime;
                 const o = audioSys.ctx.createOscillator();
                 const g = audioSys.ctx.createGain();
-                const noise = audioSys.ctx.createBufferSource();
-                
-                // Simple sine click (switch-like)
-                o.type = 'triangle';
-                o.frequency.setValueAtTime(1500, t);
-                o.frequency.exponentialRampToValueAtTime(100, t + 0.05);
-                
-                g.gain.setValueAtTime(0.1, t);
-                g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-                
-                o.connect(g); g.connect(audioSys.ctx.destination);
-                o.start(); o.stop(t + 0.05);
+                o.type = 'triangle'; o.frequency.setValueAtTime(1500, t); o.frequency.exponentialRampToValueAtTime(100, t+0.05);
+                g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.05);
+                o.connect(g); g.connect(audioSys.ctx.destination); o.start(); o.stop(t+0.05);
             },
             playSpace: () => {
                 const t = audioSys.ctx.currentTime;
                 const o = audioSys.ctx.createOscillator();
                 const g = audioSys.ctx.createGain();
-                o.type = 'square';
-                o.frequency.setValueAtTime(100, t); // Thud sound
-                o.frequency.exponentialRampToValueAtTime(50, t + 0.1);
-                g.gain.setValueAtTime(0.15, t);
-                g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-                o.connect(g); g.connect(audioSys.ctx.destination);
-                o.start(); o.stop(t + 0.1);
+                o.type = 'square'; o.frequency.setValueAtTime(100, t); o.frequency.exponentialRampToValueAtTime(50, t+0.1);
+                g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.1);
+                o.connect(g); g.connect(audioSys.ctx.destination); o.start(); o.stop(t+0.1);
             },
             playEnter: () => {
                  const t = audioSys.ctx.currentTime;
                  const o = audioSys.ctx.createOscillator();
                  const g = audioSys.ctx.createGain();
-                 o.type = 'sawtooth';
-                 o.frequency.setValueAtTime(600, t);
-                 o.frequency.exponentialRampToValueAtTime(200, t + 0.15);
-                 g.gain.setValueAtTime(0.1, t);
-                 g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-                 o.connect(g); g.connect(audioSys.ctx.destination);
-                 o.start(); o.stop(t + 0.15);
+                 o.type = 'sawtooth'; o.frequency.setValueAtTime(600, t); o.frequency.exponentialRampToValueAtTime(200, t+0.15);
+                 g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.15);
+                 o.connect(g); g.connect(audioSys.ctx.destination); o.start(); o.stop(t+0.15);
             },
             playDelete: () => {
                  const t = audioSys.ctx.currentTime;
                  const o = audioSys.ctx.createOscillator();
                  const g = audioSys.ctx.createGain();
-                 o.type = 'sine';
-                 o.frequency.setValueAtTime(800, t);
-                 o.frequency.linearRampToValueAtTime(1200, t + 0.05); // Scrape up
-                 g.gain.setValueAtTime(0.1, t);
-                 g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-                 o.connect(g); g.connect(audioSys.ctx.destination);
-                 o.start(); o.stop(t + 0.05);
+                 o.type = 'sine'; o.frequency.setValueAtTime(800, t); o.frequency.linearRampToValueAtTime(1200, t+0.05);
+                 g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.05);
+                 o.connect(g); g.connect(audioSys.ctx.destination); o.start(); o.stop(t+0.05);
             }
         };
 
-        // Global Key Listener for Typing Sounds
         document.addEventListener('keydown', (e) => {
             if (audioSys.ctx.state === 'suspended') audioSys.ctx.resume();
             if (e.key === ' ') audioSys.playSpace();
@@ -370,6 +366,7 @@
                 if(id === 'events') app.loadEvents();
                 if(id === 'ectotape') app.loadEctoTape();
                 if(id === 'draw-edit') app.startSymbolEdit();
+                if(id === 'settings') settings.load(); // Load values into inputs
             },
             tab: (t) => {
                 document.getElementById('tab-clans').classList.add('hidden');
@@ -378,27 +375,57 @@
             }
         };
 
-        // --- SETTINGS LOGIC ---
+        // --- SETTINGS LOGIC (PERSISTENCE ADDED) ---
         window.settings = {
-            apply: () => {
+            apply: (save = true) => {
                 const r = document.documentElement.style;
-                r.setProperty('--bg-color', document.getElementById('col-bg').value);
-                r.setProperty('--main-color', document.getElementById('col-main').value);
-                r.setProperty('--dim-color', document.getElementById('col-dim').value);
-                r.setProperty('--warn-color', document.getElementById('col-warn').value);
-                r.setProperty('--rep-good', document.getElementById('col-r-good').value);
-                r.setProperty('--rep-watch', document.getElementById('col-r-watch').value);
-                r.setProperty('--rep-black', document.getElementById('col-r-bad').value);
+                const vals = {
+                    bg: document.getElementById('col-bg').value,
+                    main: document.getElementById('col-main').value,
+                    dim: document.getElementById('col-dim').value,
+                    warn: document.getElementById('col-warn').value,
+                    rGood: document.getElementById('col-r-good').value,
+                    rWatch: document.getElementById('col-r-watch').value,
+                    rBad: document.getElementById('col-r-bad').value
+                };
+
+                r.setProperty('--bg-color', vals.bg);
+                r.setProperty('--main-color', vals.main);
+                r.setProperty('--dim-color', vals.dim);
+                r.setProperty('--warn-color', vals.warn);
+                r.setProperty('--rep-good', vals.rGood);
+                r.setProperty('--rep-watch', vals.rWatch);
+                r.setProperty('--rep-black', vals.rBad);
+
+                if(save) localStorage.setItem('clanNetSettings', JSON.stringify(vals));
+            },
+            load: () => {
+                const s = localStorage.getItem('clanNetSettings');
+                if(s) {
+                    const v = JSON.parse(s);
+                    document.getElementById('col-bg').value = v.bg;
+                    document.getElementById('col-main').value = v.main;
+                    document.getElementById('col-dim').value = v.dim;
+                    document.getElementById('col-warn').value = v.warn;
+                    document.getElementById('col-r-good').value = v.rGood;
+                    document.getElementById('col-r-watch').value = v.rWatch;
+                    document.getElementById('col-r-bad').value = v.rBad;
+                    settings.apply(false);
+                }
             },
             reset: () => {
-                document.getElementById('col-bg').value = "#000000";
-                document.getElementById('col-main').value = "#00FF00";
-                document.getElementById('col-dim').value = "#004400";
-                document.getElementById('col-warn').value = "#FFAA00";
-                document.getElementById('col-r-good').value = "#00FF00";
-                document.getElementById('col-r-watch').value = "#D000FF";
-                document.getElementById('col-r-bad').value = "#FF0000";
-                settings.apply();
+                if(!confirm("RESTORE DEFAULT VISUALS?")) return;
+                localStorage.removeItem('clanNetSettings');
+                // Defaults
+                const d = { bg: "#000000", main: "#00FF00", dim: "#004400", warn: "#FFAA00", rGood: "#00FF00", rWatch: "#D000FF", rBad: "#FF0000" };
+                document.getElementById('col-bg').value = d.bg;
+                document.getElementById('col-main').value = d.main;
+                document.getElementById('col-dim').value = d.dim;
+                document.getElementById('col-warn').value = d.warn;
+                document.getElementById('col-r-good').value = d.rGood;
+                document.getElementById('col-r-watch').value = d.rWatch;
+                document.getElementById('col-r-bad').value = d.rBad;
+                settings.apply(false); // Apply but don't save to allow session reset, or save to overwrite? Let's not save so reload keeps default.
             }
         };
 
@@ -435,8 +462,26 @@
             },
 
             // HUB
-            initHub: () => {
+            initHub: async () => {
                 document.getElementById('hub-user').innerText = state.user;
+                
+                // CHECK ADMIN / WHITE HAT ACCESS
+                const admins = ["user1234", "user4321"]; // Lowercase check
+                const uLower = state.user.toLowerCase();
+                let canAccessSoc = admins.includes(uLower);
+                
+                if(!canAccessSoc) {
+                    const w = await getDoc(doc(db, "soc_whitelist", state.user)); // Check DB whitelist
+                    if(w.exists()) canAccessSoc = true;
+                }
+
+                if(canAccessSoc) {
+                    document.getElementById('btn-soc').classList.remove('hidden');
+                } else {
+                    document.getElementById('btn-soc').classList.add('hidden');
+                }
+
+                // USER DATA LISTENER
                 onSnapshot(doc(db, "users", state.user), (d) => {
                     const data = d.data();
                     if(data.clan) {
@@ -447,13 +492,13 @@
                         document.getElementById('panel-no-clan').classList.remove('hidden');
                         document.getElementById('panel-in-clan').classList.add('hidden');
                     }
-                    // Rep Color Logic
                     const rep = data.rep || 0;
                     const b = document.getElementById('rep-badge');
                     if(rep > 50) { b.innerText="BLACKLISTED"; b.className="rep-red"; }
                     else if(rep > 0) { b.innerText="WATCHLIST"; b.className="rep-purple"; }
                     else { b.innerText="GOOD"; b.className="rep-green"; }
                 });
+
                 // Global Chat
                 const q = query(collection(db, "global_chat"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => {
@@ -466,7 +511,36 @@
                 });
             },
 
-            // CLANS
+            // --- SOC (WHITE HAT PANEL) ---
+            runSecurityScan: (type) => {
+                const c = document.getElementById('soc-console');
+                c.innerHTML += `<div class="term-line">> INITIATING ${type}_SCAN...</div>`;
+                c.scrollTop = c.scrollHeight;
+                
+                // Simulated Scanning Effect
+                let steps = 0;
+                const max = 5;
+                const int = setInterval(() => {
+                    steps++;
+                    const rnd = Math.floor(Math.random() * 9999);
+                    c.innerHTML += `<div class="term-line" style="opacity:0.7">...analyzing packet block [${rnd}]</div>`;
+                    c.scrollTop = c.scrollHeight;
+                    
+                    if(steps >= max) {
+                        clearInterval(int);
+                        if(type === 'TRAFFIC') {
+                             c.innerHTML += `<div class="term-line term-success">>> SCAN COMPLETE. TRAFFIC NOMINAL.</div>`;
+                             c.innerHTML += `<div class="term-line">> NO MALICIOUS SIGNATURES DETECTED.</div>`;
+                        } else {
+                             c.innerHTML += `<div class="term-line term-warn">>> ALERT: PORT SCAN DETECTED FROM EXTERNAL NODE.</div>`;
+                             c.innerHTML += `<div class="term-line term-success">>> FIREWALL: BLOCKED.</div>`;
+                        }
+                        c.scrollTop = c.scrollHeight;
+                    }
+                }, 500);
+            },
+
+            // CLANS, JOBS, EVENTS, ECTOTAPE (UNCHANGED LOGIC FROM PREVIOUS)
             listenToClan: (cName) => {
                 document.getElementById('panel-no-clan').classList.add('hidden');
                 document.getElementById('panel-in-clan').classList.remove('hidden');
@@ -516,8 +590,6 @@
                     document.getElementById('clan-input').value="";
                 }
             },
-
-            // TRANSLATOR
             toggleTrans: () => { app.autoTrans = !app.autoTrans; document.getElementById('btn-trans').style.color = app.autoTrans ? '#00FF00' : '#555'; },
             translate: (txt) => {
                 let out = "";
@@ -538,28 +610,20 @@
                 }
                 return html;
             },
-
-            // --- EVENTS SYSTEM ---
             createEvent: async () => {
                 const n = document.getElementById('evt-name').value.trim();
                 const d = document.getElementById('evt-desc').value.trim();
                 const s = document.getElementById('evt-start').value;
                 const e = document.getElementById('evt-end').value;
-                
                 if(!n || !s) return alert("NAME & DATE REQUIRED");
-                
                 loading(true);
-                // Check uniqueness
                 const q = query(collection(db, "events"), where("name", "==", n));
                 const snap = await getDocs(q);
                 if(!snap.empty) { loading(false); return alert("EVENT NAME EXISTS"); }
-
                 await addDoc(collection(db, "events"), {
                     name: n, desc: d, start: s, end: e, creator: state.user, ts: serverTimestamp()
                 });
-                loading(false);
-                alert("EVENT CREATED");
-                app.loadEvents();
+                loading(false); alert("EVENT CREATED"); app.loadEvents();
             },
             loadEvents: async () => {
                 const list = document.getElementById('event-list');
@@ -569,23 +633,14 @@
                 list.innerHTML = "";
                 snap.forEach(d => {
                     const e = d.data();
-                    list.innerHTML += `<div class="card">
-                        <strong style="color:white;">${e.name}</strong><br>
-                        <span>${e.start} // ${e.end || '?'}</span><br>
-                        <p>${e.desc}</p>
-                        <small>ORG: ${e.creator}</small>
-                    </div>`;
+                    list.innerHTML += `<div class="card"><strong style="color:white;">${e.name}</strong><br><span>${e.start} // ${e.end || '?'}</span><br><p>${e.desc}</p><small>ORG: ${e.creator}</small></div>`;
                 });
             },
-
-            // --- JOBS / GIGS SYSTEM ---
             createJob: async () => {
                 const t = document.getElementById('job-title').value;
                 const d = document.getElementById('job-desc').value;
                 if(!t) return;
-                await addDoc(collection(db, "jobs"), {
-                    title: t, desc: d, owner: state.user, worker: null, status: 'OPEN', ts: serverTimestamp()
-                });
+                await addDoc(collection(db, "jobs"), { title: t, desc: d, owner: state.user, worker: null, status: 'OPEN', ts: serverTimestamp() });
                 document.getElementById('job-create-panel').classList.add('hidden');
                 document.getElementById('job-list-panel').classList.remove('hidden');
                 app.loadJobs();
@@ -600,7 +655,6 @@
                     const j = d.data();
                     const id = d.id;
                     let action = "";
-                    
                     if(j.status === 'OPEN' && j.owner !== state.user) {
                         action = `<button onclick="app.acceptJob('${id}')">ACCEPT CONTRACT</button>`;
                     } else if (j.owner === state.user || j.worker === state.user) {
@@ -608,44 +662,31 @@
                     } else {
                         action = `<button disabled>CONTRACT CLOSED</button>`;
                     }
-
-                    list.innerHTML += `<div class="card">
-                        <strong>${j.title}</strong> [${j.status}]<br>
-                        <em>${j.desc}</em><br>
-                        <small>CLIENT: ${j.owner}</small><br>
-                        ${action}
-                    </div>`;
+                    list.innerHTML += `<div class="card"><strong>${j.title}</strong> [${j.status}]<br><em>${j.desc}</em><br><small>CLIENT: ${j.owner}</small><br>${action}</div>`;
                 });
             },
             acceptJob: async (jid) => {
                 if(!confirm("ACCEPT JOB? DM WILL OPEN.")) return;
-                await updateDoc(doc(db, "jobs", jid), {
-                    worker: state.user, status: 'ASSIGNED'
-                });
+                await updateDoc(doc(db, "jobs", jid), { worker: state.user, status: 'ASSIGNED' });
                 app.openJobChat(jid);
             },
             openJobChat: (jid) => {
                 state.currentJob = jid;
                 document.getElementById('job-chat-panel').classList.remove('hidden');
-                // Listen to chat
                 const q = query(collection(db, "jobs", jid, "msgs"), orderBy("ts", "desc"));
                 state.unsubJobChat = onSnapshot(q, (snap) => {
                     const div = document.getElementById('job-chat-box');
                     div.innerHTML = "";
                     const msgs = [];
                     snap.forEach(d => msgs.push(d.data()));
-                    msgs.reverse().forEach(m => {
-                         div.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`;
-                    });
+                    msgs.reverse().forEach(m => { div.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`; });
                     div.scrollTop = div.scrollHeight;
                 });
             },
             sendJobMsg: async () => {
                 const t = document.getElementById('job-msg-input').value;
                 if(!t || !state.currentJob) return;
-                await addDoc(collection(db, "jobs", state.currentJob, "msgs"), {
-                    u: state.user, txt: t, ts: serverTimestamp()
-                });
+                await addDoc(collection(db, "jobs", state.currentJob, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() });
                 document.getElementById('job-msg-input').value = "";
             },
             closeJobChat: () => {
@@ -654,52 +695,28 @@
                 state.currentJob = null;
                 app.loadJobs();
             },
-
-            // --- ECTOTAPE ---
             loadEctoTape: async () => {
-                // Check whitelist for upload button
                 const admins = ["User1234", "User4321"];
                 let canPost = admins.includes(state.user);
-                // Also check DB whitelist
-                if(!canPost) {
-                    const w = await getDoc(doc(db, "ectotape_whitelist", state.user));
-                    if(w.exists()) canPost = true;
-                }
-                
+                if(!canPost) { const w = await getDoc(doc(db, "ectotape_whitelist", state.user)); if(w.exists()) canPost = true; }
                 if(canPost) document.getElementById('upload-zone').classList.remove('hidden');
                 else document.getElementById('upload-zone').classList.add('hidden');
-
-                // Load vids
                 const q = query(collection(db, "ectotape_vids"), orderBy("ts", "desc"), limit(20));
                 const snap = await getDocs(q);
                 const feed = document.getElementById('video-feed');
                 feed.innerHTML = "";
                 snap.forEach(d => {
                     const v = d.data();
-                    feed.innerHTML += `<div class="video-card">
-                        <div class="video-thumb">
-                            <iframe width="100%" height="150" src="${v.url.replace('watch?v=', 'embed/')}" frameborder="0" allowfullscreen></iframe>
-                        </div>
-                        <div class="video-info">
-                            <strong>${v.title}</strong><br>
-                            <small>BY: ${v.uploader}</small>
-                        </div>
-                    </div>`;
+                    feed.innerHTML += `<div class="video-card"><div class="video-thumb"><iframe width="100%" height="150" src="${v.url.replace('watch?v=', 'embed/')}" frameborder="0" allowfullscreen></iframe></div><div class="video-info"><strong>${v.title}</strong><br><small>BY: ${v.uploader}</small></div></div>`;
                 });
             },
             uploadVideo: async () => {
                 const t = document.getElementById('vid-title').value;
                 const u = document.getElementById('vid-url').value;
                 if(!t || !u) return alert("MISSING DATA");
-                // Double check whitelist server side in real app, here client side check
-                await addDoc(collection(db, "ectotape_vids"), {
-                    title: t, url: u, uploader: state.user, ts: serverTimestamp()
-                });
-                alert("BROADCASTING");
-                app.loadEctoTape();
+                await addDoc(collection(db, "ectotape_vids"), { title: t, url: u, uploader: state.user, ts: serverTimestamp() });
+                alert("BROADCASTING"); app.loadEctoTape();
             },
-
-            // --- CLAN CREATION & SYMBOL EDIT ---
             createClanStart: async () => {
                 const n = document.getElementById('create-name').value;
                 const p = document.getElementById('create-pass').value;
@@ -712,20 +729,15 @@
             },
             startSymbolEdit: () => {
                 drawing.mode = "edit";
-                drawing.tempData = { syms: { ...state.clanData.symbols } }; // copy existing
+                drawing.tempData = { syms: { ...state.clanData.symbols } };
                 drawing.letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
                 drawing.idx = 0;
                 nav.to('draw');
             },
-            
-            // DICTIONARY
             addWord: async () => {
                 const k = document.getElementById('dict-orig').value.toLowerCase();
                 const v = document.getElementById('dict-new').value.toLowerCase();
-                if(k && v && state.clan) {
-                    await updateDoc(doc(db, "clans", state.clan), { [`words.${k}`]: v });
-                    // refresh list logic would go here
-                }
+                if(k && v && state.clan) { await updateDoc(doc(db, "clans", state.clan), { [`words.${k}`]: v }); }
             }
         };
 
@@ -734,7 +746,6 @@
             canvas: document.getElementById('draw-canvas'),
             ctx: document.getElementById('draw-canvas').getContext('2d'),
             isDrawing: false, mode: 'create',
-            
             init: () => {
                 drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00';
                 const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);};
@@ -749,33 +760,24 @@
                 const char = drawing.letters[drawing.idx];
                 drawing.tempData.syms[char] = drawing.canvas.toDataURL();
                 drawing.idx++;
-                
                 if(drawing.idx < drawing.letters.length) {
-                    drawing.clear();
-                    document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx];
+                    drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx];
                 } else {
-                    // FINISH
                     loading(true);
                     if(drawing.mode === 'create') {
-                        await setDoc(doc(db, "clans", drawing.tempData.name), {
-                            pass: drawing.tempData.pass,
-                            leader: state.user,
-                            symbols: drawing.tempData.syms,
-                            words: {},
-                            ranks: { [state.user]: 'leader' }
-                        });
+                        await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } });
                         await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name });
                     } else if (drawing.mode === 'edit') {
-                        await updateDoc(doc(db, "clans", state.clan), {
-                            symbols: drawing.tempData.syms
-                        });
+                        await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms });
                     }
-                    loading(false);
-                    nav.to('hub');
+                    loading(false); nav.to('hub');
                 }
             }
         };
         drawing.init();
+        
+        // --- INIT LOAD SETTINGS ---
+        settings.load();
 
     </script>
 </body>
