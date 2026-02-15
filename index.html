@@ -174,6 +174,18 @@
         <button onclick="location.reload()" style="margin-top: 20px; border: none; opacity: 0.5;">LOGOUT</button>
     </div>
 
+    <div id="screen-dict" class="screen hidden">
+        <h3>// DICTIONARY_EDIT</h3>
+        <div class="grid-2">
+            <input type="text" id="dict-orig" placeholder="ENGLISH">
+            <input type="text" id="dict-new" placeholder="CLAN WORD">
+        </div>
+        <button onclick="app.addWord()">ADD/UPDATE WORD</button>
+        <div id="dict-list" style="height: 250px; overflow-y: scroll; border: 1px solid var(--dim-color); padding: 5px; margin-bottom: 10px;">
+            </div>
+        <button onclick="nav.to('hub')">BACK</button>
+    </div>
+
     <div id="screen-social" class="screen hidden">
         <h2>// NET_SOCIAL</h2>
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -299,7 +311,6 @@
     </div>
     <div id="screen-draw" class="screen hidden"><h3 id="draw-title">DRAW: A</h3><canvas id="draw-canvas" width="280" height="280"></canvas><div class="grid-2"><button onclick="drawing.clear()">CLEAR</button><button onclick="drawing.save()">NEXT</button></div><button onclick="drawing.cancel()">CANCEL</button></div>
     <div id="screen-create" class="screen hidden"><h2>// NEW_CLAN</h2><input type="text" id="create-name" placeholder="NAME"><input type="password" id="create-pass" placeholder="PASS"><button onclick="app.createClanStart()">START DRAWING</button><button onclick="nav.to('hub')">CANCEL</button></div>
-    <div id="screen-dict" class="screen hidden"><h3>// DICT</h3><div class="grid-2"><input type="text" id="dict-orig"><input type="text" id="dict-new"></div><button onclick="app.addWord()">ADD</button><div id="dict-list"></div><button onclick="nav.to('hub')">BACK</button></div>
     
     <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2><div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU ]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
     
@@ -344,13 +355,14 @@
                 if(id === 'jobs') app.loadJobs();
                 if(id === 'social') social.loadPosts();
                 if(id === 'settings') settings.load();
+                if(id === 'dict') app.renderDict(); // NEW: Render Dict on load
             },
             tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-' + t).classList.remove('hidden'); }
         };
 
         // --- APP LOGIC ---
         window.app = {
-            encMode: false,
+            encMode: false, // Default Enc Off
             dictMode: false,
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim();
@@ -437,7 +449,13 @@
 
             listenToClan: (cName) => {
                 document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText = cName;
-                onSnapshot(doc(db, "clans", cName), (doc) => { state.clanData = doc.data(); if(state.clanData && state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); else document.getElementById('btn-delete-clan').classList.add('hidden'); });
+                onSnapshot(doc(db, "clans", cName), (doc) => { 
+                    state.clanData = doc.data(); 
+                    if(state.clanData && state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); 
+                    else document.getElementById('btn-delete-clan').classList.add('hidden'); 
+                    // Update dict list if open
+                    if(!document.getElementById('screen-dict').classList.contains('hidden')) app.renderDict();
+                });
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => { const d = document.getElementById('clan-chat'); d.innerHTML = ""; const msgs = []; snap.forEach(doc => msgs.push(doc.data())); msgs.reverse().forEach(m => { let txt = app.translate(m.txt); d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${txt}</div>`; }); d.scrollTop = d.scrollHeight; });
             },
@@ -464,18 +482,16 @@
             toggleEnc: () => { 
                 app.encMode = !app.encMode; 
                 document.getElementById('btn-enc').style.color = app.encMode ? '#00FF00' : '#555'; 
+                // Refresh chat by grabbing latest (handled by snapshot usually, but visual update)
+                // A full refresh happens on new message, to force refresh:
+                // We'd need to re-render the last snapshot data.
+                // For simplicity, it applies on next message or reload.
             },
             toggleDict: () => {
                 app.dictMode = !app.dictMode;
                 document.getElementById('btn-dict').style.color = app.dictMode ? '#00FF00' : '#555';
             },
             translate: (txt) => { 
-                // Logic:
-                // 1. If ENC is ON: Symbols are used. Words swapped if found.
-                // 2. If ENC is OFF:
-                //    - If DICT is ON: Words swapped if found (TEXT).
-                //    - If DICT is OFF: Raw text.
-                
                 if (!app.encMode && !app.dictMode) return txt;
 
                 let out = "";
@@ -484,25 +500,15 @@
                 
                 txt.split(" ").forEach(w => {
                     const c = w.toLowerCase().replace(/[^a-z]/g,'');
-                    let finalWord = c;
-                    
-                    // Dictionary Swap Logic (Used if DICT is ON or ENC is ON, actually usually encryption implies dictionary use, but user asked for specific mode)
-                    // Let's assume standard behavior:
-                    // If DICT is ON, we swap.
-                    // If ENC is ON, we usually swap too. 
-                    // Let's allow independent toggles as requested.
+                    let finalWord = w;
                     
                     if (app.dictMode && words[c]) finalWord = words[c];
-                    else if (app.encMode && words[c]) finalWord = words[c]; // Assuming ENC implies using the codebook too
-                    else finalWord = w; // Keep original punctuation if not swapped, or use 'c' if strict
+                    else if (app.encMode && words[c]) finalWord = words[c]; 
 
-                    // Render
                     if (app.encMode) {
-                        // Strip punct for symbol lookup
                         const clean = finalWord.toLowerCase().replace(/[^a-z]/g,'');
                         out += app.strToSym(clean, syms) + " ";
                     } else {
-                        // Just Text (Dict mode or Raw)
                         out += finalWord + " ";
                     }
                 });
@@ -510,6 +516,22 @@
             },
             strToSym: (str, syms) => { let html = ""; for(let c of str) { if(syms[c.toUpperCase()]) html += `<img src="${syms[c.toUpperCase()]}" class="chat-img">`; else html += c; } return html; },
             
+            // DICTIONARY UI (NEW)
+            renderDict: () => {
+                const list = document.getElementById('dict-list');
+                list.innerHTML = "";
+                const words = state.clanData.words || {};
+                if(Object.keys(words).length === 0) { list.innerHTML = "<div style='color:#555;'>DICTIONARY EMPTY</div>"; return; }
+                for(const [k, v] of Object.entries(words)) {
+                    list.innerHTML += `<div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between;">
+                        <span>${k} <span style="color:var(--main-color);">-></span> ${v}</span>
+                        <button onclick="app.delWord('${k}')" style="width:20px;height:20px;padding:0;font-size:10px;border-color:red;color:red;">X</button>
+                    </div>`;
+                }
+            },
+            addWord: async () => { const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan) await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]:v}); app.renderDict(); },
+            delWord: async (k) => { if(!confirm("DELETE?")) return; await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]: deleteField()}); app.renderDict(); },
+
             // JOBS, EVENTS, ETC
             createEvent: async () => { const n = document.getElementById('evt-name').value; if(!n) return; await addDoc(collection(db, "events"), { name: n, desc: document.getElementById('evt-desc').value, start: document.getElementById('evt-start').value, end: document.getElementById('evt-end').value, creator: state.user, ts: serverTimestamp() }); alert("CREATED"); app.loadEvents(); },
             loadEvents: async () => { const list = document.getElementById('event-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "events"), orderBy("start", "asc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const e = d.data(); list.innerHTML += `<div class="card"><strong style="color:white;">${e.name}</strong><br><span>${e.start} // ${e.end || '?'}</span><br><p>${e.desc}</p><small>ORG: ${e.creator}</small></div>`; }); },
@@ -523,11 +545,10 @@
             uploadVideo: async () => { await addDoc(collection(db, "ectotape_vids"), { title: document.getElementById('vid-title').value, url: document.getElementById('vid-url').value, uploader: state.user, ts: serverTimestamp() }); alert("UPLOADED"); app.loadEctoTape(); },
             createClanStart: () => { const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p) return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
             startSymbolEdit: () => { drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
-            addWord: async () => { const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan) await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]:v}); },
             runSecurityScan: (type) => { const c=document.getElementById('soc-console'); c.innerHTML+=`<div>> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div>> COMPLETE. CLEAN.</div>`,1500); }
         };
 
-        // --- SOCIAL (Same as before) ---
+        // --- SOCIAL ---
         window.social = {
             tab: (t) => {
                 document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden');
