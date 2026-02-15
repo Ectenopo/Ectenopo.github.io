@@ -54,17 +54,19 @@
         button.warn { border-color: var(--warn-color); color: var(--warn-color); }
         button.admin { border-color: cyan; color: cyan; border-style: double; }
         button.admin:hover { background: cyan; color: black; }
+        
+        /* SOCIAL ACTIONS */
+        .social-actions { display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #333; padding-top: 5px; }
+        .social-btn { flex: 1; font-size: 10px; padding: 5px; background: transparent; border: 1px solid #333; }
+        .social-btn:hover { background: #111; border-color: var(--main-color); }
+        .active-action { color: var(--warn-color); border-color: var(--warn-color); }
 
-        /* --- VERIFICATION BADGE --- */
-        .verified-badge {
-            display: inline-block;
-            color: cyan;
-            margin-left: 4px;
-            font-size: 1.1em;
-            text-shadow: 0 0 5px cyan;
-        }
+        /* COMMENTS SECTION */
+        .comment-section { margin-top: 10px; padding: 10px; border: 1px solid #333; background: #050505; }
+        .comment-list { max-height: 150px; overflow-y: scroll; margin-bottom: 5px; }
+        .comment-item { border-bottom: 1px solid #222; padding: 4px 0; font-size: 0.9em; }
 
-        /* --- LAYOUTS --- */
+        .verified-badge { display: inline-block; color: cyan; margin-left: 4px; font-size: 1.1em; text-shadow: 0 0 5px cyan; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .card { border: 1px dashed var(--dim-color); padding: 10px; margin-bottom: 10px; }
         .chat-box { height: 250px; overflow-y: scroll; border: 1px solid #222; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); }
@@ -72,33 +74,24 @@
         .chat-img { height: 20px; vertical-align: middle; filter: sepia(1) hue-rotate(50deg) saturate(5); }
         
         canvas { border: 1px solid var(--main-color); cursor: crosshair; background: #050505; display: block; margin: 0 auto 10px auto; }
-        
-        #loading-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9);
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
-        }
+        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 
-        /* --- SOCIAL FEED STYLES --- */
-        .post-header { display: flex; justify-content: space-between; font-size: 0.8em; color: #888; border-bottom: 1px solid #333; margin-bottom: 5px; }
         .poll-bar { height: 10px; background: #333; margin-top: 2px; position: relative; }
         .poll-fill { height: 100%; background: var(--main-color); width: 0%; transition: width 0.5s; }
+        .post-header { display: flex; justify-content: space-between; font-size: 0.8em; color: #888; border-bottom: 1px solid #333; margin-bottom: 5px; }
 
-        /* --- KALI LINUX EMULATION --- */
-        #screen-kali { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'), #101010; z-index: 2000; padding: 0; margin: 0; border: none; max-width: none; display: flex; flex-direction: column; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        /* KALI STYLE (Minified for space) */
+        #screen-kali { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'), #101010; z-index: 2000; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
         #kali-bar { height: 40px; background: var(--kali-bar); border-bottom: 1px solid #444; display: flex; align-items: center; padding: 0 10px; color: #ddd; justify-content: space-between; }
-        .kali-btn { background: transparent; border: none; color: #ddd; width: auto; padding: 5px 15px; margin: 0; font-size: 14px; }
-        .kali-btn:hover { background: #444; color: white; }
-        .kali-logo { font-weight: bold; color: var(--kali-accent); margin-right: 20px; }
-        #kali-desktop { flex: 1; position: relative; overflow: hidden; }
-        .window { position: absolute; width: 600px; height: 400px; background: #1e1e1e; border: 1px solid #444; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; top: 50px; left: 50px; }
+        .kali-btn { background: transparent; border: none; color: #ddd; width: auto; padding: 5px 15px; } .kali-btn:hover { background: #444; }
+        #kali-desktop { flex: 1; position: relative; }
+        .window { position: absolute; width: 600px; height: 400px; background: #1e1e1e; border: 1px solid #444; display: flex; flex-direction: column; top: 50px; left: 50px; }
         .win-header { height: 30px; background: #333; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; cursor: move; }
-        .win-title { color: #ccc; font-size: 12px; }
         .win-body { flex: 1; background: #000; padding: 5px; color: #00ff00; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; }
         #py-console { flex: 1; overflow-y: auto; padding: 5px; white-space: pre-wrap; }
         #py-input-line { display: flex; margin-top: 5px; border-top: 1px solid #333; padding-top: 5px; }
-        #py-input { background: transparent; border: none; color: white; flex: 1; padding: 0; font-family: 'Courier New', monospace; }
+        #py-input { background: transparent; border: none; color: white; flex: 1; font-family: 'Courier New', monospace; }
         .term-line { font-family: monospace; font-size: 12px; margin: 2px 0; }
-        .term-err { color: #FF0000; } .term-info { color: cyan; }
     </style>
 </head>
 <body>
@@ -115,7 +108,7 @@
 
     <div id="screen-hub" class="screen hidden">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div onclick="app.openProfile(state.user)" style="cursor: pointer; border-bottom: 1px solid transparent;">
+            <div onclick="app.openProfile(state.user)" style="cursor: pointer;">
                 USER: <span id="hub-user"></span>
             </div>
             <div style="display: flex; gap: 5px;">
@@ -192,7 +185,7 @@
                 <textarea id="post-content" placeholder="What's happening?" style="height: 60px;"></textarea>
                 <button onclick="social.createPost()">PUBLISH POST</button>
             </div>
-            <div id="feed-posts" style="height: 300px; overflow-y: scroll;"></div>
+            <div id="feed-posts" style="height: 400px; overflow-y: scroll;"></div>
         </div>
 
         <div id="soc-tab-polls" class="hidden">
@@ -203,7 +196,17 @@
                 <input type="text" id="poll-o2" placeholder="Option 2">
                 <button onclick="social.createPoll()">LAUNCH POLL</button>
             </div>
-            <div id="feed-polls" style="height: 300px; overflow-y: scroll; margin-top: 10px;"></div>
+            <div id="feed-polls" style="height: 400px; overflow-y: scroll; margin-top: 10px;"></div>
+        </div>
+        
+        <div id="comment-overlay" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;display:flex;justify-content:center;align-items:center;">
+            <div class="screen" style="width:90%; height:80%; display:flex; flex-direction:column;">
+                <h3>// COMMENTS</h3>
+                <div id="active-comment-list" style="flex:1; overflow-y:scroll; border:1px solid #333; padding:10px; margin-bottom:10px;"></div>
+                <input type="text" id="new-comment-input" placeholder="Add comment...">
+                <button onclick="social.submitComment()">POST</button>
+                <button onclick="document.getElementById('comment-overlay').classList.add('hidden')" class="warn">CLOSE</button>
+            </div>
         </div>
 
         <button onclick="nav.to('hub')">BACK</button>
@@ -252,84 +255,37 @@
 
     <div id="screen-settings" class="screen hidden">
         <h2>// SYSTEM_CONFIG</h2>
-        <div class="grid-2">
-            <div>BG: <input type="color" id="col-bg" value="#000000" onchange="settings.apply()"></div>
-            <div>MAIN: <input type="color" id="col-main" value="#00FF00" onchange="settings.apply()"></div>
-        </div>
-        <button onclick="settings.reset()" style="margin-top: 20px;" class="danger">RETURN TO DEFAULT SETTINGS</button>
+        <div class="grid-2"><div>BG: <input type="color" id="col-bg" onchange="settings.apply()"></div><div>MAIN: <input type="color" id="col-main" onchange="settings.apply()"></div></div>
+        <button onclick="settings.reset()" class="danger" style="margin-top:20px;">RETURN TO DEFAULT SETTINGS</button>
         <button onclick="nav.to('hub')">BACK</button>
     </div>
-
     <div id="screen-events" class="screen hidden">
         <h2>// EVENT_LOG</h2>
-        <div style="border: 1px solid var(--dim-color); padding: 10px; margin-bottom: 10px;">
-            <input type="text" id="evt-name" placeholder="EVENT NAME">
-            <input type="text" id="evt-desc" placeholder="DESCRIPTION">
-            <div class="grid-2"><input type="date" id="evt-start"><input type="date" id="evt-end"></div>
-            <button onclick="app.createEvent()">PUBLISH</button>
-        </div>
-        <div id="event-list" style="height: 200px; overflow-y: scroll;"></div>
-        <button onclick="nav.to('hub')">BACK</button>
+        <div style="border:1px solid #333;padding:10px;margin-bottom:10px;"><input type="text" id="evt-name" placeholder="EVENT NAME"><input type="text" id="evt-desc" placeholder="DESCRIPTION"><div class="grid-2"><input type="date" id="evt-start"><input type="date" id="evt-end"></div><button onclick="app.createEvent()">PUBLISH</button></div>
+        <div id="event-list" style="height:200px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">BACK</button>
     </div>
-
     <div id="screen-jobs" class="screen hidden">
         <h2>// GIG_NETWORK</h2>
         <div class="grid-2"><button onclick="document.getElementById('job-create-panel').classList.remove('hidden');">POST JOB</button><button onclick="app.loadJobs()">BROWSE</button></div>
-        <div id="job-create-panel" class="hidden" style="margin-top: 10px; border: 1px dashed var(--dim-color); padding: 10px;">
-            <input type="text" id="job-title" placeholder="TITLE"><textarea id="job-desc" placeholder="DESC"></textarea><button onclick="app.createJob()">UPLOAD</button>
-        </div>
-        <div id="job-list-panel" style="margin-top: 10px;"><div id="job-list" style="height: 300px; overflow-y: scroll;"></div></div>
-        <div id="job-chat-panel" class="hidden" style="position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index: 10; padding: 15px; box-sizing: border-box;">
-            <h3>// SECURE_CHANNEL</h3><div id="job-chat-box" class="chat-box" style="height: 300px;"></div>
-            <input type="text" id="job-msg-input"><button onclick="app.sendJobMsg()">SEND</button><button onclick="app.closeJobChat()" class="warn">CLOSE</button>
-        </div>
+        <div id="job-create-panel" class="hidden" style="margin-top:10px;border:1px dashed #333;padding:10px;"><input type="text" id="job-title" placeholder="TITLE"><textarea id="job-desc" placeholder="DESC"></textarea><button onclick="app.createJob()">UPLOAD</button></div>
+        <div id="job-list-panel" style="margin-top:10px;"><div id="job-list" style="height:300px;overflow-y:scroll;"></div></div>
+        <div id="job-chat-panel" class="hidden" style="position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bg-color);z-index:10;padding:15px;"><div id="job-chat-box" class="chat-box" style="height:300px;"></div><input type="text" id="job-msg-input"><button onclick="app.sendJobMsg()">SEND</button><button onclick="app.closeJobChat()" class="warn">CLOSE</button></div>
         <button onclick="nav.to('hub')">BACK</button>
     </div>
-
     <div id="screen-ectotape" class="screen hidden">
-        <h2 style="color: var(--rep-watch); text-align: center;">// ECTOTAPE_STREAM</h2>
+        <h2 style="color:var(--rep-watch);text-align:center;">// ECTOTAPE_STREAM</h2>
         <div id="upload-zone" class="hidden"><input type="text" id="vid-title" placeholder="TITLE"><input type="text" id="vid-url" placeholder="URL"><button onclick="app.uploadVideo()">BROADCAST</button></div>
-        <div id="video-feed" style="height: 400px; overflow-y: scroll;"></div>
-        <button onclick="nav.to('hub')">EXIT</button>
+        <div id="video-feed" style="height:400px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">EXIT</button>
     </div>
-
-    <div id="screen-draw" class="screen hidden">
-        <h3 id="draw-title">DRAW: A</h3>
-        <canvas id="draw-canvas" width="280" height="280"></canvas>
-        <div class="grid-2"><button onclick="drawing.clear()">CLEAR</button><button onclick="drawing.save()">NEXT</button></div>
-        <button onclick="drawing.cancel()">CANCEL</button>
-    </div>
-
+    <div id="screen-draw" class="screen hidden"><h3 id="draw-title">DRAW: A</h3><canvas id="draw-canvas" width="280" height="280"></canvas><div class="grid-2"><button onclick="drawing.clear()">CLEAR</button><button onclick="drawing.save()">NEXT</button></div><button onclick="drawing.cancel()">CANCEL</button></div>
     <div id="screen-create" class="screen hidden"><h2>// NEW_CLAN</h2><input type="text" id="create-name" placeholder="NAME"><input type="password" id="create-pass" placeholder="PASS"><button onclick="app.createClanStart()">START DRAWING</button><button onclick="nav.to('hub')">CANCEL</button></div>
     <div id="screen-dict" class="screen hidden"><h3>// DICT</h3><div class="grid-2"><input type="text" id="dict-orig"><input type="text" id="dict-new"></div><button onclick="app.addWord()">ADD</button><div id="dict-list"></div><button onclick="nav.to('hub')">BACK</button></div>
-
-    <div id="screen-soc" class="screen hidden" style="border-color: cyan; box-shadow: 0 0 15px cyan;">
-        <h2 style="color: cyan;">// SECURITY_OPS_CENTER</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-            <button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button>
-            <button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button>
-        </div>
-        <button onclick="nav.to('kali')" style="background: #111; color: var(--kali-accent); border: 1px solid var(--kali-accent); font-weight: bold;">[ BOOT KALI_LINUX_EMU ]</button>
-        <div id="soc-console" style="background: #000; border: 1px solid cyan; height: 150px; padding: 10px; overflow-y: scroll; font-family: monospace; font-size: 11px; margin-top:10px;">
-            <span class="term-line">> SOC_INIT... READY.</span>
-        </div>
-        <button onclick="nav.to('hub')" style="margin-top: 10px; border-color: cyan; color: cyan;">DISCONNECT</button>
-    </div>
-
-    <div id="screen-kali" class="hidden">
-        <div id="kali-bar"><div style="display: flex; align-items: center;"><span class="kali-logo">🐉 KALI_EMU</span><button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications</button></div><div id="kali-clock">12:00</div></div>
-        <div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()">
-            <div id="win-term" class="window" style="z-index: 10;">
-                <div class="win-header" onmousedown="kali.startDrag(event, 'win-term')"><span class="win-title">root@kali:~/python_scripts</span><div class="win-controls"><button onclick="nav.to('soc')" style="background:#ff5f56;width:15px;height:15px;border-radius:50%;padding:0;"></button></div></div>
-                <div class="win-body"><div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div><div id="py-input-line"><span style="color:cyan;margin-right:5px;">>>></span><input type="text" id="py-input" onkeydown="kali.handleInput(event)"></div></div>
-            </div>
-            <div id="kali-menu" class="hidden" style="position: absolute; top:0; left:0; width:200px; background:#2d2d2d; z-index:50; border:1px solid #444;"><button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button><button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button></div>
-        </div>
-    </div>
+    <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2><div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU ]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
+    <div id="screen-kali" class="hidden"><div id="kali-bar"><div style="display:flex;align-items:center;"><span class="kali-logo">🐉 KALI_EMU</span><button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications</button></div></div><div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()"><div id="win-term" class="window" style="z-index:10;"><div class="win-header" onmousedown="kali.startDrag(event,'win-term')"><span class="win-title">root@kali:~/python_scripts</span><div class="win-controls"><button onclick="nav.to('soc')" style="background:#ff5f56;width:15px;height:15px;border-radius:50%;padding:0;"></button></div></div><div class="win-body"><div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div><div id="py-input-line"><span style="color:cyan;margin-right:5px;">>>></span><input type="text" id="py-input" onkeydown="kali.handleInput(event)"></div></div></div><div id="kali-menu" class="hidden" style="position:absolute;top:0;left:0;width:200px;background:#2d2d2d;z-index:50;border:1px solid #444;"><button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button><button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button></div></div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, limit, serverTimestamp, where, getDocs, deleteField, deleteDoc } 
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, limit, serverTimestamp, where, getDocs, deleteField, deleteDoc, arrayUnion, arrayRemove } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDxb5GEGx9LZYD4Ijo-N6K849rsneYlgqk", authDomain: "ectenopo.firebaseapp.com", projectId: "ectenopo", storageBucket: "ectenopo.firebasestorage.app", messagingSenderId: "283760497520", appId: "1:283760497520:web:c9fdda2d704ca95c0bf5b5" };
@@ -338,12 +294,12 @@
 
         // --- UTILS ---
         const loading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
-        window.audioSys = { ctx: new (window.AudioContext||window.webkitAudioContext)(), playClick:()=>{/*...*/}, playEnter:()=>{/*...*/} }; // Simplified for space
+        window.audioSys = { ctx: new (window.AudioContext||window.webkitAudioContext)(), playClick:()=>{}, playEnter:(){} }; 
 
         // --- STATE ---
-        window.state = { user: null, clan: null, clanData: {}, viewedProfile: null };
+        window.state = { user: null, clan: null, clanData: {}, viewedProfile: null, activeCommentId: null, activeCommentType: null, unsubComments: null };
 
-        // --- NAVIGATION ---
+        // --- NAV ---
         window.nav = {
             to: (id) => {
                 document.querySelectorAll('.screen, #screen-kali').forEach(e => e.classList.add('hidden'));
@@ -361,8 +317,6 @@
         // --- APP LOGIC ---
         window.app = {
             autoTrans: true,
-            
-            // AUTH
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim();
                 const p = document.getElementById('auth-pass').value.trim();
@@ -384,357 +338,248 @@
                 await setDoc(doc(db, "users", u), { pass: p, clan: null, rep: 0, displayName: u, verified: false, pfp: "", private: false });
                 loading(false); alert("REGISTERED");
             },
-
-            // HUB & CORE
             initHub: async () => {
+                // User & Profile Init
                 const docSnap = await getDoc(doc(db, "users", state.user));
                 const userData = docSnap.data();
-                
                 let verifiedHTML = userData.verified ? `<span class="verified-badge">♦✓</span>` : '';
                 document.getElementById('hub-user').innerHTML = `${userData.displayName || state.user} ${verifiedHTML}`;
 
-                // Admin Check for SOC
                 const admins = ["user1234", "user4321"];
-                const isSuper = admins.includes(state.user.toLowerCase());
-                if(isSuper) document.getElementById('btn-soc').classList.remove('hidden');
+                if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
 
-                // Clan Listener
+                // Listen to User (Clan updates)
                 onSnapshot(doc(db, "users", state.user), (d) => {
                     const data = d.data();
                     if(data.clan) { state.clan = data.clan; app.listenToClan(data.clan); }
                     else { state.clan = null; document.getElementById('panel-no-clan').classList.remove('hidden'); document.getElementById('panel-in-clan').classList.add('hidden'); }
+                    document.getElementById('hub-rep').innerText = "REP: " + (data.rep || 0);
                 });
+
+                // Listen to Global Chat (FIXED)
+                const q = query(collection(db, "global_chat"), orderBy("ts", "desc"), limit(50));
+                onSnapshot(q, (snap) => {
+                    const d = document.getElementById('global-chat'); d.innerHTML = "";
+                    const msgs = []; snap.forEach(doc => msgs.push(doc.data()));
+                    msgs.reverse().forEach(m => d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`);
+                    d.scrollTop = d.scrollHeight;
+                });
+            },
+            sendGlobalMsg: async () => {
+                const t = document.getElementById('global-input').value;
+                if(t) { await addDoc(collection(db, "global_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('global-input').value=""; }
             },
 
             // PROFILES
-            searchUser: () => {
-                const u = document.getElementById('search-user-input').value.trim();
-                if(u) app.openProfile(u);
-            },
+            searchUser: () => { const u = document.getElementById('search-user-input').value.trim(); if(u) app.openProfile(u); },
             openProfile: async (targetUser) => {
                 loading(true);
                 const snap = await getDoc(doc(db, "users", targetUser));
                 loading(false);
-                
                 if(!snap.exists()) return alert("USER NOT FOUND");
                 const d = snap.data();
                 state.viewedProfile = targetUser;
-
                 document.getElementById('prof-username').innerText = "@" + targetUser;
                 document.getElementById('prof-displayname').innerText = d.displayName || targetUser;
-                
                 const pfp = d.pfp || "";
                 document.getElementById('prof-pfp-display').style.backgroundImage = pfp ? `url('${pfp}')` : "none";
-
-                if(d.verified) document.getElementById('prof-verified').classList.remove('hidden');
-                else document.getElementById('prof-verified').classList.add('hidden');
-
-                // Privacy Logic
-                if(d.private && targetUser !== state.user) {
-                    document.getElementById('prof-clan').innerText = "[REDACTED]";
-                    document.getElementById('prof-rep').innerText = "[REDACTED]";
-                } else {
-                    document.getElementById('prof-clan').innerText = d.clan || "NONE";
-                    document.getElementById('prof-rep').innerText = d.rep || "0";
-                }
-
-                // Edit Panel
-                if(targetUser === state.user) {
-                    document.getElementById('prof-edit-panel').classList.remove('hidden');
-                    document.getElementById('edit-disp').value = d.displayName || "";
-                    document.getElementById('edit-pfp').value = d.pfp || "";
-                    document.getElementById('edit-private').checked = d.private || false;
-                } else {
-                    document.getElementById('prof-edit-panel').classList.add('hidden');
-                }
-
-                // Admin Verification Panel
+                if(d.verified) document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
+                
+                if(d.private && targetUser !== state.user) { document.getElementById('prof-clan').innerText = "[REDACTED]"; document.getElementById('prof-rep').innerText = "[REDACTED]"; }
+                else { document.getElementById('prof-clan').innerText = d.clan || "NONE"; document.getElementById('prof-rep').innerText = d.rep || "0"; }
+                
+                if(targetUser === state.user) { document.getElementById('prof-edit-panel').classList.remove('hidden'); document.getElementById('edit-disp').value = d.displayName || ""; document.getElementById('edit-pfp').value = d.pfp || ""; document.getElementById('edit-private').checked = d.private || false; }
+                else { document.getElementById('prof-edit-panel').classList.add('hidden'); }
+                
                 const admins = ["user1234", "user4321"];
-                if(admins.includes(state.user.toLowerCase()) && targetUser !== state.user) {
-                    document.getElementById('prof-admin-panel').classList.remove('hidden');
-                } else {
-                    document.getElementById('prof-admin-panel').classList.add('hidden');
-                }
-
+                if(admins.includes(state.user.toLowerCase()) && targetUser !== state.user) document.getElementById('prof-admin-panel').classList.remove('hidden');
+                else document.getElementById('prof-admin-panel').classList.add('hidden');
                 nav.to('profile');
             },
             saveProfile: async () => {
-                const dn = document.getElementById('edit-disp').value.trim();
-                const pf = document.getElementById('edit-pfp').value.trim();
-                const priv = document.getElementById('edit-private').checked;
-                await updateDoc(doc(db, "users", state.user), { displayName: dn, pfp: pf, private: priv });
-                alert("PROFILE UPDATED");
-                app.openProfile(state.user);
+                const dn = document.getElementById('edit-disp').value.trim(); const pf = document.getElementById('edit-pfp').value.trim(); const priv = document.getElementById('edit-private').checked;
+                await updateDoc(doc(db, "users", state.user), { displayName: dn, pfp: pf, private: priv }); alert("SAVED"); app.openProfile(state.user);
             },
-            verifyUser: async () => {
-                if(!confirm("GRANT VERIFIED STATUS?")) return;
-                await updateDoc(doc(db, "users", state.viewedProfile), { verified: true });
-                alert("USER VERIFIED");
-                app.openProfile(state.viewedProfile);
-            },
+            verifyUser: async () => { if(!confirm("VERIFY?")) return; await updateDoc(doc(db, "users", state.viewedProfile), { verified: true }); alert("VERIFIED"); app.openProfile(state.viewedProfile); },
 
-            // CLAN
+            // CLAN CORE
             listenToClan: (cName) => {
-                document.getElementById('panel-no-clan').classList.add('hidden');
-                document.getElementById('panel-in-clan').classList.remove('hidden');
-                document.getElementById('clan-header').innerText = cName;
-                
-                onSnapshot(doc(db, "clans", cName), (doc) => { 
-                    state.clanData = doc.data(); 
-                    // Show Delete Button if Leader
-                    if(state.clanData.leader === state.user) {
-                        document.getElementById('btn-delete-clan').classList.remove('hidden');
-                    } else {
-                        document.getElementById('btn-delete-clan').classList.add('hidden');
-                    }
-                });
-                
-                // Chat Listener (Simplified)
+                document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText = cName;
+                onSnapshot(doc(db, "clans", cName), (doc) => { state.clanData = doc.data(); if(state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); else document.getElementById('btn-delete-clan').classList.add('hidden'); });
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
-                onSnapshot(q, (snap) => {
-                    const d = document.getElementById('clan-chat'); d.innerHTML = "";
-                    const msgs = []; snap.forEach(doc => msgs.push(doc.data()));
-                    msgs.reverse().forEach(m => { 
-                        let txt = app.autoTrans ? app.translate(m.txt) : m.txt; 
-                        d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${txt}</div>`; 
-                    });
-                    d.scrollTop = d.scrollHeight;
-                });
+                onSnapshot(q, (snap) => { const d = document.getElementById('clan-chat'); d.innerHTML = ""; const msgs = []; snap.forEach(doc => msgs.push(doc.data())); msgs.reverse().forEach(m => { let txt = app.autoTrans ? app.translate(m.txt) : m.txt; d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${txt}</div>`; }); d.scrollTop = d.scrollHeight; });
             },
-            
-            // ROSTER (Fixed)
             loadRoster: () => {
-                nav.to('ranks');
-                const list = document.getElementById('roster-list');
-                list.innerHTML = "";
-                const ranks = state.clanData.ranks || {};
-                const isLeader = state.clanData.leader === state.user;
-
+                nav.to('ranks'); const list = document.getElementById('roster-list'); list.innerHTML = ""; const ranks = state.clanData.ranks || {}; const isLeader = state.clanData.leader === state.user;
                 for (const [member, rank] of Object.entries(ranks)) {
-                    let controls = "";
-                    if (isLeader && member !== state.user) {
-                        controls = `
-                        <button onclick="app.clanKick('${member}')" style="width:auto; font-size:10px; padding:2px;" class="danger">KICK</button>
-                        <button onclick="app.clanPromote('${member}')" style="width:auto; font-size:10px; padding:2px;">PROMOTE</button>
-                        `;
-                    }
-                    list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>${member} <span style="color:yellow">[${rank.toUpperCase()}]</span></span>
-                        <div>${controls}</div>
-                    </div>`;
+                    let controls = ""; if (isLeader && member !== state.user) controls = `<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:2px;" class="danger">KICK</button><button onclick="app.clanPromote('${member}')" style="width:auto;font-size:10px;padding:2px;">PROMOTE</button>`;
+                    list.innerHTML += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span>${member} <span style="color:yellow">[${rank.toUpperCase()}]</span></span><div>${controls}</div></div>`;
                 }
             },
-            clanKick: async (target) => {
-                if(!confirm(`KICK ${target}?`)) return;
-                await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: deleteField() });
-                await updateDoc(doc(db, "users", target), { clan: null });
-                app.loadRoster();
-            },
-            clanPromote: async (target) => {
-                await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: 'admin' });
-                app.loadRoster();
-            },
-
-            // DELETE CLAN
+            clanKick: async (target) => { if(!confirm(`KICK ${target}?`)) return; await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: deleteField() }); await updateDoc(doc(db, "users", target), { clan: null }); app.loadRoster(); },
+            clanPromote: async (target) => { await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: 'admin' }); app.loadRoster(); },
             deleteClan: async () => {
-                const cName = state.clan;
-                if(!confirm("WARNING: THIS WILL PERMANENTLY DELETE THE CLAN AND REMOVE ALL MEMBERS. PROCEED?")) return;
-                loading(true);
-                
-                // 1. Get all members
-                const cDoc = await getDoc(doc(db, "clans", cName));
-                const ranks = cDoc.data().ranks;
-                
-                // 2. Remove clan from all users
-                const batch = []; 
-                // Note: In real app use Batch writes. Here iterating for simplicity of code block.
-                for(const member of Object.keys(ranks)) {
-                    await updateDoc(doc(db, "users", member), { clan: null });
-                }
-
-                // 3. Delete Clan Doc
-                await deleteDoc(doc(db, "clans", cName));
-                
-                loading(false);
-                alert("CLAN DELETED");
-                nav.to('hub');
+                const cName = state.clan; if(!confirm("WARNING: DELETE CLAN?")) return; loading(true);
+                const cDoc = await getDoc(doc(db, "clans", cName)); const ranks = cDoc.data().ranks;
+                for(const member of Object.keys(ranks)) await updateDoc(doc(db, "users", member), { clan: null });
+                await deleteDoc(doc(db, "clans", cName)); loading(false); alert("DELETED"); nav.to('hub');
             },
-
-            // DRAWING (Fix Black Screen)
-            startSymbolEdit: () => {
-                drawing.mode = "edit";
-                // Clone existing symbols
-                drawing.tempData = { syms: { ...state.clanData.symbols } };
-                drawing.letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
-                drawing.idx = 0;
-                nav.to('draw');
-                // Force reset canvas
-                setTimeout(() => drawing.clear(), 100);
-            },
+            joinClan: async () => { const n = document.getElementById('join-name').value.trim(); const p = document.getElementById('join-pass').value.trim(); const s = await getDoc(doc(db, "clans", n)); if(s.exists() && s.data().pass === p) { await updateDoc(doc(db, "users", state.user), { clan: n }); await updateDoc(doc(db, "clans", n), { [`ranks.${state.user}`]: 'member' }); } else alert("INVALID"); },
+            leaveClan: async () => { if(!confirm("LEAVE?")) return; await updateDoc(doc(db, "users", state.user), { clan: null }); await updateDoc(doc(db, "clans", state.clan), { [`ranks.${state.user}`]: deleteField() }); },
+            sendClanMsg: async () => { const t = document.getElementById('clan-input').value; if(t) { await addDoc(collection(db, "clans", state.clan, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('clan-input').value=""; } },
+            toggleTrans: () => { app.autoTrans = !app.autoTrans; document.getElementById('btn-trans').style.color = app.autoTrans ? '#00FF00' : '#555'; },
+            translate: (txt) => { let out = ""; const words = state.clanData.words || {}; const syms = state.clanData.symbols || {}; txt.split(" ").forEach(w => { const c = w.toLowerCase().replace(/[^a-z]/g,''); if(words[c]) out += app.strToSym(words[c], syms) + " "; else out += app.strToSym(c, syms) + " "; }); return out; },
+            strToSym: (str, syms) => { let html = ""; for(let c of str) { if(syms[c.toUpperCase()]) html += `<img src="${syms[c.toUpperCase()]}" class="chat-img">`; else html += c; } return html; },
             
-            // Standard Ops
-            joinClan: async () => {/*...*/},
-            leaveClan: async () => {/*...*/},
-            sendClanMsg: async () => {/*...*/},
-            sendGlobalMsg: async () => {/*...*/},
-            translate: (txt) => {/*...*/},
-            strToSym: (str, syms) => {/*...*/},
-            toggleTrans: () => {/*...*/},
-            // ... (Other generic functions assumed from previous prompt)
+            // JOBS, EVENTS, KALI, ETC
+            createEvent: async () => { const n = document.getElementById('evt-name').value; if(!n) return; await addDoc(collection(db, "events"), { name: n, desc: document.getElementById('evt-desc').value, start: document.getElementById('evt-start').value, end: document.getElementById('evt-end').value, creator: state.user, ts: serverTimestamp() }); alert("CREATED"); app.loadEvents(); },
+            loadEvents: async () => { const list = document.getElementById('event-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "events"), orderBy("start", "asc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const e = d.data(); list.innerHTML += `<div class="card"><strong style="color:white;">${e.name}</strong><br><span>${e.start} // ${e.end || '?'}</span><br><p>${e.desc}</p><small>ORG: ${e.creator}</small></div>`; }); },
+            createJob: async () => { const t = document.getElementById('job-title').value; if(!t) return; await addDoc(collection(db, "jobs"), { title: t, desc: document.getElementById('job-desc').value, owner: state.user, worker: null, status: 'OPEN', ts: serverTimestamp() }); alert("POSTED"); app.loadJobs(); },
+            loadJobs: async () => { const list = document.getElementById('job-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "jobs"), orderBy("ts", "desc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const j = d.data(); const id = d.id; let action = ""; if(j.status === 'OPEN' && j.owner !== state.user) action = `<button onclick="app.acceptJob('${id}')">ACCEPT</button>`; else if (j.owner === state.user || j.worker === state.user) action = `<button onclick="app.openJobChat('${id}')" class="warn">OPEN CHAT</button>`; else action = `<button disabled>CLOSED</button>`; list.innerHTML += `<div class="card"><strong>${j.title}</strong> [${j.status}]<br><em>${j.desc}</em><br><small>CLIENT: ${j.owner}</small><br>${action}</div>`; }); },
+            acceptJob: async (jid) => { if(!confirm("ACCEPT?")) return; await updateDoc(doc(db, "jobs", jid), { worker: state.user, status: 'ASSIGNED' }); app.openJobChat(jid); },
+            openJobChat: (jid) => { document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob = jid; onSnapshot(query(collection(db, "jobs", jid, "msgs"), orderBy("ts", "desc")), (snap) => { const div = document.getElementById('job-chat-box'); div.innerHTML = ""; const msgs = []; snap.forEach(d => msgs.push(d.data())); msgs.reverse().forEach(m => div.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`); div.scrollTop = div.scrollHeight; }); },
+            sendJobMsg: async () => { const t = document.getElementById('job-msg-input').value; if(t) await addDoc(collection(db, "jobs", state.currentJob, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('job-msg-input').value = ""; },
+            closeJobChat: () => { document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob = null; },
+            loadEctoTape: async () => { const admins=["user1234","user4321"]; const q = query(collection(db, "ectotape_vids"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); const feed = document.getElementById('video-feed'); feed.innerHTML = ""; snap.forEach(d => { const v = d.data(); feed.innerHTML += `<div class="card"><strong>${v.title}</strong><iframe width="100%" height="150" src="${v.url.replace('watch?v=','embed/')}" frameborder="0"></iframe></div>`; }); if(admins.includes(state.user.toLowerCase())) document.getElementById('upload-zone').classList.remove('hidden'); },
+            uploadVideo: async () => { await addDoc(collection(db, "ectotape_vids"), { title: document.getElementById('vid-title').value, url: document.getElementById('vid-url').value, uploader: state.user, ts: serverTimestamp() }); alert("UPLOADED"); app.loadEctoTape(); },
+            createClanStart: () => { const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p) return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
+            startSymbolEdit: () => { drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
+            addWord: async () => { const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan) await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]:v}); },
+            runSecurityScan: (type) => { const c=document.getElementById('soc-console'); c.innerHTML+=`<div>> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div>> COMPLETE. CLEAN.</div>`,1500); }
         };
 
         // --- SOCIAL LOGIC ---
         window.social = {
             tab: (t) => {
-                document.getElementById('soc-tab-posts').classList.add('hidden');
-                document.getElementById('soc-tab-polls').classList.add('hidden');
-                document.getElementById('soc-tab-' + t).classList.remove('hidden');
-                if(t === 'posts') social.loadPosts();
-                if(t === 'polls') social.loadPolls();
+                document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden');
+                if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls();
+            },
+            // ACTIONS
+            like: async (id, type) => {
+                const col = type === 'post' ? 'posts' : 'polls';
+                const ref = doc(db, col, id);
+                const snap = await getDoc(ref);
+                const d = snap.data();
+                const likes = d.likes || [];
+                const dislikes = d.dislikes || [];
+                
+                if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) });
+                else {
+                    await updateDoc(ref, { likes: arrayUnion(state.user) });
+                    if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) });
+                }
+                type === 'post' ? social.loadPosts() : social.loadPolls();
+            },
+            dislike: async (id, type) => {
+                const col = type === 'post' ? 'posts' : 'polls';
+                const ref = doc(db, col, id);
+                const snap = await getDoc(ref);
+                const d = snap.data();
+                const likes = d.likes || [];
+                const dislikes = d.dislikes || [];
+
+                if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) });
+                else {
+                    await updateDoc(ref, { dislikes: arrayUnion(state.user) });
+                    if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) });
+                }
+                type === 'post' ? social.loadPosts() : social.loadPolls();
+            },
+            openComments: (id, type) => {
+                state.activeCommentId = id;
+                state.activeCommentType = type;
+                const col = type === 'post' ? 'posts' : 'polls';
+                document.getElementById('comment-overlay').classList.remove('hidden');
+                
+                // Listen to comments
+                if(state.unsubComments) state.unsubComments();
+                const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc"));
+                state.unsubComments = onSnapshot(q, (snap) => {
+                    const div = document.getElementById('active-comment-list');
+                    div.innerHTML = "";
+                    if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>";
+                    snap.forEach(d => {
+                        const c = d.data();
+                        div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`;
+                    });
+                });
+            },
+            submitComment: async () => {
+                const txt = document.getElementById('new-comment-input').value.trim();
+                if(!txt || !state.activeCommentId) return;
+                const col = state.activeCommentType === 'post' ? 'posts' : 'polls';
+                await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() });
+                document.getElementById('new-comment-input').value = "";
             },
             // POSTS
-            createPost: async () => {
-                const txt = document.getElementById('post-content').value;
-                if(!txt) return;
-                await addDoc(collection(db, "posts"), { u: state.user, txt: txt, ts: serverTimestamp(), likes: [] });
-                document.getElementById('post-content').value = "";
-                social.loadPosts();
-            },
+            createPost: async () => { const txt = document.getElementById('post-content').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; social.loadPosts(); },
             loadPosts: async () => {
-                const div = document.getElementById('feed-posts');
-                div.innerHTML = "LOADING FEED...";
+                const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED...";
                 const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20));
-                const snap = await getDocs(q);
-                div.innerHTML = "";
+                const snap = await getDocs(q); div.innerHTML = "";
                 snap.forEach(d => {
                     const p = d.data();
+                    const likes = (p.likes || []).length;
+                    const dislikes = (p.dislikes || []).length;
+                    const userLiked = (p.likes || []).includes(state.user) ? "active-action" : "";
+                    const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : "";
+
                     div.innerHTML += `
                     <div class="card">
                         <div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${new Date(p.ts?.toDate()).toLocaleTimeString()}</span></div>
                         <div>${p.txt}</div>
+                        <div class="social-actions">
+                            <button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button>
+                            <button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button>
+                            <button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button>
+                        </div>
                     </div>`;
                 });
             },
             // POLLS
             createPoll: async () => {
-                const q = document.getElementById('poll-q').value;
-                const o1 = document.getElementById('poll-o1').value;
-                const o2 = document.getElementById('poll-o2').value;
+                const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value;
                 if(!q || !o1 || !o2) return;
-                
-                await addDoc(collection(db, "polls"), {
-                    u: state.user, q: q, 
-                    opts: [{t: o1, v:0}, {t: o2, v:0}],
-                    voters: [], ts: serverTimestamp()
-                });
-                document.getElementById('poll-creator').classList.add('hidden');
-                social.loadPolls();
+                await addDoc(collection(db, "polls"), { u: state.user, q: q, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() });
+                document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls();
             },
             loadPolls: async () => {
-                const div = document.getElementById('feed-polls');
-                div.innerHTML = "LOADING POLLS...";
+                const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS...";
                 const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10));
-                const snap = await getDocs(q);
-                div.innerHTML = "";
+                const snap = await getDocs(q); div.innerHTML = "";
                 snap.forEach(d => {
                     const p = d.data();
+                    const likes = (p.likes || []).length;
+                    const dislikes = (p.dislikes || []).length;
+                    const userLiked = (p.likes || []).includes(state.user) ? "active-action" : "";
+                    const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : "";
+
                     let optsHTML = "";
                     p.opts.forEach((opt, idx) => {
-                        const total = p.opts.reduce((a,b)=>a+b.v,0) || 1;
-                        const pct = Math.round((opt.v / total) * 100);
-                        optsHTML += `
-                        <div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})">
-                            <div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div>
-                            <div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div>
-                        </div>`;
+                        const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100);
+                        optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;
                     });
-                    
                     div.innerHTML += `
                     <div class="card">
-                        <div class="post-header"><span>POLL BY @${p.u}</span></div>
-                        <strong>${p.q}</strong>
-                        ${optsHTML}
+                        <div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${optsHTML}
+                        <div class="social-actions">
+                            <button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button>
+                            <button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button>
+                            <button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button>
+                        </div>
                     </div>`;
                 });
             },
             vote: async (id, optIdx) => {
-                const ref = doc(db, "polls", id);
-                const snap = await getDoc(ref);
-                const d = snap.data();
+                const ref = doc(db, "polls", id); const snap = await getDoc(ref); const d = snap.data();
                 if(d.voters.includes(state.user)) return alert("ALREADY VOTED");
-                
-                d.opts[optIdx].v++;
-                d.voters.push(state.user);
-                await updateDoc(ref, { opts: d.opts, voters: d.voters });
-                social.loadPolls();
+                d.opts[optIdx].v++; d.voters.push(state.user); await updateDoc(ref, { opts: d.opts, voters: d.voters }); social.loadPolls();
             }
         };
 
-        // --- DRAWING ENGINE ---
-        window.drawing = {
-            canvas: document.getElementById('draw-canvas'),
-            ctx: document.getElementById('draw-canvas').getContext('2d'),
-            isDrawing: false, mode: 'create',
-            init: () => {
-                drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00';
-                const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);};
-                const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}};
-                drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY);
-                drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY);
-                drawing.canvas.onmouseup=()=>drawing.isDrawing=false;
-            },
-            clear: () => drawing.ctx.clearRect(0,0,300,300),
-            cancel: () => nav.to('hub'),
-            save: async () => {
-                const char = drawing.letters[drawing.idx];
-                drawing.tempData.syms[char] = drawing.canvas.toDataURL();
-                drawing.idx++;
-                if(drawing.idx < drawing.letters.length) {
-                    drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx];
-                } else {
-                    loading(true);
-                    if(drawing.mode === 'create') {
-                        await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } });
-                        await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name });
-                    } else if (drawing.mode === 'edit') {
-                        await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms });
-                    }
-                    loading(false); nav.to('hub');
-                }
-            }
-        };
-        drawing.init();
-        
-        // --- KALI & SETTINGS (Condensed) ---
-        window.kali = { /* ... previous implementation ... */ 
-            toggleMenu: () => document.getElementById('kali-menu').classList.toggle('hidden'),
-            startDrag: (e, id) => { /*...*/ }, drag: (e) => { /*...*/ }, stopDrag: () => { /*...*/ }
-        };
-        window.settings = { apply: () => { /*...*/ }, load: () => { /*...*/ }, reset: () => { /*...*/ } };
-
-        // --- FILL IN MISSING FUNCTIONS FROM PREVIOUS PROMPT FOR COMPLETENESS IF NEEDED ---
-        app.joinClan = async () => {
-            const n = document.getElementById('join-name').value.trim();
-            const p = document.getElementById('join-pass').value.trim();
-            const s = await getDoc(doc(db, "clans", n));
-            if(s.exists() && s.data().pass === p) {
-                 await updateDoc(doc(db, "users", state.user), { clan: n });
-                 await updateDoc(doc(db, "clans", n), { [`ranks.${state.user}`]: 'member' });
-            } else alert("INVALID");
-        };
-        app.leaveClan = async () => {
-            if(!confirm("LEAVE?")) return;
-            await updateDoc(doc(db, "users", state.user), { clan: null });
-            await updateDoc(doc(db, "clans", state.clan), { [`ranks.${state.user}`]: deleteField() });
-        };
-        app.sendClanMsg = async () => {
-            const t = document.getElementById('clan-input').value;
-            if(t) { await addDoc(collection(db, "clans", state.clan, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('clan-input').value=""; }
-        };
-        app.toggleTrans = () => { app.autoTrans = !app.autoTrans; document.getElementById('btn-trans').style.color = app.autoTrans ? '#00FF00' : '#555'; };
-        app.translate = (txt) => { let out = ""; const words = state.clanData.words || {}; const syms = state.clanData.symbols || {}; txt.split(" ").forEach(w => { const c = w.toLowerCase().replace(/[^a-z]/g,''); if(words[c]) out += app.strToSym(words[c], syms) + " "; else out += app.strToSym(c, syms) + " "; }); return out; };
-        app.strToSym = (str, syms) => { let html = ""; for(let c of str) { if(syms[c.toUpperCase()]) html += `<img src="${syms[c.toUpperCase()]}" class="chat-img">`; else html += c; } return html; };
-        app.createClanStart = async () => { const n = document.getElementById('create-name').value; const p = document.getElementById('create-pass').value; if(!n || !p) return; drawing.mode = "create"; drawing.tempData = { name: n, pass: p, syms: {} }; drawing.letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx = 0; nav.to('draw'); };
+        window.drawing = { canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing: false, mode: 'create', init: () => { drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00'; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; }, clear: () => drawing.ctx.clearRect(0,0,300,300), cancel: () => nav.to('hub'), save: async () => { const char = drawing.letters[drawing.idx]; drawing.tempData.syms[char] = drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx < drawing.letters.length) { drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx]; } else { loading(true); if(drawing.mode === 'create') { await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } }); await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name }); } else if (drawing.mode === 'edit') { await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms }); } loading(false); nav.to('hub'); } } }; drawing.init();
+        window.kali = { toggleMenu: () => document.getElementById('kali-menu').classList.toggle('hidden'), dragTarget: null, offsetX: 0, offsetY: 0, vars: {}, openApp: (app) => { const con = document.getElementById('py-console'); con.innerHTML += `\n<span class="term-info">root@kali:~# start ${app}</span>\n`; setTimeout(() => con.scrollTop = con.scrollHeight, 100); }, handleInput: (e) => { if(e.key === 'Enter') { const inp = document.getElementById('py-input'); const cmd = inp.value.trim(); const con = document.getElementById('py-console'); con.innerHTML += `\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value = ""; con.scrollTop = con.scrollHeight; } }, startDrag: (e, id) => { kali.dragTarget = document.getElementById(id); const rect = kali.dragTarget.getBoundingClientRect(); kali.offsetX = e.clientX - rect.left; kali.offsetY = e.clientY - rect.top; }, drag: (e) => { if(kali.dragTarget) { kali.dragTarget.style.left = (e.clientX - kali.offsetX) + 'px'; kali.dragTarget.style.top = (e.clientY - kali.offsetY) + 'px'; } }, stopDrag: () => { kali.dragTarget = null; } };
+        window.settings = { apply: () => { const r = document.documentElement.style; r.setProperty('--bg-color', document.getElementById('col-bg').value); r.setProperty('--main-color', document.getElementById('col-main').value); }, load: () => {}, reset: () => { document.getElementById('col-bg').value="#000000"; document.getElementById('col-main').value="#00FF00"; settings.apply(); } };
 
     </script>
 </body>
