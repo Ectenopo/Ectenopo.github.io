@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLAN_NET // v2.0</title>
+    <title>CLAN_NET // ONLINE</title>
     <style>
         /* --- THEME: BLACK & NEON GREEN --- */
         :root {
             --bg-color: #000000;
-            --main-color: #00FF00; /* Neon Green */
+            --main-color: #00FF00;
             --dim-color: #004400;
+            --warn-color: #FFAA00;
             --err-color: #FF0000;
             --font-main: 'Courier New', Courier, monospace;
         }
@@ -19,539 +20,532 @@
             color: var(--main-color);
             font-family: var(--font-main);
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             overflow-x: hidden;
+            font-size: 14px;
         }
 
-        h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--dim-color); padding-bottom: 5px; }
-        
-        /* --- UTILS --- */
+        /* --- UI COMPONENTS --- */
         .hidden { display: none !important; }
-        .screen { max-width: 600px; margin: 0 auto; border: 1px solid var(--dim-color); padding: 20px; box-shadow: 0 0 15px rgba(0, 255, 0, 0.1); }
+        .screen { max-width: 600px; margin: 0 auto; border: 1px solid var(--dim-color); padding: 15px; box-shadow: 0 0 10px rgba(0, 255, 0, 0.1); position: relative; }
         
-        /* --- CONTROLS --- */
-        input, button, textarea {
+        button, input, select, textarea {
             background: #0a0a0a;
             border: 1px solid var(--dim-color);
             color: var(--main-color);
-            padding: 12px;
-            margin-bottom: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
             font-family: var(--font-main);
             width: 100%;
             box-sizing: border-box;
             outline: none;
         }
 
-        input:focus { border-color: var(--main-color); }
+        button:hover { background: var(--main-color); color: black; cursor: pointer; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.danger { border-color: var(--err-color); color: var(--err-color); }
+        button.danger:hover { background: var(--err-color); color: white; }
+        button.warn { border-color: var(--warn-color); color: var(--warn-color); }
+        
+        /* --- REPUTATION COLORS --- */
+        .rep-green { color: #00FF00; text-shadow: 0 0 5px #00FF00; }
+        .rep-purple { color: #D000FF; text-shadow: 0 0 5px #D000FF; }
+        .rep-red { color: #FF0000; text-shadow: 0 0 5px #FF0000; font-weight: bold; }
 
-        button {
-            background: var(--dim-color);
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-            text-transform: uppercase;
+        /* --- ALERTS & FLASHING --- */
+        @keyframes flashRed { 0% {background:black;} 50% {background:#330000;} 100% {background:black;} }
+        .alert-mode { animation: flashRed 1s infinite; }
+        
+        #alert-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border: 2px solid var(--err-color);
         }
 
-        button:hover { background: var(--main-color); color: black; box-shadow: 0 0 10px var(--main-color); }
-        button.danger { border-color: var(--err-color); color: var(--err-color); background: #200000; }
-        button.danger:hover { background: var(--err-color); color: white; box-shadow: 0 0 10px var(--err-color); }
-        button.secondary { background: transparent; border: 1px dashed var(--dim-color); color: #666; }
-        button.secondary:hover { border-color: var(--main-color); color: var(--main-color); }
-
-        /* --- GRID FOR SYMBOL EDIT --- */
-        .symbol-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-        .symbol-item { border: 1px solid #333; text-align: center; padding: 10px; cursor: pointer; }
-        .symbol-item:hover { background: var(--dim-color); }
-
         /* --- CHAT --- */
-        .chat-msg { margin-bottom: 10px; border-bottom: 1px solid #111; padding-bottom: 5px; word-wrap: break-word; }
-        .chat-img { height: 24px; vertical-align: middle; } 
+        .chat-box { height: 250px; overflow-y: scroll; border: 1px solid #222; margin-bottom: 10px; padding: 10px; background: #050505; }
+        .chat-msg { margin-bottom: 8px; border-bottom: 1px solid #111; padding-bottom: 4px; font-size: 0.9em; word-wrap: break-word; }
+        .chat-img { height: 20px; vertical-align: middle; }
         
         canvas { border: 1px solid var(--main-color); cursor: crosshair; background: #050505; display: block; margin: 0 auto 10px auto; }
         
-        /* --- BOT CHECK --- */
-        #captcha-box { border: 1px dashed var(--main-color); padding: 15px; text-align: center; margin-bottom: 15px; cursor: pointer; }
-        #captcha-box.verified { background: var(--dim-color); border-style: solid; }
+        /* --- LOADING SPINNER --- */
+        #loading-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+        }
     </style>
 </head>
 <body>
 
-    <div id="screen-auth" class="screen">
-        <h1>// SYSTEM_LOGIN</h1>
-        <input type="text" id="auth-user" placeholder="USERNAME">
-        <input type="password" id="auth-pass" placeholder="PASSWORD">
-        <input type="email" id="auth-email" placeholder="EMAIL (RECOVERY)">
-        <p style="font-size: 0.7em; color: #666;">* INACTIVITY PURGE: 37 DAYS</p>
-        <button onclick="app.login()">AUTHENTICATE</button>
-        <button onclick="app.register()" class="secondary">REGISTER NEW ID</button>
+    <div id="loading-overlay" class="hidden">Connecting to Firebase...</div>
+
+    <div id="audio-controls" class="hidden"></div>
+
+    <div id="alert-overlay" class="hidden">
+        <h1 style="color:red; font-size: 3em;">⚠ ALERT ⚠</h1>
+        <p id="alert-msg" style="color:white; font-size: 1.5em; text-align: center; padding: 20px;">SYSTEM COMPROMISED</p>
+        <button onclick="audioSys.stopAlarm(); document.getElementById('alert-overlay').classList.add('hidden')" style="width: 200px; border-color: red; color: red;">ACKNOWLEDGE</button>
     </div>
 
-    <div id="screen-dash" class="screen hidden">
-        <h2>// MAIN_MENU</h2>
-        <p>USER: <span id="dash-username" style="color:white;"></span></p>
-        <p>STATUS: <span id="dash-status"></span></p>
+    <div id="screen-auth" class="screen">
+        <h1>// NET_LOGIN_ONLINE</h1>
+        <input type="text" id="auth-user" placeholder="USERNAME">
+        <input type="password" id="auth-pass" placeholder="PASSWORD">
+        <button onclick="app.login()">AUTHENTICATE</button>
+        <button onclick="app.register()" style="border-style: dashed; opacity: 0.7;">REGISTER IDENTITY</button>
+    </div>
+
+    <div id="screen-hub" class="screen hidden">
+        <div style="display: flex; justify-content: space-between;">
+            <span>USER: <span id="hub-user"></span></span>
+            <span id="hub-rep">REP: <span id="rep-badge">LOADING...</span></span>
+        </div>
+        <hr style="border-color: #333;">
+
+        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <button onclick="nav.tab('clans')">CLANS</button>
+            <button onclick="nav.tab('global')">GLOBAL COMMS</button>
+        </div>
+
+        <div id="tab-clans">
+            <div id="panel-no-clan">
+                <button onclick="nav.to('create')">INITIALIZE NEW CLAN</button>
+                <div style="border: 1px solid #333; padding: 10px; margin-top: 10px;">
+                    <p style="margin: 0 0 5px 0;">SEARCH NETWORK:</p>
+                    <input type="text" id="join-name" placeholder="EXACT CLAN NAME">
+                    <input type="password" id="join-pass" placeholder="ACCESS KEY">
+                    <button onclick="app.joinClan()">CONNECT</button>
+                </div>
+            </div>
+            <div id="panel-in-clan" class="hidden">
+                <h2 id="clan-header" style="color:white;">CLAN_NAME</h2>
+                <div class="chat-box" id="clan-chat"></div>
+                
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="app.toggleTrans()" id="btn-trans" style="width: 50px; font-size: 10px;">ENC</button>
+                    <input type="text" id="clan-input" placeholder="Secure Message..." style="margin:0;">
+                    <button onclick="app.sendClanMsg()" style="width: 60px;">SEND</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px;">
+                    <button onclick="nav.to('dict')">DICTIONARY</button>
+                    <button onclick="nav.to('ranks')">MEMBERS/RANKS</button>
+                    <button onclick="nav.to('alert')" id="btn-alerts" class="warn hidden">SEND ALERT</button>
+                    <button onclick="app.leaveClan()" class="danger">LEAVE</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-global" class="hidden">
+            <p style="font-size: 0.8em; color: #888;">// PUBLIC FREQUENCY</p>
+            <div class="chat-box" id="global-chat"></div>
+            <input type="text" id="global-input" placeholder="Public Comment...">
+            <button onclick="app.sendGlobalMsg()">POST COMMENT</button>
+        </div>
         
-        <div id="dash-no-clan">
-            <button onclick="nav.to('create')">CREATE NEW CLAN</button>
-            <button onclick="nav.to('join')">JOIN EXISTING CLAN</button>
-        </div>
-
-        <div id="dash-in-clan" class="hidden">
-            <button onclick="app.enterClanInterface()" style="padding: 20px; font-size: 1.1em;">> ENTER CLAN NETWORK</button>
-            <br><br>
-            <button onclick="app.leaveOrDisband()" id="btn-leave" class="danger">LEAVE CLAN</button>
-        </div>
-
-        <button onclick="app.logout()" class="secondary">TERMINATE SESSION</button>
+        <button onclick="location.reload()" style="margin-top: 20px; border: none; color: #444;">LOGOUT</button>
     </div>
 
     <div id="screen-create" class="screen hidden">
-        <h2>// INITIALIZE_CLAN</h2>
-        <input type="text" id="new-clan-name" placeholder="CLAN NAME (UNIQUE)">
-        <input type="password" id="new-clan-pass" placeholder="CLAN PASSWORD">
-        <div id="captcha-box" onclick="app.verifyCaptcha()">[ ] I AM NOT A ROBOT</div>
-        <button onclick="app.createClanStart()">PROCEED TO SYMBOL CREATION</button>
-        <button onclick="nav.to('dash')" class="secondary">CANCEL</button>
+        <h2>// NEW_CLAN</h2>
+        <input type="text" id="create-name" placeholder="UNIQUE NAME">
+        <input type="password" id="create-pass" placeholder="PASSWORD">
+        <div style="border: 1px dashed green; padding: 10px; text-align: center; cursor: pointer;" onclick="this.style.background='#003300'; app.isHuman=true;">[ ] NOT A ROBOT</div>
+        <br>
+        <button onclick="app.createClanStart()">START SYMBOL DRAWING</button>
+        <button onclick="nav.to('hub')" style="border-style: dashed;">CANCEL</button>
     </div>
 
     <div id="screen-draw" class="screen hidden">
-        <h3>// SYMBOL_GENERATOR</h3>
-        <p id="draw-instruction" style="text-align: center;">DRAW SYMBOL FOR: A</p>
+        <h3 id="draw-title">DRAW: A</h3>
         <canvas id="draw-canvas" width="280" height="280"></canvas>
-        <button onclick="drawing.clear()">CLEAR CANVAS</button>
-        <button onclick="drawing.saveAction()">SAVE SYMBOL</button>
-        <button onclick="drawing.cancelEdit()" id="btn-cancel-draw" class="hidden secondary">CANCEL EDIT</button>
-    </div>
-
-    <div id="screen-join" class="screen hidden">
-        <h2>// ESTABLISH_LINK</h2>
-        <input type="text" id="join-name" placeholder="EXACT CLAN NAME">
-        <input type="password" id="join-pass" placeholder="ACCESS PASSWORD">
-        <button onclick="app.joinClan()">CONNECT</button>
-        <button onclick="nav.to('dash')" class="secondary">BACK</button>
-    </div>
-
-    <div id="screen-clan" class="screen hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid green; margin-bottom: 10px;">
-            <span id="clan-title" style="font-weight: bold;">CLAN</span>
-            <button onclick="nav.to('dash')" style="width: auto; padding: 5px 10px; font-size: 0.8em;">EXIT</button>
-        </div>
-
-        <div id="chat-history" style="height: 300px; overflow-y: scroll; border: 1px solid #222; margin-bottom: 10px; padding: 10px; background: #050505;"></div>
-
-        <div style="display: flex; gap: 5px;">
-            <button id="btn-trans" onclick="app.toggleTrans()" style="width: 60px; font-size: 0.7em;">ENC: ON</button>
-            <input type="text" id="chat-input" placeholder="MESSAGE..." style="margin: 0;">
-            <button onclick="app.sendMessage()" style="width: 70px;">SEND</button>
-        </div>
-
-        <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button onclick="nav.to('dict')">DICTIONARY</button>
-            <button onclick="nav.to('editsym')">EDIT SYMBOLS</button>
-        </div>
-
-        <div id="leader-tools" class="hidden" style="margin-top: 20px; border-top: 1px dashed #333; padding-top: 10px;">
-            <p style="color: #666; font-size: 0.8em;">LEADER COMMANDS</p>
-            <input type="text" id="blacklist-user" placeholder="USERNAME TO BLACKLIST">
-            <button class="danger" onclick="app.blacklistUser()">BLACKLIST USER</button>
-        </div>
+        <button onclick="drawing.clear()">CLEAR</button>
+        <button onclick="drawing.save()">SAVE & NEXT</button>
     </div>
 
     <div id="screen-dict" class="screen hidden">
-        <h3>// CUSTOM_DICTIONARY</h3>
-        <p style="font-size: 0.8em;">Define custom words. E.g. "NO" -> "AWGOE"</p>
+        <h3>// DICTIONARY_EDIT</h3>
         <div style="display: flex; gap: 5px;">
             <input type="text" id="dict-orig" placeholder="ENGLISH">
             <input type="text" id="dict-new" placeholder="CLAN WORD">
         </div>
-        <button onclick="app.addWord()">ADD DEFINITION</button>
-        <ul id="dict-list" style="list-style: none; padding: 0; color: #aaa;"></ul>
-        <button onclick="nav.to('clan')" class="secondary">RETURN</button>
+        <button onclick="app.addWord()">ADD/UPDATE WORD</button>
+        <div id="dict-list" style="height: 200px; overflow-y: scroll; border: 1px solid #222;"></div>
+        <button onclick="nav.to('hub')" style="margin-top: 10px;">BACK</button>
     </div>
 
-    <div id="screen-editsym" class="screen hidden">
-        <h3>// EDIT_SYMBOLS</h3>
-        <p>SELECT A LETTER TO REDRAW:</p>
-        <div class="symbol-grid" id="symbol-grid-container">
-            </div>
-        <br>
-        <button onclick="nav.to('clan')" class="secondary">RETURN</button>
+    <div id="screen-alert" class="screen hidden">
+        <h2 style="color: var(--warn-color);">// BROADCAST_SYSTEM</h2>
+        <button onclick="app.sendAlert(1)">LEVEL 1: ANNOUNCEMENT</button>
+        <button onclick="app.sendAlert(2)" class="warn">LEVEL 2: IMPORTANT</button>
+        <button onclick="app.sendAlert(3)" class="danger">LEVEL 3: EMERGENCY</button>
+        <textarea id="alert-text" placeholder="MESSAGE CONTENT..." style="height: 100px; background: #111; color: white; border: 1px solid green;"></textarea>
+        <button onclick="nav.to('hub')" style="margin-top: 10px;">CANCEL</button>
     </div>
 
-    <script>
-        /* --- CORE DATABASE SIMULATION --- */
-        const DB = {
-            users: JSON.parse(localStorage.getItem('users') || '{}'),
-            clans: JSON.parse(localStorage.getItem('clans') || '{}'),
-            currentUser: null,
-            currentClan: null
+    <div id="screen-ranks" class="screen hidden">
+        <h3>// ROSTER_CONTROL</h3>
+        <div id="member-list" style="height: 300px; overflow-y: scroll;"></div>
+        <button onclick="nav.to('hub')">BACK</button>
+    </div>
+
+    <script type="module">
+        // --- 1. FIREBASE SETUP (Using CDN) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, limit, serverTimestamp, arrayUnion, arrayRemove, deleteField } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxb5GEGx9LZYD4Ijo-N6K849rsneYlgqk",
+            authDomain: "ectenopo.firebaseapp.com",
+            projectId: "ectenopo",
+            storageBucket: "ectenopo.firebasestorage.app",
+            messagingSenderId: "283760497520",
+            appId: "1:283760497520:web:c9fdda2d704ca95c0bf5b5"
         };
 
-        const saveDB = () => {
-            localStorage.setItem('users', JSON.stringify(DB.users));
-            localStorage.setItem('clans', JSON.stringify(DB.clans));
+        const fbApp = initializeApp(firebaseConfig);
+        const db = getFirestore(fbApp);
+
+        // --- 2. AUDIO ENGINE ---
+        window.audioSys = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            playTone: (freq, type, dur) => {
+                const o = audioSys.ctx.createOscillator();
+                const g = audioSys.ctx.createGain();
+                o.type = type; o.frequency.value = freq;
+                o.connect(g); g.connect(audioSys.ctx.destination);
+                o.start(); g.gain.exponentialRampToValueAtTime(0.00001, audioSys.ctx.currentTime + dur);
+                o.stop(audioSys.ctx.currentTime + dur);
+            },
+            playDing: () => { audioSys.playTone(800, 'sine', 1); setTimeout(() => audioSys.playTone(1200, 'sine', 1), 100); },
+            startAlarm: () => {
+                if(audioSys.osc) return;
+                audioSys.osc = audioSys.ctx.createOscillator(); audioSys.osc.type = 'sawtooth';
+                audioSys.osc.connect(audioSys.ctx.destination); audioSys.osc.start();
+                let up=true;
+                audioSys.int = setInterval(() => {
+                    let f = audioSys.osc.frequency.value || 500;
+                    if(up) f+=50; else f-=50;
+                    if(f>1000) up=false; if(f<500) up=true;
+                    audioSys.osc.frequency.value = f;
+                }, 50);
+            },
+            stopAlarm: () => { if(audioSys.osc){ audioSys.osc.stop(); audioSys.osc=null; clearInterval(audioSys.int); } }
         };
 
-        const nav = {
-            to: (screenId) => {
-                document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
-                document.getElementById('screen-' + screenId).classList.remove('hidden');
-                
-                if (screenId === 'dash') app.loadDashboard();
-                if (screenId === 'clan') app.loadChat();
-                if (screenId === 'dict') app.loadDict();
-                if (screenId === 'editsym') app.loadEditMenu();
+        // --- 3. STATE & UTILS ---
+        window.state = { user: null, clan: null, unsubClan: null, unsubGlobal: null };
+        const loading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
+
+        window.nav = {
+            to: (id) => {
+                document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden'));
+                document.getElementById('screen-' + id).classList.remove('hidden');
+                if(id === 'hub') app.initHub();
+            },
+            tab: (t) => {
+                document.getElementById('tab-clans').classList.add('hidden');
+                document.getElementById('tab-global').classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('hidden');
             }
         };
 
-        /* --- DRAWING ENGINE --- */
-        const drawing = {
-            canvas: document.getElementById('draw-canvas'),
-            ctx: document.getElementById('draw-canvas').getContext('2d'),
-            isDrawing: false,
-            letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''),
-            currentIndex: 0,
-            tempSymbols: {},
-            mode: 'creation', // 'creation' or 'edit'
-            editingLetter: null,
+        // --- 4. APP LOGIC ---
+        window.app = {
+            isHuman: false, autoTrans: true, tempClan: {},
 
-            init: () => {
-                drawing.ctx.lineWidth = 4;
-                drawing.ctx.strokeStyle = '#00FF00';
-                drawing.ctx.lineCap = 'round';
+            // AUTH
+            login: async () => {
+                const u = document.getElementById('auth-user').value.trim();
+                const p = document.getElementById('auth-pass').value.trim();
+                if(!u || !p) return alert("MISSING INPUT");
                 
-                // Mouse & Touch Events
-                const startDraw = (x, y) => {
-                    drawing.isDrawing = true;
-                    drawing.ctx.beginPath();
-                    drawing.ctx.moveTo(x, y);
-                };
-                const moveDraw = (x, y) => {
-                    if (!drawing.isDrawing) return;
-                    drawing.ctx.lineTo(x, y);
-                    drawing.ctx.stroke();
-                };
-                
-                drawing.canvas.onmousedown = (e) => startDraw(e.offsetX, e.offsetY);
-                drawing.canvas.onmousemove = (e) => moveDraw(e.offsetX, e.offsetY);
-                drawing.canvas.onmouseup = () => drawing.isDrawing = false;
-                
-                drawing.canvas.ontouchstart = (e) => {
-                    e.preventDefault();
-                    const r = drawing.canvas.getBoundingClientRect();
-                    startDraw(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
-                };
-                drawing.canvas.ontouchmove = (e) => {
-                    e.preventDefault();
-                    const r = drawing.canvas.getBoundingClientRect();
-                    moveDraw(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
-                };
-                drawing.canvas.ontouchend = () => drawing.isDrawing = false;
-            },
+                loading(true);
+                const docRef = doc(db, "users", u);
+                const docSnap = await getDoc(docRef);
+                loading(false);
 
-            clear: () => drawing.ctx.clearRect(0, 0, 300, 300),
-
-            startCreation: () => {
-                drawing.mode = 'creation';
-                drawing.currentIndex = 0;
-                drawing.tempSymbols = {};
-                drawing.clear();
-                document.getElementById('btn-cancel-draw').classList.add('hidden');
-                drawing.updateLabel();
-                nav.to('draw');
-            },
-
-            startEdit: (letter) => {
-                drawing.mode = 'edit';
-                drawing.editingLetter = letter;
-                drawing.clear();
-                document.getElementById('draw-instruction').innerText = "REDRAWING: " + letter;
-                document.getElementById('btn-cancel-draw').classList.remove('hidden');
-                nav.to('draw');
-            },
-
-            cancelEdit: () => {
-                nav.to('editsym');
-            },
-
-            saveAction: () => {
-                const imgData = drawing.canvas.toDataURL();
-
-                if (drawing.mode === 'creation') {
-                    let letter = drawing.letters[drawing.currentIndex];
-                    drawing.tempSymbols[letter] = imgData;
-                    drawing.currentIndex++;
-                    if (drawing.currentIndex < drawing.letters.length) {
-                        drawing.clear();
-                        drawing.updateLabel();
-                    } else {
-                        app.finalizeClan();
-                    }
+                if (docSnap.exists() && docSnap.data().pass === p) {
+                    state.user = u;
+                    nav.to('hub');
                 } else {
-                    // Edit Mode
-                    DB.currentClan.symbols[drawing.editingLetter] = imgData;
-                    saveDB();
-                    alert("SYMBOL UPDATED");
-                    nav.to('editsym');
+                    alert("INVALID USER OR PASSWORD");
                 }
             },
 
-            updateLabel: () => {
-                document.getElementById('draw-instruction').innerText = "DRAW SYMBOL FOR: " + drawing.letters[drawing.currentIndex];
+            register: async () => {
+                const u = document.getElementById('auth-user').value.trim();
+                const p = document.getElementById('auth-pass').value.trim();
+                if(!u || !p) return alert("MISSING INPUT");
+                
+                loading(true);
+                const docRef = doc(db, "users", u);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    loading(false); return alert("USERNAME TAKEN");
+                }
+
+                await setDoc(docRef, { pass: p, clan: null, rep: 0 });
+                loading(false);
+                alert("IDENTITY REGISTERED. PLEASE LOGIN.");
+            },
+
+            // MAIN HUB
+            initHub: () => {
+                const u = state.user;
+                document.getElementById('hub-user').innerText = u;
+
+                // Listen to User Data (for clan changes)
+                onSnapshot(doc(db, "users", u), (doc) => {
+                    const data = doc.data();
+                    if(data.clan) {
+                        state.clan = data.clan;
+                        app.listenToClan(data.clan);
+                    } else {
+                        state.clan = null;
+                        if(state.unsubClan) state.unsubClan(); // Stop listening to old clan
+                        document.getElementById('panel-no-clan').classList.remove('hidden');
+                        document.getElementById('panel-in-clan').classList.add('hidden');
+                    }
+                    // Rep Check
+                    const rep = data.rep || 0;
+                    const badge = document.getElementById('rep-badge');
+                    if(rep > 50) { badge.innerText="BLACKLISTED"; badge.className="rep-red"; }
+                    else if(rep > 0) { badge.innerText="WATCHLIST"; badge.className="rep-purple"; }
+                    else { badge.innerText="GOOD"; badge.className="rep-green"; }
+                });
+
+                // Listen to Global Chat
+                if(state.unsubGlobal) state.unsubGlobal();
+                const q = query(collection(db, "global_chat"), orderBy("ts", "desc"), limit(50));
+                state.unsubGlobal = onSnapshot(q, (snapshot) => {
+                    const div = document.getElementById('global-chat');
+                    div.innerHTML = "";
+                    const msgs = [];
+                    snapshot.forEach(doc => msgs.push(doc.data()));
+                    msgs.reverse().forEach(m => {
+                        div.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`;
+                    });
+                    div.scrollTop = div.scrollHeight;
+                });
+            },
+
+            // CLAN LOGIC
+            listenToClan: (clanName) => {
+                document.getElementById('panel-no-clan').classList.add('hidden');
+                document.getElementById('panel-in-clan').classList.remove('hidden');
+                document.getElementById('clan-header').innerText = clanName;
+
+                // Listen to Clan Data (Alerts, Dictionary, Ranks)
+                state.unsubClan = onSnapshot(doc(db, "clans", clanName), (doc) => {
+                    state.clanData = doc.data();
+                    
+                    // Show Leader Buttons
+                    const isLeader = state.clanData.leader === state.user;
+                    const myRank = (state.clanData.ranks || {})[state.user] || 'member';
+                    if(isLeader || myRank === 'admin') document.getElementById('btn-alerts').classList.remove('hidden');
+                    else document.getElementById('btn-alerts').classList.add('hidden');
+
+                    // Check Alerts
+                    if(state.clanData.lastAlert) {
+                        const a = state.clanData.lastAlert;
+                        // Simple logic to not spam: In real app, check timestamp
+                        if(Date.now() - a.ts < 5000) { 
+                            if(a.level === 2) audioSys.playDing();
+                            if(a.level === 3) { 
+                                document.getElementById('alert-msg').innerText = a.txt;
+                                document.getElementById('alert-overlay').classList.remove('hidden');
+                                audioSys.startAlarm();
+                            }
+                        }
+                    }
+                });
+
+                // Listen to Clan Chat
+                const q = query(collection(db, "clans", clanName, "msgs"), orderBy("ts", "desc"), limit(50));
+                onSnapshot(q, (snapshot) => {
+                    const div = document.getElementById('clan-chat');
+                    div.innerHTML = "";
+                    const msgs = [];
+                    snapshot.forEach(doc => msgs.push(doc.data()));
+                    msgs.reverse().forEach(m => {
+                         let content = app.autoTrans ? app.translate(m.txt) : m.txt;
+                         div.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${content}</div>`;
+                    });
+                    div.scrollTop = div.scrollHeight;
+                });
+            },
+
+            createClanStart: async () => {
+                if(!app.isHuman) return alert("BOT DETECTED");
+                const n = document.getElementById('create-name').value.trim();
+                const p = document.getElementById('create-pass').value.trim();
+                
+                loading(true);
+                const check = await getDoc(doc(db, "clans", n));
+                if(check.exists()){ loading(false); return alert("NAME TAKEN"); }
+                
+                app.tempClan = { name: n, pass: p };
+                loading(false);
+                drawing.idx = 0; drawing.tempSym = {}; drawing.clear();
+                nav.to('draw');
+            },
+
+            joinClan: async () => {
+                const n = document.getElementById('join-name').value.trim();
+                const p = document.getElementById('join-pass').value.trim();
+                
+                loading(true);
+                const ref = doc(db, "clans", n);
+                const snap = await getDoc(ref);
+                loading(false);
+
+                if(!snap.exists()) return alert("NOT FOUND");
+                const data = snap.data();
+                if(data.pass !== p) return alert("WRONG PASS");
+                if((data.blacklist || []).includes(state.user)) return alert("BLACKLISTED");
+
+                await updateDoc(doc(db, "users", state.user), { clan: n });
+                await updateDoc(ref, { [`ranks.${state.user}`]: 'member' });
+            },
+
+            leaveClan: async () => {
+                if(!confirm("LEAVE CLAN?")) return;
+                const c = state.clan;
+                await updateDoc(doc(db, "users", state.user), { clan: null });
+                await updateDoc(doc(db, "clans", c), { [`ranks.${state.user}`]: deleteField() });
+            },
+
+            // MESSAGING
+            sendGlobalMsg: async () => {
+                const txt = document.getElementById('global-input').value;
+                if(!txt) return;
+                await addDoc(collection(db, "global_chat"), {
+                    u: state.user, txt: txt, ts: serverTimestamp()
+                });
+                document.getElementById('global-input').value = "";
+            },
+
+            sendClanMsg: async () => {
+                const txt = document.getElementById('clan-input').value;
+                if(!txt) return;
+                await addDoc(collection(db, "clans", state.clan, "msgs"), {
+                    u: state.user, txt: txt, ts: serverTimestamp()
+                });
+                document.getElementById('clan-input').value = "";
+            },
+
+            sendAlert: async (lvl) => {
+                const txt = document.getElementById('alert-text').value;
+                if(!txt) return;
+                
+                // Save alert to clan doc to trigger listeners
+                await updateDoc(doc(db, "clans", state.clan), {
+                    lastAlert: { txt: txt, level: lvl, ts: Date.now() }
+                });
+
+                // Add to chat history
+                const prefix = lvl === 1 ? "ANNOUNCEMENT: " : (lvl === 2 ? "BROADCAST: " : "EMERGENCY: ");
+                await addDoc(collection(db, "clans", state.clan, "msgs"), {
+                    u: "SYSTEM", txt: prefix + txt, ts: serverTimestamp()
+                });
+                nav.to('hub');
+            },
+
+            // TRANSLATION & DICTIONARY
+            translate: (text) => {
+                let out = "";
+                const words = state.clanData.words || {};
+                const symbols = state.clanData.symbols || {};
+                
+                text.split(" ").forEach(word => {
+                    const clean = word.toLowerCase().replace(/[^a-z]/g,'');
+                    if(words[clean]) out += app.strToSym(words[clean], symbols) + " ";
+                    else out += app.strToSym(clean, symbols) + " ";
+                });
+                return out;
+            },
+            strToSym: (str, symbols) => {
+                let html = "";
+                for(let c of str) {
+                    const U = c.toUpperCase();
+                    if(symbols[U]) html += `<img src="${symbols[U]}" class="chat-img">`;
+                    else html += c;
+                }
+                return html;
+            },
+            toggleTrans: () => {
+                app.autoTrans = !app.autoTrans;
+                document.getElementById('btn-trans').style.color = app.autoTrans ? '#00FF00' : '#444';
+                // Trigger re-render by toggling a class or just wait for next update
+            },
+            addWord: async () => {
+                const k = document.getElementById('dict-orig').value.toLowerCase();
+                const v = document.getElementById('dict-new').value.toLowerCase();
+                if(k && v) {
+                    await updateDoc(doc(db, "clans", state.clan), { [`words.${k}`]: v });
+                    // update UI list manually or wait for listener
+                    app.renderDict();
+                }
+            },
+            renderDict: () => {
+                const list = document.getElementById('dict-list');
+                list.innerHTML = "";
+                const words = state.clanData.words || {};
+                for(const [k,v] of Object.entries(words)) {
+                    list.innerHTML += `<div style="border-bottom:1px solid #333; padding:5px;">${k} -> ${v}</div>`;
+                }
+            }
+        };
+
+        // --- 5. DRAWING ---
+        window.drawing = {
+            canvas: document.getElementById('draw-canvas'),
+            ctx: document.getElementById('draw-canvas').getContext('2d'),
+            isDrawing: false, letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''), idx: 0, tempSym: {},
+            
+            init: () => {
+                drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00';
+                const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);};
+                const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}};
+                drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY);
+                drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY);
+                drawing.canvas.onmouseup=()=>drawing.isDrawing=false;
+                drawing.canvas.ontouchstart=e=>{e.preventDefault();const r=drawing.canvas.getBoundingClientRect();start(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);};
+                drawing.canvas.ontouchmove=e=>{e.preventDefault();const r=drawing.canvas.getBoundingClientRect();move(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);};
+                drawing.canvas.ontouchend=()=>drawing.isDrawing=false;
+            },
+            clear: ()=>drawing.ctx.clearRect(0,0,300,300),
+            save: async () => {
+                drawing.tempSym[drawing.letters[drawing.idx]] = drawing.canvas.toDataURL();
+                drawing.idx++;
+                if(drawing.idx < drawing.letters.length) {
+                    drawing.clear();
+                    document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx];
+                } else {
+                    // FINALIZE CLAN CREATION
+                    loading(true);
+                    await setDoc(doc(db, "clans", app.tempClan.name), {
+                        pass: app.tempClan.pass,
+                        leader: state.user,
+                        symbols: drawing.tempSym,
+                        words: {},
+                        ranks: { [state.user]: 'leader' },
+                        blacklist: []
+                    });
+                    // Set user to clan
+                    await updateDoc(doc(db, "users", state.user), { clan: app.tempClan.name });
+                    loading(false);
+                    nav.to('hub');
+                }
             }
         };
         drawing.init();
 
-        /* --- APP LOGIC --- */
-        const app = {
-            captchaVerified: false,
-            autoTranslate: true,
-            tempClanData: {},
-
-            verifyCaptcha: () => {
-                app.captchaVerified = true;
-                const box = document.getElementById('captcha-box');
-                box.innerText = "[X] VERIFIED HUMAN";
-                box.classList.add('verified');
-            },
-
-            login: () => {
-                const u = document.getElementById('auth-user').value.trim();
-                const p = document.getElementById('auth-pass').value.trim();
-                
-                if (!DB.users[u] || DB.users[u].pass !== p) {
-                    alert("ACCESS DENIED");
-                    return;
-                }
-                
-                // Account Expiry Check
-                const lastLogin = new Date(DB.users[u].lastLogin);
-                if (!DB.users[u].email && (new Date() - lastLogin) > (37 * 24 * 60 * 60 * 1000)) {
-                    alert("ACCOUNT PURGED (INACTIVITY)");
-                    delete DB.users[u];
-                    saveDB();
-                    return;
-                }
-
-                DB.currentUser = u;
-                DB.users[u].lastLogin = new Date().toISOString();
-                
-                // Load Clan if user is in one
-                const usersClanName = DB.users[u].clan;
-                if (usersClanName && DB.clans[usersClanName]) {
-                    DB.currentClan = DB.clans[usersClanName];
-                } else {
-                    DB.currentClan = null;
-                }
-                
-                saveDB();
-                nav.to('dash');
-            },
-
-            register: () => {
-                const u = document.getElementById('auth-user').value.trim();
-                const p = document.getElementById('auth-pass').value.trim();
-                const e = document.getElementById('auth-email').value.trim();
-                
-                if (DB.users[u]) { alert("ID TAKEN"); return; }
-                if (!u || !p) { alert("DATA REQUIRED"); return; }
-
-                DB.users[u] = { pass: p, email: e, lastLogin: new Date().toISOString(), clan: null };
-                saveDB();
-                alert("ID CREATED");
-            },
-
-            logout: () => {
-                DB.currentUser = null;
-                DB.currentClan = null;
-                nav.to('auth');
-            },
-
-            loadDashboard: () => {
-                document.getElementById('dash-username').innerText = DB.currentUser;
-                
-                if (DB.currentClan) {
-                    document.getElementById('dash-status').innerText = "CONNECTED TO: " + DB.currentClan.name;
-                    document.getElementById('dash-no-clan').classList.add('hidden');
-                    document.getElementById('dash-in-clan').classList.remove('hidden');
-                    
-                    const btn = document.getElementById('btn-leave');
-                    if (DB.currentUser === DB.currentClan.leader) {
-                        btn.innerText = "DISBAND CLAN (DELETE)";
-                    } else {
-                        btn.innerText = "LEAVE CLAN";
-                    }
-                } else {
-                    document.getElementById('dash-status').innerText = "NO LINK";
-                    document.getElementById('dash-no-clan').classList.remove('hidden');
-                    document.getElementById('dash-in-clan').classList.add('hidden');
-                }
-            },
-
-            createClanStart: () => {
-                const name = document.getElementById('new-clan-name').value.trim();
-                const pass = document.getElementById('new-clan-pass').value.trim();
-                
-                if (!name || !pass) { alert("INPUT REQUIRED"); return; }
-                if (!app.captchaVerified) { alert("BOT CHECK FAILED"); return; }
-                if (DB.clans[name]) { alert("NAME TAKEN"); return; }
-
-                app.tempClanData = { name, pass, leader: DB.currentUser, blacklist: [], words: {} };
-                drawing.startCreation();
-            },
-
-            finalizeClan: () => {
-                const data = app.tempClanData;
-                data.symbols = drawing.tempSymbols;
-                
-                DB.clans[data.name] = data;
-                DB.users[DB.currentUser].clan = data.name; // Link user to clan
-                DB.currentClan = data;
-                
-                saveDB();
-                alert("CLAN ESTABLISHED");
-                nav.to('dash');
-            },
-
-            joinClan: () => {
-                const name = document.getElementById('join-name').value.trim();
-                const pass = document.getElementById('join-pass').value.trim();
-                
-                if (!DB.clans[name]) { alert("UNKNOWN CLAN"); return; }
-                const clan = DB.clans[name];
-                
-                if (clan.pass !== pass) { alert("BAD PASSWORD"); return; }
-                if (clan.blacklist.includes(DB.currentUser)) { alert("BLACKLISTED"); return; }
-
-                DB.users[DB.currentUser].clan = name; // Link user
-                DB.currentClan = clan;
-                saveDB();
-                alert("LINK ESTABLISHED");
-                nav.to('dash');
-            },
-
-            leaveOrDisband: () => {
-                if (!DB.currentClan) return;
-                
-                if (DB.currentUser === DB.currentClan.leader) {
-                    if (confirm("WARNING: THIS WILL DELETE THE CLAN PERMANENTLY.")) {
-                        const name = DB.currentClan.name;
-                        delete DB.clans[name];
-                        // Reset clan for user (in real app, would need to loop all users)
-                        DB.users[DB.currentUser].clan = null;
-                        DB.currentClan = null;
-                        saveDB();
-                        alert("CLAN DELETED");
-                        nav.to('dash');
-                    }
-                } else {
-                    if (confirm("LEAVE CLAN?")) {
-                        DB.users[DB.currentUser].clan = null;
-                        DB.currentClan = null;
-                        saveDB();
-                        nav.to('dash');
-                    }
-                }
-            },
-
-            enterClanInterface: () => {
-                document.getElementById('clan-title').innerText = DB.currentClan.name;
-                const tools = document.getElementById('leader-tools');
-                if (DB.currentUser === DB.currentClan.leader) tools.classList.remove('hidden');
-                else tools.classList.add('hidden');
-                nav.to('clan');
-            },
-
-            blacklistUser: () => {
-                const target = document.getElementById('blacklist-user').value.trim();
-                if (target && target !== DB.currentUser) {
-                    DB.currentClan.blacklist.push(target);
-                    saveDB();
-                    alert(target + " BLACKLISTED");
-                }
-            },
-
-            /* --- EDIT SYMBOLS --- */
-            loadEditMenu: () => {
-                const grid = document.getElementById('symbol-grid-container');
-                grid.innerHTML = '';
-                drawing.letters.forEach(letter => {
-                    const div = document.createElement('div');
-                    div.className = 'symbol-item';
-                    div.innerText = letter;
-                    div.onclick = () => drawing.startEdit(letter);
-                    grid.appendChild(div);
-                });
-            },
-
-            /* --- CHAT & TRANSLATION --- */
-            toggleTrans: () => {
-                app.autoTranslate = !app.autoTranslate;
-                document.getElementById('btn-trans').innerText = app.autoTranslate ? "ENC: ON" : "ENC: OFF";
-            },
-
-            addWord: () => {
-                const orig = document.getElementById('dict-orig').value.trim().toLowerCase();
-                const change = document.getElementById('dict-new').value.trim().toLowerCase();
-                if (orig && change) {
-                    DB.currentClan.words[orig] = change;
-                    saveDB();
-                    app.loadDict();
-                }
-            },
-
-            loadDict: () => {
-                const list = document.getElementById('dict-list');
-                list.innerHTML = "";
-                for (const [key, val] of Object.entries(DB.currentClan.words)) {
-                    list.innerHTML += `<li>${key} -> ${val}</li>`;
-                }
-            },
-
-            sendMessage: () => {
-                const input = document.getElementById('chat-input');
-                const rawMsg = input.value;
-                if (!rawMsg) return;
-
-                let html = `<span style='color: #444; font-size:0.8em;'>[${DB.currentUser}]:</span> `;
-                
-                if (app.autoTranslate) {
-                    rawMsg.split(' ').forEach(word => {
-                        let clean = word.toLowerCase().replace(/[^a-z]/g, '');
-                        if (DB.currentClan.words[clean]) {
-                            // Custom Word -> Symbols
-                            html += app.textToSym(DB.currentClan.words[clean]) + " ";
-                        } else {
-                            // Normal Word -> Symbols
-                            html += app.textToSym(clean) + " ";
-                        }
-                    });
-                } else {
-                    html += `<span style="color:var(--main-color)">${rawMsg}</span>`;
-                }
-
-                const history = document.getElementById('chat-history');
-                const div = document.createElement('div');
-                div.className = 'chat-msg';
-                div.innerHTML = html;
-                history.appendChild(div);
-                history.scrollTop = history.scrollHeight;
-                input.value = "";
-            },
-
-            textToSym: (text) => {
-                let out = "";
-                for (let char of text) {
-                    let upper = char.toUpperCase();
-                    if (DB.currentClan.symbols[upper]) {
-                        out += `<img src="${DB.currentClan.symbols[upper]}" class="chat-img">`;
-                    } else {
-                        out += char;
-                    }
-                }
-                return out;
-            }
-        };
     </script>
 </body>
 </html>
