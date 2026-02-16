@@ -96,6 +96,12 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         @keyframes shake { 0% { transform: translate(0, 0); } 25% { transform: translate(2px, 0); } 75% { transform: translate(-2px, 0); } 100% { transform: translate(0, 0); } }
 
+        /* NEW: CLAN FULL SCREEN ALERT */
+        #clan-alert-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: red; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: alertBg 0.5s infinite; }
+        @keyframes alertBg { 0% { background: #500; } 50% { background: #f00; } 100% { background: #500; } }
+        #clan-alert-box { background: black; border: 4px double white; padding: 40px; text-align: center; max-width: 80%; }
+        #clan-alert-msg { color: white; font-size: 2em; font-weight: bold; font-family: 'Courier New', monospace; margin-bottom: 20px; display: block; }
+
         /* COCKPIT SPECIFIC STYLES */
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 5px; border: 1px solid #333; margin-bottom: 5px; }
         .switch-label { font-size: 0.8em; color: #888; }
@@ -115,8 +121,6 @@
         .led.on { background: #00FF00; box-shadow: 0 0 5px #00FF00; border-color: #fff; }
         .led.busy { background: #FFAA00; box-shadow: 0 0 5px #FFAA00; animation: blink 0.2s infinite; }
         
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
         /* KALI STYLE */
         #screen-kali { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'), #101010; z-index: 2000; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
         #kali-bar { height: 40px; background: var(--kali-bar); border-bottom: 1px solid #444; display: flex; align-items: center; padding: 0 10px; color: #ddd; justify-content: space-between; }
@@ -159,6 +163,16 @@
     <div id="sys-alert-banner" class="alert-off">
         <span id="sys-alert-msg">SYSTEM NORMAL</span>
         <button onclick="sysAlerts.hide()" style="background:transparent; border:none; color:inherit; font-size:16px; margin-left:20px; cursor:pointer;">[X]</button>
+    </div>
+
+    <!-- CLAN RED ALERT OVERLAY -->
+    <div id="clan-alert-overlay" class="hidden">
+        <div id="clan-alert-box">
+            <h1 style="color: yellow; font-size: 3em; margin: 0;">⚠ ALERT ⚠</h1>
+            <span id="clan-alert-msg">CLAN UNDER ATTACK</span>
+            <br><br>
+            <button onclick="app.ackAlert()" style="font-size: 1.5em; background: white; color: black; border: 2px solid black; cursor: pointer;">ACKNOWLEDGE</button>
+        </div>
     </div>
 
     <div id="loading-overlay" class="hidden">>> INITIALIZING NEURAL LINK...</div>
@@ -224,6 +238,17 @@
                     <input type="text" id="clan-input" placeholder="Secure Message..." style="margin:0;">
                     <button onclick="app.sendClanMsg()" style="width: 60px;">SEND</button>
                 </div>
+                
+                <!-- CLAN LEADER COMMANDS (ALERTS) -->
+                <div id="clan-leader-cmds" class="hidden" style="margin-top: 10px; padding: 5px; border: 1px dashed white;">
+                    <small>COMMAND UPLINK:</small>
+                    <div class="grid-3">
+                        <button onclick="app.sendClanAlert('ANNOUNCE')" style="font-size: 10px; color: #00FF00; border-color: #00FF00;">ANNOUNCE</button>
+                        <button onclick="app.sendClanAlert('WARN')" style="font-size: 10px; color: #FFAA00; border-color: #FFAA00;">WARNING</button>
+                        <button onclick="app.sendClanAlert('ALERT')" style="font-size: 10px; background: #500; color: white; border-color: red;">RED ALERT</button>
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px;">
                     <button onclick="nav.to('dict')">DICTIONARY</button>
                     <button onclick="app.loadRoster()">ROSTER / RANKS</button>
@@ -671,7 +696,7 @@
 
         // --- APP LOGIC ---
         window.app = {
-            encMode: false, dictMode: false, clanUnsub: null,
+            encMode: false, dictMode: false, clanUnsub: null, alertInterval: null,
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
                 if(!u || !p) return; loading(true);
@@ -760,16 +785,77 @@
                 if (app.clanUnsub) app.clanUnsub(); // Clean up previous
                 app.clanUnsub = onSnapshot(doc(db, "clans", cName), (doc) => { 
                     state.clanData = doc.data() || {}; 
-                    if(state.clanData && state.clanData.leader === state.user) document.getElementById('btn-delete-clan').classList.remove('hidden'); else document.getElementById('btn-delete-clan').classList.add('hidden'); 
+                    if(state.clanData && state.clanData.leader === state.user) {
+                        document.getElementById('btn-delete-clan').classList.remove('hidden'); 
+                        document.getElementById('clan-leader-cmds').classList.remove('hidden');
+                    } else {
+                        document.getElementById('btn-delete-clan').classList.add('hidden'); 
+                        document.getElementById('clan-leader-cmds').classList.add('hidden');
+                    }
                     if(!document.getElementById('screen-dict').classList.contains('hidden')) app.renderDict(); 
                 });
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => { 
                     const d = document.getElementById('clan-chat'); d.innerHTML = ""; 
                     const msgs = []; snap.forEach(doc => msgs.push(doc.data())); 
-                    msgs.reverse().forEach(m => { let txt = app.translate(m.txt); d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${txt}</div>`; }); 
+                    
+                    // HANDLE ALERT EFFECTS FOR NEW MESSAGES
+                    snap.docChanges().forEach(change => {
+                        if (change.type === "added") {
+                            const m = change.doc.data();
+                            const now = Date.now();
+                            const msgTime = m.ts ? m.ts.toMillis() : now;
+                            // Only play effects if message is less than 10 seconds old (prevents replay on refresh)
+                            if (now - msgTime < 10000) {
+                                if (m.type === 'WARN') {
+                                    audioSys.playTone(600, 'square', 0.1);
+                                    setTimeout(() => audioSys.playTone(600, 'square', 0.1), 200);
+                                    setTimeout(() => audioSys.playTone(600, 'square', 0.1), 400);
+                                }
+                                if (m.type === 'ALERT') {
+                                    app.triggerClanRedAlert(m.txt);
+                                }
+                            }
+                        }
+                    });
+
+                    msgs.reverse().forEach(m => { 
+                        let txt = app.translate(m.txt); 
+                        let style = "";
+                        if(m.type === 'ANNOUNCE') style = "font-weight:bold; color: #00FF00; border: 1px solid #00FF00; padding: 2px;";
+                        if(m.type === 'WARN') style = "font-weight:bold; color: #FFAA00; border: 1px solid #FFAA00; padding: 2px;";
+                        if(m.type === 'ALERT') style = "font-weight:bold; color: white; background: red; padding: 2px;";
+                        
+                        d.innerHTML += `<div class="chat-msg" style="${style}"><strong>${m.u}:</strong> ${txt}</div>`; 
+                    }); 
                     d.scrollTop = d.scrollHeight; 
                 });
+            },
+            sendClanAlert: async (level) => {
+                if(state.clanData.leader !== state.user) return;
+                const txt = prompt(`ENTER ${level} MESSAGE:`);
+                if(!txt) return;
+                await addDoc(collection(db, "clans", state.clan, "msgs"), {
+                    u: "SYSTEM",
+                    txt: txt,
+                    type: level,
+                    ts: serverTimestamp()
+                });
+            },
+            triggerClanRedAlert: (msg) => {
+                const el = document.getElementById('clan-alert-overlay');
+                document.getElementById('clan-alert-msg').innerText = msg;
+                el.classList.remove('hidden');
+                
+                if(app.alertInterval) clearInterval(app.alertInterval);
+                app.alertInterval = setInterval(() => {
+                    audioSys.playTone(800, 'sawtooth', 0.2);
+                    setTimeout(() => audioSys.playTone(600, 'sawtooth', 0.2), 200);
+                }, 1000);
+            },
+            ackAlert: () => {
+                document.getElementById('clan-alert-overlay').classList.add('hidden');
+                if(app.alertInterval) clearInterval(app.alertInterval);
             },
             loadRoster: () => { 
                 nav.to('ranks'); 
@@ -1093,6 +1179,7 @@
                 audioSys.playTone(300, 'sawtooth', 0.2);
             },
             animate: () => {
+                // Same as before
                 if(!cockpit.running || document.getElementById('screen-cockpit').classList.contains('hidden')) return;
                 
                 const w = cockpit.canvas.width;
