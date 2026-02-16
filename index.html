@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLAN_NET // SYSTEM_ONLINE</title>
+    <title>CLAN_NET // SYSTEM_V3</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -125,8 +125,6 @@
         .device-info { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 9px; }
         .remote-iframe { width: 100%; height: 400px; border: none; background: #000; }
         .shell-output { height: 70%; overflow-y: scroll; border: 1px solid #333; padding: 5px; margin-bottom: 10px; background: #000; color: var(--main-color); font-family: monospace; }
-        .shell-input { display: flex; }
-        .shell-input input { flex: 1; background: transparent; border: none; color: var(--main-color); }
         .stats-panel { background: #111; border: 1px solid var(--warn-color); padding: 10px; margin: 5px 0; font-size: 9px; }
         .hack-btn { background: var(--err-color); color: white; font-size: 8px; padding: 3px; margin: 2px; }
         .real-tools-panel { background: #111; border: 1px solid cyan; padding: 10px; margin-top: 10px; font-size: 10px; }
@@ -134,6 +132,12 @@
         .real-tools-panel a:hover { text-decoration: underline; }
         #scan-progress { width: 100%; height: 5px; background: #333; margin: 5px 0; }
         #scan-progress-fill { height: 100%; background: var(--warn-color); width: 0%; transition: width 0.1s; }
+        
+        /* NEW MODULE STYLES */
+        .freq-bar { width: 5px; background: #333; margin: 1px; display: inline-block; vertical-align: bottom; }
+        .news-link { display: block; padding: 10px; border: 1px solid #333; margin-bottom: 5px; color: #aaa; text-decoration: none; transition: 0.2s; }
+        .news-link:hover { border-color: cyan; color: cyan; background: #111; padding-left: 15px; }
+        .vid-embed { width: 100%; height: 200px; border: none; margin-top: 10px; background: #000; }
     </style>
 </head>
 <body>
@@ -173,10 +177,13 @@
             <button onclick="nav.to('jobs')">JOBS / GIGS</button>
             <button onclick="nav.to('events')">EVENTS</button>
             <button onclick="nav.tab('global')">GLOBAL COMMS</button>
+            
+            <!-- NEW BUTTONS -->
+            <button onclick="nav.to('news')" style="color: cyan; border-color: cyan;">[ WORLD_WIRE ]</button>
+            <button onclick="nav.to('radio')" style="color: yellow; border-color: yellow;">[ SIGNAL_INTERCEPT ]</button>
+
             <button onclick="nav.to('ectotape')" style="border-color: var(--rep-watch); color: var(--rep-watch);">[ ECTOTAPE ]</button>
             <button onclick="nav.to('soc')" id="btn-soc" class="hidden admin" style="grid-column: span 2;">[ SECURITY OPS CENTER ]</button>
-            
-            <!-- VERIFIED EXPLOIT MENU -->
             <button onclick="nav.to('cockpit')" id="btn-payload" class="hidden warn" style="grid-column: span 2; border-style: dashed;">[ CYBER_DECK COMMAND ]</button>
         </div>
 
@@ -231,7 +238,7 @@
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
-    <!-- SOCIAL SCREEN -->
+    <!-- SOCIAL SCREEN (UPDATED) -->
     <div id="screen-social" class="screen hidden">
         <h2>// NET_SOCIAL</h2>
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -241,6 +248,8 @@
         <div id="soc-tab-posts">
             <div style="border-bottom: 1px dashed #333; padding-bottom: 10px; margin-bottom: 10px;">
                 <textarea id="post-content" placeholder="What's happening?" style="height: 60px;"></textarea>
+                <!-- VIDEO INPUT ADDED -->
+                <input type="text" id="post-video" placeholder="Youtube URL (Optional)">
                 <button onclick="social.createPost()">PUBLISH POST</button>
             </div>
             <div id="feed-posts" style="height: 400px; overflow-y: scroll;"></div>
@@ -251,6 +260,8 @@
                 <input type="text" id="poll-q" placeholder="Question">
                 <input type="text" id="poll-o1" placeholder="Option 1">
                 <input type="text" id="poll-o2" placeholder="Option 2">
+                <!-- VIDEO INPUT ADDED -->
+                <input type="text" id="poll-video" placeholder="Youtube URL (Optional)">
                 <button onclick="social.createPoll()">LAUNCH POLL</button>
             </div>
             <div id="feed-polls" style="height: 400px; overflow-y: scroll; margin-top: 10px;"></div>
@@ -258,14 +269,66 @@
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
-    <!-- COMMENT OVERLAY -->
-    <div id="comment-overlay" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:3000;display:flex;justify-content:center;align-items:center;">
+    <!-- RADIO SCREEN (NEW) -->
+    <div id="screen-radio" class="screen hidden" style="border-color: yellow;">
+        <h2 style="color: yellow;">// SIGNAL_INTERCEPT (RADIO)</h2>
+        <div class="card" style="border-color: yellow; text-align: center;">
+            <div id="freq-viz" style="height: 50px; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; margin-bottom: 10px;">
+                <!-- Bars generated by JS -->
+            </div>
+            <div style="font-family: monospace; font-size: 20px; color: yellow; margin-bottom: 10px;">FREQ: <span id="radio-freq">462.5625</span> MHz</div>
+            <div class="grid-2">
+                <button onclick="radio.toggleNoise()" style="color: yellow; border-color: yellow;" id="btn-noise">TOGGLE SIMULATED STATIC</button>
+                <button onclick="radio.scan()" style="color: yellow; border-color: yellow;">SCAN NEXT</button>
+            </div>
+        </div>
+        
+        <h3 style="color: #888;">// LIVE UPLINKS (EXTERNAL)</h3>
+        <p style="font-size: 10px; color: #666;">WARNING: Leaving ClanNet Encrypted Tunnel</p>
+        <div class="grid-2">
+            <a href="https://www.broadcastify.com/listen/" target="_blank" class="news-link" style="text-align: center; border-color: yellow; color: yellow;">OPEN BROADCASTIFY (POLICE/FIRE)</a>
+            <a href="https://tunein.com/radio/Police-Scanners-c100000/" target="_blank" class="news-link" style="text-align: center; border-color: yellow; color: yellow;">TUNEIN POLICE RADIO</a>
+        </div>
+
+        <button onclick="nav.to('hub')">BACK</button>
+    </div>
+
+    <!-- NEWS SCREEN (NEW) -->
+    <div id="screen-news" class="screen hidden" style="border-color: cyan;">
+        <h2 style="color: cyan;">// WORLD_WIRE (NEWS)</h2>
+        
+        <!-- USER NEWS SECTION -->
+        <h3 style="color: cyan; border-bottom: 1px solid cyan;">UNDERGROUND UPDATES</h3>
+        <div style="border: 1px solid #333; padding: 5px; margin-bottom: 10px;">
+             <input type="text" id="news-headline" placeholder="Headline...">
+             <input type="text" id="news-link-input" placeholder="Source URL (Optional)...">
+             <button onclick="news.post()" class="admin">BROADCAST UPDATE</button>
+        </div>
+        <div id="news-feed-internal" style="height: 150px; overflow-y: scroll; border: 1px solid #333; margin-bottom: 20px; padding: 5px;"></div>
+
+        <!-- EXTERNAL LINKS -->
+        <h3 style="color: #fff; border-bottom: 1px solid #fff;">GLOBAL INTERCEPTS (EXTERNAL)</h3>
+        <p style="font-size: 10px; color: #aaa;">Direct Uplinks to Corp Media Nodes:</p>
+        
+        <a href="https://www.foxnews.com" target="_blank" class="news-link">>> FOX_NEWS_NETWORK</a>
+        <a href="https://www.cbc.ca/news" target="_blank" class="news-link">>> CBC_NEWS_FEED</a>
+        <a href="https://www.cnn.com" target="_blank" class="news-link">>> CNN_GLOBAL</a>
+        <a href="https://www.bbc.com/news" target="_blank" class="news-link">>> BBC_WORLD_SERVICE</a>
+        <a href="https://news.google.com" target="_blank" class="news-link">>> GOOGLE_AGGREGATE</a>
+
+        <button onclick="nav.to('hub')">BACK</button>
+    </div>
+
+    <!-- COMMENT OVERLAY (FIXED) -->
+    <div id="comment-overlay" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:9000;display:flex;justify-content:center;align-items:center;">
         <div class="screen" style="width:90%; height:80%; display:flex; flex-direction:column; background: #000; border: 1px solid var(--main-color);">
-            <h3 style="border-bottom: 1px solid #333; padding-bottom: 10px;">// COMMENTS_THREAD</h3>
+            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom:10px;">
+                <h3 style="margin:0;">// COMMENTS_THREAD</h3>
+                <button onclick="social.closeComments()" class="warn" style="width:auto; padding: 2px 10px;">CLOSE [X]</button>
+            </div>
             <div id="active-comment-list" style="flex:1; overflow-y:scroll; padding:10px; margin-bottom:10px; border: 1px solid #222;"></div>
             <input type="text" id="new-comment-input" placeholder="Add comment...">
             <button onclick="social.submitComment()">POST COMMENT</button>
-            <button onclick="document.getElementById('comment-overlay').classList.add('hidden')" class="warn">CLOSE THREAD</button>
         </div>
     </div>
 
@@ -364,11 +427,11 @@
     <!-- SOC SCREEN -->
     <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2><div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
     
-    <!-- ENHANCED: CYBERDECK COCKPIT -->
+    <!-- CYBERDECK COCKPIT -->
     <div id="screen-cockpit" class="screen hidden" style="border-color: var(--warn-color); box-shadow: 0 0 20px rgba(255, 170, 0, 0.2); max-width: 900px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--warn-color); margin-bottom: 10px; padding-bottom: 5px;">
             <h2 style="color: var(--warn-color); margin:0;">// CYBER_DECK_V2.0 - EDU SIM (BROWSER LIMITS APPLY)</h2>
-            <div style="font-size: 10px; color: var(--warn-color); animation: blink 2s infinite;">[ SYSTEM: ONLINE - REAL SCAN: USE NMAP CLI FOR FULL ACCESS ]</div>
+            <div style="font-size: 10px; color: var(--warn-color); animation: blink 2s infinite;">[ SYSTEM: ONLINE ]</div>
         </div>
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
@@ -460,7 +523,6 @@
                 <div class="chat-box" id="cockpit-log" style="flex: 1; border-color: var(--warn-color); font-size: 10px; color: var(--warn-color); font-family: monospace; margin: 0;">
                     <div class="term-line">>> DECK INITIALIZED... (NOTE: BROWSER SECURITY BLOCKS REAL SCANS)</div>
                     <div class="term-line">>> USE 'LAN DISCOVERY' FOR SIM + LIMITED DETECT</div>
-                    <div class="term-line">>> FOR REAL: RUN NMAP IN TERMINAL</div>
                 </div>
 
                 <!-- ENHANCED: NETWORK SCAN RESULTS PANEL -->
@@ -473,7 +535,7 @@
         <button onclick="nav.to('hub')" style="margin-top: 10px; border-color: var(--warn-color); color: var(--warn-color);">DISCONNECT</button>
     </div>
 
-    <!-- ENHANCED: REMOTE ACCESS OVERLAY (SIMULATED GUI) -->
+    <!-- REMOTE ACCESS OVERLAY (SIMULATED GUI) -->
     <div id="remote-access-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 4000; display: flex; justify-content: center; align-items: center;">
         <div style="width: 90%; height: 80%; background: #000; border: 2px solid var(--warn-color); padding: 10px; color: var(--main-color); font-family: monospace;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px;">
@@ -529,7 +591,9 @@
                 if(id === 'social') social.loadPosts();
                 if(id === 'settings') settings.load();
                 if(id === 'dict') app.renderDict();
-                if(id === 'cockpit') cockpit.init(); // Init cockpit loop
+                if(id === 'cockpit') cockpit.init(); 
+                if(id === 'radio') radio.init(); // New radio init
+                if(id === 'news') news.init(); // New news init
             },
             tab: (t) => { 
                 document.getElementById('tab-clans').classList.add('hidden'); 
@@ -538,7 +602,7 @@
             }
         };
 
-        // --- APP LOGIC (FULLY RESTORED) ---
+        // --- APP LOGIC ---
         window.app = {
             encMode: false, dictMode: false, clanUnsub: null,
             login: async () => {
@@ -570,7 +634,6 @@
                 if(userData.verified) document.getElementById('btn-payload').classList.remove('hidden');
                 else document.getElementById('btn-payload').classList.add('hidden');
 
-                // FIXED: Force initial check and setup snapshot listener
                 const setupClanListener = (data) => {
                     if(data.clan) { 
                         state.clan = data.clan; 
@@ -587,7 +650,7 @@
                     document.getElementById('hub-rep').innerText = "REP: " + (data.rep || 0);
                 };
 
-                setupClanListener(userData); // Initial setup
+                setupClanListener(userData);
 
                 app.clanUnsub = onSnapshot(doc(db, "users", state.user), (d) => {
                     const data = d.data();
@@ -605,7 +668,7 @@
             },
             sendGlobalMsg: async () => { const t = document.getElementById('global-input').value; if(t) { await addDoc(collection(db, "global_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('global-input').value=""; } },
             
-            // PROFILES & CLAN (FULL)
+            // PROFILES & CLAN
             searchUser: () => { const u = document.getElementById('search-user-input').value.trim(); if(u) app.openProfile(u); },
             openProfile: async (targetUser) => {
                 loading(true); const snap = await getDoc(doc(db, "users", targetUser)); loading(false);
@@ -669,7 +732,7 @@
             addWord: async () => { const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan) await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]:v}); app.renderDict(); },
             delWord: async (k) => { if(!confirm("DELETE?")) return; await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]: deleteField()}); app.renderDict(); },
 
-            // JOBS, EVENTS, ETC (FULL)
+            // JOBS, EVENTS, ETC
             createEvent: async () => { const n = document.getElementById('evt-name').value; if(!n) return; await addDoc(collection(db, "events"), { name: n, desc: document.getElementById('evt-desc').value, start: document.getElementById('evt-start').value, end: document.getElementById('evt-end').value, creator: state.user, ts: serverTimestamp() }); alert("CREATED"); app.loadEvents(); },
             loadEvents: async () => { const list = document.getElementById('event-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "events"), orderBy("start", "asc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const e = d.data(); list.innerHTML += `<div class="card"><strong style="color:white;">${e.name}</strong><br><span>${e.start} // ${e.end || '?'}</span><br><p>${e.desc}</p><small>ORG: ${e.creator}</small></div>`; }); },
             createJob: async () => { const t = document.getElementById('job-title').value; if(!t) return; await addDoc(collection(db, "jobs"), { title: t, desc: document.getElementById('job-desc').value, owner: state.user, worker: null, status: 'OPEN', ts: serverTimestamp() }); alert("POSTED"); app.loadJobs(); },
@@ -682,24 +745,138 @@
             uploadVideo: async () => { await addDoc(collection(db, "ectotape_vids"), { title: document.getElementById('vid-title').value, url: document.getElementById('vid-url').value, uploader: state.user, ts: serverTimestamp() }); alert("UPLOADED"); app.loadEctoTape(); },
             createClanStart: () => { const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p) return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
             startSymbolEdit: () => { drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
-            runSecurityScan: (type) => { const c=document.getElementById('soc-console'); c.innerHTML+=`<div>> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div>> COMPLETE. CLEAN.</div>`,1500); }
+            runSecurityScan: (type) => { const c=document.getElementById('soc-console'); c.innerHTML+=`<div>> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div>> COMPLETE. CLEAN.</div>`,1500); },
+            getEmbedUrl: (url) => { if(!url) return null; let vidId = url.split('v=')[1]; if(!vidId && url.indexOf('youtu.be/') > -1) vidId = url.split('youtu.be/')[1]; if(vidId) { const amp = vidId.indexOf('&'); if(amp != -1) vidId = vidId.substring(0, amp); return `https://www.youtube.com/embed/${vidId}`; } return null; }
         };
 
-        // --- SOCIAL (FULL) ---
+        // --- SOCIAL (UPDATED WITH VIDEO & FIXED COMMENTS) ---
         window.social = {
             tab: (t) => { document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden'); if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls(); },
             like: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); else { await updateDoc(ref, { likes: arrayUnion(state.user) }); if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
             dislike: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); else { await updateDoc(ref, { dislikes: arrayUnion(state.user) }); if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
-            openComments: (id, type) => { state.activeCommentId = id; state.activeCommentType = type; const col = type === 'post' ? 'posts' : 'polls'; document.getElementById('comment-overlay').classList.remove('hidden'); if(state.unsubComments) state.unsubComments(); const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc")); state.unsubComments = onSnapshot(q, (snap) => { const div = document.getElementById('active-comment-list'); div.innerHTML = ""; if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; snap.forEach(d => { const c = d.data(); div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; }); }); },
+            
+            // FIXED COMMENT SYSTEM
+            openComments: (id, type) => { 
+                state.activeCommentId = id; 
+                state.activeCommentType = type; 
+                const col = type === 'post' ? 'posts' : 'polls'; 
+                document.getElementById('comment-overlay').classList.remove('hidden'); 
+                
+                if(state.unsubComments) state.unsubComments();
+                
+                const listDiv = document.getElementById('active-comment-list');
+                listDiv.innerHTML = "<div style='color:var(--main-color);'>LOADING COMMENTS...</div>";
+
+                const q = query(collection(db, col, id, "comments"), orderBy("ts", "asc")); 
+                state.unsubComments = onSnapshot(q, (snap) => { 
+                    listDiv.innerHTML = ""; 
+                    if(snap.empty) listDiv.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; 
+                    snap.forEach(d => { 
+                        const c = d.data(); 
+                        listDiv.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; 
+                    });
+                    listDiv.scrollTop = listDiv.scrollHeight;
+                }); 
+            },
+            closeComments: () => {
+                document.getElementById('comment-overlay').classList.add('hidden');
+                if(state.unsubComments) state.unsubComments();
+                state.unsubComments = null;
+                state.activeCommentId = null;
+            },
             submitComment: async () => { const txt = document.getElementById('new-comment-input').value.trim(); if(!txt || !state.activeCommentId) return; const col = state.activeCommentType === 'post' ? 'posts' : 'polls'; await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() }); document.getElementById('new-comment-input').value = ""; },
-            createPost: async () => { const txt = document.getElementById('post-content').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; social.loadPosts(); },
-            loadPosts: async () => { const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED..."; const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div><div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`; }); },
-            createPoll: async () => { const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value; if(!q || !o1 || !o2) return; await addDoc(collection(db, "polls"), { u: state.user, q: q, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() }); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
-            loadPolls: async () => { const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS..."; const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let optsHTML = ""; p.opts.forEach((opt, idx) => { const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100); optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`; }); div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`; }); },
+            
+            // UPDATED POST/POLL CREATION WITH VIDEO
+            createPost: async () => { const txt = document.getElementById('post-content').value; const vid = document.getElementById('post-video').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, video: vid || null, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; document.getElementById('post-video').value = ""; social.loadPosts(); },
+            loadPosts: async () => { const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED..."; const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; 
+                let vidHtml = ""; if(p.video) { const embed = app.getEmbedUrl(p.video); if(embed) vidHtml = `<iframe class="vid-embed" src="${embed}" allowfullscreen></iframe>`; }
+                div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div>${vidHtml}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`; }); },
+            createPoll: async () => { const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value; const vid = document.getElementById('poll-video').value; if(!q || !o1 || !o2) return; await addDoc(collection(db, "polls"), { u: state.user, q: q, video: vid || null, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() }); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
+            loadPolls: async () => { const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS..."; const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let optsHTML = ""; p.opts.forEach((opt, idx) => { const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100); optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`; }); 
+                let vidHtml = ""; if(p.video) { const embed = app.getEmbedUrl(p.video); if(embed) vidHtml = `<iframe class="vid-embed" src="${embed}" allowfullscreen></iframe>`; }
+                div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${vidHtml}${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`; }); },
             vote: async (id, optIdx) => { const ref = doc(db, "polls", id); const snap = await getDoc(ref); const d = snap.data(); if(d.voters.includes(state.user)) return alert("ALREADY VOTED"); d.opts[optIdx].v++; d.voters.push(state.user); await updateDoc(ref, { opts: d.opts, voters: d.voters }); social.loadPolls(); }
         };
 
-        // ENHANCED: CYBERDECK LOGIC WITH REALISTIC SIM + WEBRTC
+        // NEW: NEWS MODULE
+        window.news = {
+            init: async () => {
+                 news.loadInternal();
+            },
+            post: async () => {
+                const h = document.getElementById('news-headline').value;
+                const l = document.getElementById('news-link-input').value;
+                if(!h) return;
+                await addDoc(collection(db, "news"), { title: h, link: l || null, u: state.user, ts: serverTimestamp() });
+                document.getElementById('news-headline').value = "";
+                document.getElementById('news-link-input').value = "";
+                news.loadInternal();
+            },
+            loadInternal: async () => {
+                const d = document.getElementById('news-feed-internal');
+                d.innerHTML = "Scanning local nodes...";
+                const q = query(collection(db, "news"), orderBy("ts", "desc"), limit(10));
+                const snap = await getDocs(q);
+                d.innerHTML = "";
+                snap.forEach(doc => {
+                    const n = doc.data();
+                    d.innerHTML += `<div style="border-bottom:1px solid #222; margin-bottom:5px; padding-bottom:5px;">
+                        <strong style="color:cyan;">${n.title}</strong>
+                        ${n.link ? `<br><a href="${n.link}" target="_blank" style="font-size:10px; color:#666;">[SOURCE LINK]</a>` : ''}
+                        <br><small style="color:#444;">REPORT: @${n.u}</small>
+                    </div>`;
+                });
+            }
+        };
+
+        // NEW: RADIO MODULE
+        window.radio = {
+            interval: null,
+            noiseNode: null,
+            init: () => {
+                const viz = document.getElementById('freq-viz');
+                viz.innerHTML = "";
+                for(let i=0; i<20; i++) {
+                    viz.innerHTML += `<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*50}px"></div>`;
+                }
+                if(radio.interval) clearInterval(radio.interval);
+                radio.interval = setInterval(radio.anim, 100);
+            },
+            anim: () => {
+                for(let i=0; i<20; i++) {
+                    document.getElementById(`fb-${i}`).style.height = (Math.random()*40 + 5) + "px";
+                }
+            },
+            scan: () => {
+                audioSys.playTone(800, 'sawtooth', 0.1);
+                let f = (400 + Math.random()*100).toFixed(4);
+                document.getElementById('radio-freq').innerText = f;
+            },
+            toggleNoise: () => {
+                if(radio.noiseNode) {
+                    radio.noiseNode.disconnect();
+                    radio.noiseNode = null;
+                    document.getElementById('btn-noise').style.background = "transparent";
+                    document.getElementById('btn-noise').style.color = "yellow";
+                } else {
+                    const ctx = audioSys.ctx;
+                    if(ctx.state==='suspended') ctx.resume();
+                    const bufferSize = 4096;
+                    const whiteNoise = ctx.createScriptProcessor(bufferSize, 1, 1);
+                    whiteNoise.onaudioprocess = function(e) {
+                        const output = e.outputBuffer.getChannelData(0);
+                        for (let i = 0; i < bufferSize; i++) {
+                            output[i] = Math.random() * 0.1 - 0.05; // Low volume static
+                        }
+                    };
+                    whiteNoise.connect(ctx.destination);
+                    radio.noiseNode = whiteNoise;
+                    document.getElementById('btn-noise').style.background = "yellow";
+                    document.getElementById('btn-noise').style.color = "black";
+                }
+            }
+        };
+
         window.cockpit = {
             running: false,
             ctx: null,
@@ -713,7 +890,7 @@
                 cockpit.ctx = cockpit.canvas.getContext('2d');
                 cockpit.running = true;
                 cockpit.animate();
-                cockpit.detectLocalIP(); // Attempt local IP detect on load
+                cockpit.detectLocalIP(); 
             },
             toggle: (el) => {
                 el.classList.toggle('toggle-active');
@@ -727,7 +904,6 @@
                 l.scrollTop = l.scrollHeight;
             },
             runAction: (action) => {
-                // Same as before
                 audioSys.playTone(200, 'sawtooth', 0.1);
                 const t = document.getElementById('cockpit-target').value;
                 const p = document.getElementById('cockpit-proto').value;
@@ -741,9 +917,9 @@
                     else if(action === 'PORT_SCAN') cockpit.log(`>> PORT ${Math.floor(Math.random()*65535)} [OPEN] SERVICE: UNKNOWN`);
                     else if(action === 'BRUTE_FORCE') cockpit.log(`>> TRYING CREDENTIALS... [FAIL]`);
                     else if(action === 'EXECUTE_PAYLOAD') {
-                         cockpit.log(`>> UPLOADING BINARY... [||||||||||] 100%`);
-                         cockpit.log(`>> <span style="background:var(--warn-color); color:black">ROOT ACCESS GRANTED</span>`);
-                         audioSys.playTone(1000, 'square', 0.5);
+                          cockpit.log(`>> UPLOADING BINARY... [||||||||||] 100%`);
+                          cockpit.log(`>> <span style="background:var(--warn-color); color:black">ROOT ACCESS GRANTED</span>`);
+                          audioSys.playTone(1000, 'square', 0.5);
                     }
                     else cockpit.log(`>> PROCESS COMPLETE. DATA LOGGED.`);
                     
@@ -751,7 +927,6 @@
                 }, 1000 + Math.random() * 2000);
             },
             detectLocalIP: () => {
-                // Simple WebRTC-based local IP detection (limited but real)
                 const rtc = new RTCPeerConnection({ iceServers: [] });
                 rtc.createDataChannel('');
                 rtc.createOffer().then(offer => rtc.setLocalDescription(offer));
@@ -778,13 +953,12 @@
                 setTimeout(() => {
                     clearInterval(interval);
                     progress.style.width = '100%';
-                    // Enhanced fake devices with Wii example
                     cockpit.currentDevices = [
                         { ip: '192.168.1.1', mac: '00:11:22:33:44:55', os: 'Router (Firmware v2.1)', ports: '80(open), 443(open), 22(closed)', vuln: 'Low', type: 'Router' },
                         { ip: '192.168.1.10', mac: 'AA:BB:CC:DD:EE:FF', os: 'Windows 10', ports: '3389(open), 445(open)', vuln: 'Medium', type: 'PC' },
                         { ip: '192.168.1.15', mac: '11:22:33:44:55:66', os: 'iOS 17 (iPhone)', ports: '5353(open)', vuln: 'Low', type: 'Mobile' },
                         { ip: '192.168.1.20', mac: 'FF:EE:DD:CC:BB:AA', os: 'Linux Ubuntu 22.04', ports: '22(open), 80(closed)', vuln: 'High', type: 'Server' },
-                        { ip: '192.168.1.50', mac: '77:88:99:00:11:22', os: 'Nintendo Wii (v4.3)', ports: '80(open)', vuln: 'High', type: 'Console' }, // Wii example
+                        { ip: '192.168.1.50', mac: '77:88:99:00:11:22', os: 'Nintendo Wii (v4.3)', ports: '80(open)', vuln: 'High', type: 'Console' }, 
                         { ip: '192.168.1.100', mac: '33:44:55:66:77:88', os: 'Smart TV (Android)', ports: '8080(open)', vuln: 'Medium', type: 'IoT' }
                     ];
                     const resultsDiv = document.getElementById('scan-results');
@@ -856,7 +1030,6 @@
                 audioSys.playTone(300, 'sawtooth', 0.2);
             },
             animate: () => {
-                // Same as before
                 if(!cockpit.running || document.getElementById('screen-cockpit').classList.contains('hidden')) return;
                 
                 const w = cockpit.canvas.width;
@@ -887,7 +1060,6 @@
         window.drawing = { canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing: false, mode: 'create', init: () => { drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00'; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; }, clear: () => drawing.ctx.clearRect(0,0,300,300), cancel: () => nav.to('hub'), save: async () => { const char = drawing.letters[drawing.idx]; drawing.tempData.syms[char] = drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx < drawing.letters.length) { drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx]; } else { loading(true); if(drawing.mode === 'create') { await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } }); await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name }); } else if (drawing.mode === 'edit') { await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms }); } loading(false); nav.to('hub'); } } }; drawing.init();
         window.kali = { toggleMenu: () => document.getElementById('kali-menu').classList.toggle('hidden'), dragTarget: null, offsetX: 0, offsetY: 0, vars: {}, openApp: (app) => { const con = document.getElementById('py-console'); con.innerHTML += `\n<span class="term-info">root@kali:~# start ${app}</span>\n`; setTimeout(() => con.scrollTop = con.scrollHeight, 100); }, handleInput: (e) => { if(e.key === 'Enter') { const inp = document.getElementById('py-input'); const cmd = inp.value.trim(); const con = document.getElementById('py-console'); con.innerHTML += `\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value = ""; con.scrollTop = con.scrollHeight; audioSys.playTone(600, 'sine', 0.1); } else { audioSys.playTone(800, 'sine', 0.05); } }, startDrag: (e, id) => { kali.dragTarget = document.getElementById(id); const rect = kali.dragTarget.getBoundingClientRect(); kali.offsetX = e.clientX - rect.left; kali.offsetY = e.clientY - rect.top; }, drag: (e) => { if(kali.dragTarget) { kali.dragTarget.style.left = (e.clientX - kali.offsetX) + 'px'; kali.dragTarget.style.top = (e.clientY - kali.offsetY) + 'px'; } }, stopDrag: () => { kali.dragTarget = null; } };
         
-        // --- SETTINGS LOGIC (FULL) ---
         window.settings = {
             apply: () => {
                 const r = document.documentElement.style;
@@ -931,7 +1103,6 @@
             }
         };
 
-        // Keyboard Sounds (Global)
         document.addEventListener('keydown', (e) => {
              if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 if(e.key === 'Enter') audioSys.playTone(400, 'square', 0.1);
