@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLAN_NET // SYSTEM_V3.1 - VOICE_ENHANCED</title>
+    <title>CLAN_NET // SYSTEM_V3.2 - TACTICAL_AUDIO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -16,9 +17,6 @@
             --rep-watch: #D000FF;
             --rep-black: #FF0000;
             --font-main: 'Courier New', Courier, monospace;
-            --kali-bg: #1a1a1a;
-            --kali-bar: #2d2d2d;
-            --kali-accent: #3377ff;
         }
 
         body {
@@ -57,6 +55,14 @@
         button.admin { border-color: cyan; color: cyan; border-style: double; }
         button.admin:hover { background: cyan; color: black; }
         
+        /* DELETE BUTTONS */
+        .del-btn { 
+            display: inline-block; width: auto; padding: 2px 5px; font-size: 10px; 
+            border: 1px solid var(--err-color); color: var(--err-color); background: transparent; 
+            margin-left: 5px; cursor: pointer; 
+        }
+        .del-btn:hover { background: var(--err-color); color: black; }
+
         /* SOCIAL ACTIONS */
         .social-actions { display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #333; padding-top: 5px; }
         .social-btn { flex: 1; font-size: 10px; padding: 5px; background: transparent; border: 1px solid #333; cursor: pointer; color: #888; }
@@ -66,109 +72,41 @@
         /* COMMENTS SECTION */
         .comment-item { border-bottom: 1px solid #222; padding: 6px 0; font-size: 0.9em; word-wrap: break-word; }
         
-        /* BADGES & LAYOUT */
-        .verified-badge { display: inline-block; color: cyan; margin-left: 4px; font-size: 1.1em; text-shadow: 0 0 5px cyan; }
+        /* LAYOUT */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-
         .card { border: 1px dashed var(--dim-color); padding: 10px; margin-bottom: 10px; position: relative; }
         .chat-box { height: 250px; overflow-y: scroll; border: 1px solid #222; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); }
         .chat-msg { margin-bottom: 8px; border-bottom: 1px solid #111; padding-bottom: 4px; font-size: 0.9em; word-wrap: break-word; }
         .chat-img { height: 20px; vertical-align: middle; filter: sepia(1) hue-rotate(50deg) saturate(5); }
         
-        canvas { border: 1px solid var(--main-color); cursor: crosshair; background: #050505; display: block; margin: 0 auto 10px auto; }
-        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; color: var(--main-color); font-size: 1.5em; border: 2px solid var(--dim-color); }
+        /* PTT BUTTON */
+        #btn-ptt {
+            user-select: none; -webkit-user-select: none;
+            touch-action: manipulation;
+            transition: all 0.1s;
+        }
+        #btn-ptt:active {
+            background: var(--warn-color) !important;
+            color: black !important;
+            transform: scale(0.98);
+        }
+        .transmitting {
+            background: var(--warn-color) !important;
+            color: black !important;
+            box-shadow: 0 0 15px var(--warn-color);
+        }
 
+        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; color: var(--main-color); font-size: 1.5em; border: 2px solid var(--dim-color); }
         .poll-bar { height: 10px; background: #333; margin-top: 2px; position: relative; }
         .poll-fill { height: 100%; background: var(--main-color); width: 0%; transition: width 0.5s; }
         .post-header { display: flex; justify-content: space-between; font-size: 0.8em; color: #888; border-bottom: 1px solid #333; margin-bottom: 5px; }
+        .vid-embed { width: 100%; height: 200px; border: none; margin-top: 10px; background: #000; }
 
         /* ALERT SYSTEM STYLES */
-        #sys-alert-banner { position: fixed; top: 0; left: 0; width: 100%; min-height: 30px; z-index: 10000; display: flex; align-items: center; justify-content: center; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: 0.3s; }
+        #sys-alert-banner { position: fixed; top: 0; left: 0; width: 100%; min-height: 30px; z-index: 10000; display: flex; align-items: center; justify-content: center; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: 0.3s; background: #002200; color: #00FF00; border-bottom: 2px solid #00FF00; }
         .alert-off { transform: translateY(-100%); }
         .alert-on { transform: translateY(0); }
-        
-        .type-info { background: #002200; color: #00FF00; border-bottom: 2px solid #00FF00; }
-        .type-warn { background: #332200; color: #FFAA00; border-bottom: 2px solid #FFAA00; animation: pulse 2s infinite; }
-        .type-crit { background: #330000; color: #FFFFFF; border-bottom: 2px solid #FF0000; animation: shake 0.5s infinite; }
-        
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-        @keyframes shake { 0% { transform: translate(0, 0); } 25% { transform: translate(2px, 0); } 75% { transform: translate(-2px, 0); } 100% { transform: translate(0, 0); } }
-
-        /* NEW: CLAN FULL SCREEN ALERT */
-        #clan-alert-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: red; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: alertBg 0.5s infinite; }
-        @keyframes alertBg { 0% { background: #500; } 50% { background: #f00; } 100% { background: #500; } }
-        #clan-alert-box { background: black; border: 4px double white; padding: 40px; text-align: center; max-width: 80%; }
-        #clan-alert-msg { color: white; font-size: 2em; font-weight: bold; font-family: 'Courier New', monospace; margin-bottom: 20px; display: block; }
-
-        /* VOICE CHAT VISUALS - ENHANCED */
-        .voice-bar-container { display: flex; align-items: flex-end; justify-content: center; height: 30px; gap: 2px; margin-top: 5px; }
-        .voice-bar { width: 4px; background: #333; height: 5px; transition: height 0.1s; }
-        .voice-active .voice-bar { background: var(--main-color); }
-        
-        /* NEW: Voice Users List */
-        .voice-users-list { max-height: 100px; overflow-y: auto; border: 1px solid #222; padding: 5px; margin: 5px 0; background: rgba(0,0,0,0.5); }
-        .voice-user-item { display: flex; align-items: center; gap: 5px; padding: 3px; border-bottom: 1px solid #111; font-size: 10px; }
-        .voice-user-indicator { width: 8px; height: 8px; border-radius: 50%; background: #00FF00; box-shadow: 0 0 5px #00FF00; animation: pulse 2s infinite; }
-        .voice-user-speaking { animation: speaking 0.3s infinite; }
-        @keyframes speaking { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-
-        /* COCKPIT SPECIFIC STYLES */
-        .switch-container { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 5px; border: 1px solid #333; margin-bottom: 5px; }
-        .switch-label { font-size: 0.8em; color: #888; }
-        .toggle-switch { position: relative; width: 40px; height: 20px; background: #333; cursor: pointer; }
-        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #555; transition: 0.2s; }
-        .toggle-active { background: var(--dim-color); }
-        .toggle-active::after { left: 22px; background: var(--main-color); }
-        
-        .dial-container { text-align: center; background: #111; padding: 5px; border: 1px solid #333; }
-        input[type="range"] { -webkit-appearance: none; width: 100%; height: 5px; background: #333; outline: none; margin: 10px 0; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; background: var(--main-color); cursor: pointer; }
-        
-        .action-btn { background: #001100; border: 1px solid var(--main-color); color: var(--main-color); font-size: 10px; padding: 15px 5px; text-align: center; cursor: pointer; transition: 0.1s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
-        .action-btn:hover { background: var(--main-color); color: black; box-shadow: 0 0 10px var(--main-color); }
-        .action-btn:active { transform: scale(0.95); }
-        .led { width: 8px; height: 8px; background: #333; border-radius: 50%; border: 1px solid #555; }
-        .led.on { background: #00FF00; box-shadow: 0 0 5px #00FF00; border-color: #fff; }
-        .led.busy { background: #FFAA00; box-shadow: 0 0 5px #FFAA00; animation: blink 0.2s infinite; }
-        
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
-        /* KALI STYLE */
-        #screen-kali { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'), #101010; z-index: 2000; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
-        #kali-bar { height: 40px; background: var(--kali-bar); border-bottom: 1px solid #444; display: flex; align-items: center; padding: 0 10px; color: #ddd; justify-content: space-between; }
-        .kali-btn { background: transparent; border: none; color: #ddd; width: auto; padding: 5px 15px; cursor: pointer; } .kali-btn:hover { background: #444; }
-        #kali-desktop { flex: 1; position: relative; }
-        .window { position: absolute; width: 600px; height: 400px; background: #1e1e1e; border: 1px solid #444; display: flex; flex-direction: column; top: 50px; left: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .win-header { height: 30px; background: #333; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; cursor: move; }
-        .win-body { flex: 1; background: #000; padding: 5px; color: #00ff00; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; }
-        #py-console { flex: 1; overflow-y: auto; padding: 5px; white-space: pre-wrap; }
-        #py-input-line { display: flex; margin-top: 5px; border-top: 1px solid #333; padding-top: 5px; }
-        #py-input { background: transparent; border: none; color: white; flex: 1; font-family: 'Courier New', monospace; outline: none; }
-        .term-line { font-family: monospace; font-size: 12px; margin: 2px 0; }
-        .term-info { color: cyan; } .term-err { color: red; }
-
-        /* ENHANCED NETWORK STYLES */
-        #network-scan-panel { background: #000; border: 1px solid var(--warn-color); height: 250px; overflow-y: scroll; font-family: monospace; font-size: 10px; color: var(--warn-color); padding: 10px; margin: 10px 0; }
-        .device-card { border: 1px solid #333; padding: 8px; margin-bottom: 5px; background: rgba(255,170,0,0.05); cursor: pointer; }
-        .device-card:hover { background: rgba(255,170,0,0.1); }
-        .device-info { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 9px; }
-        .remote-iframe { width: 100%; height: 400px; border: none; background: #000; }
-        .shell-output { height: 70%; overflow-y: scroll; border: 1px solid #333; padding: 5px; margin-bottom: 10px; background: #000; color: var(--main-color); font-family: monospace; }
-        .stats-panel { background: #111; border: 1px solid var(--warn-color); padding: 10px; margin: 5px 0; font-size: 9px; }
-        .hack-btn { background: var(--err-color); color: white; font-size: 8px; padding: 3px; margin: 2px; }
-        .real-tools-panel { background: #111; border: 1px solid cyan; padding: 10px; margin-top: 10px; font-size: 10px; }
-        .real-tools-panel a { color: cyan; text-decoration: none; }
-        .real-tools-panel a:hover { text-decoration: underline; }
-        #scan-progress { width: 100%; height: 5px; background: #333; margin: 5px 0; }
-        #scan-progress-fill { height: 100%; background: var(--warn-color); width: 0%; transition: width 0.1s; }
-        
-        /* NEW MODULE STYLES */
-        .freq-bar { width: 5px; background: #333; margin: 1px; display: inline-block; vertical-align: bottom; }
-        .news-link { display: block; padding: 10px; border: 1px solid #333; margin-bottom: 5px; color: #aaa; text-decoration: none; transition: 0.2s; }
-        .news-link:hover { border-color: cyan; color: cyan; background: #111; padding-left: 15px; }
-        .vid-embed { width: 100%; height: 200px; border: none; margin-top: 10px; background: #000; }
     </style>
 </head>
 <body>
@@ -176,29 +114,21 @@
     <!-- SYSTEM ALERT BANNER -->
     <div id="sys-alert-banner" class="alert-off">
         <span id="sys-alert-msg">SYSTEM NORMAL</span>
-        <button onclick="sysAlerts.hide()" style="background:transparent; border:none; color:inherit; font-size:16px; margin-left:20px; cursor:pointer;">[X]</button>
-    </div>
-
-    <!-- CLAN RED ALERT OVERLAY -->
-    <div id="clan-alert-overlay" class="hidden">
-        <div id="clan-alert-box">
-            <h1 style="color: yellow; font-size: 3em; margin: 0;">⚠ ALERT ⚠</h1>
-            <span id="clan-alert-msg">CLAN UNDER ATTACK</span>
-            <br><br>
-            <button onclick="app.ackAlert()" style="font-size: 1.5em; background: white; color: black; border: 2px solid black; cursor: pointer;">ACKNOWLEDGE</button>
-        </div>
+        <button onclick="document.getElementById('sys-alert-banner').classList.add('alert-off')" style="background:transparent; border:none; color:inherit; font-size:16px; margin-left:20px; cursor:pointer; width:auto;">[X]</button>
     </div>
 
     <div id="loading-overlay" class="hidden">>> INITIALIZING NEURAL LINK...</div>
 
+    <!-- AUTH SCREEN -->
     <div id="screen-auth" class="screen">
-        <h1>// NET_LOGIN_ONLINE</h1>
+        <h1>// NET_LOGIN_V3.2</h1>
         <input type="text" id="auth-user" placeholder="USERNAME">
         <input type="password" id="auth-pass" placeholder="PASSWORD">
         <button onclick="app.login()">AUTHENTICATE</button>
         <button onclick="app.register()" style="border-style: dashed; opacity: 0.7;">REGISTER IDENTITY</button>
     </div>
 
+    <!-- HUB SCREEN -->
     <div id="screen-hub" class="screen hidden">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div onclick="app.openProfile(state.user)" style="cursor: pointer;">
@@ -210,8 +140,7 @@
             </div>
         </div>
         <div style="margin-bottom: 10px;">
-            <span id="hub-rep">REP: <span id="rep-badge">LOADING...</span></span><br>
-            <small id="device-info" style="color: #666; font-size: 10px;">DEVICE: DETECTING...</small>
+            <span id="hub-rep">REP: <span id="rep-badge">LOADING...</span></span>
         </div>
         
         <div style="display: flex; gap: 5px; margin-bottom: 10px;">
@@ -229,16 +158,10 @@
             <button onclick="nav.tab('global')">GLOBAL COMMS</button>
             
             <button onclick="nav.to('news')" style="color: cyan; border-color: cyan;">[ WORLD_WIRE ]</button>
-            <button onclick="nav.to('radio')" style="color: yellow; border-color: yellow;">[ SIGNAL_INTERCEPT ]</button>
-
-            <!-- VERIFIED ONLY -->
-            <button onclick="nav.to('verified')" id="btn-verified" class="hidden" style="color: gold; border-color: gold;">[ ELITE_UPLINK ]</button>
-
             <button onclick="nav.to('ectotape')" style="border-color: var(--rep-watch); color: var(--rep-watch);">[ ECTOTAPE ]</button>
-            <button onclick="nav.to('soc')" id="btn-soc" class="hidden admin" style="grid-column: span 2;">[ SECURITY OPS CENTER ]</button>
-            <button onclick="nav.to('cockpit')" id="btn-payload" class="hidden warn" style="grid-column: span 2; border-style: dashed;">[ CYBER_DECK COMMAND ]</button>
         </div>
 
+        <!-- CLANS TAB -->
         <div id="tab-clans">
             <div id="panel-no-clan">
                 <button onclick="nav.to('create')">INITIALIZE NEW CLAN</button>
@@ -252,59 +175,40 @@
             <div id="panel-in-clan" class="hidden">
                 <h2 id="clan-header">CLAN_NAME</h2>
                 
-                <!-- ENHANCED VOICE COMMS UI -->
-                <div style="border: 1px solid #333; padding: 5px; margin-bottom: 10px; background: rgba(0,20,0,0.5);">
+                <!-- NEW PTT VOICE COMMS -->
+                <div style="border: 1px solid var(--warn-color); padding: 5px; margin-bottom: 10px; background: rgba(50,20,0,0.2);">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <small>VOICE COMMS (LIVE MIC + PEER AUDIO)</small>
-                        <div id="voice-status" style="width:10px; height:10px; border-radius:50%; background:red;"></div>
+                        <small style="color:var(--warn-color);">TACTICAL AUDIO (WALKIE-TALKIE)</small>
+                        <div id="voice-status-dot" style="width:8px; height:8px; border-radius:50%; background:red;"></div>
                     </div>
                     
-                    <!-- CONNECTED USERS LIST -->
-                    <div id="voice-users-container" class="hidden">
-                        <div style="font-size: 9px; color: #888; margin-top: 5px;">CONNECTED USERS:</div>
-                        <div id="voice-users-list" class="voice-users-list"></div>
+                    <div id="voice-controls" class="hidden" style="margin-top:5px;">
+                        <button id="btn-ptt" style="font-weight:bold; height:50px; border: 2px solid var(--warn-color);">HOLD TO TALK</button>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                            <span id="voice-status-text" style="font-size:10px; color:#888;">STANDBY</span>
+                            <button onclick="voice.toggleMute()" id="btn-mute" style="width:auto; padding:2px 5px; font-size:10px;">MUTE AUDIO</button>
+                        </div>
                     </div>
+
+                    <button onclick="voice.connect()" id="btn-connect-voice" style="margin-top:5px;">CONNECT COMMS CHANNEL</button>
                     
-                    <div class="voice-bar-container" id="voice-viz">
-                        <!-- Bars injected here -->
-                    </div>
-                    <div class="grid-2" style="margin-top:5px;">
-                        <button onclick="app.toggleVoice()" id="btn-voice-conn" style="font-size:10px;">CONNECT MIC</button>
-                        <button onclick="app.muteVoice()" id="btn-voice-mute" style="font-size:10px;" disabled>MUTE</button>
-                    </div>
-                    <small style="color: #555; font-size: 8px; display: block; margin-top: 3px;">
-                        ⚠ BROWSER LIMITS: Uses WebRTC for P2P detection. Full voice requires external server.
-                    </small>
+                    <div id="voice-log" style="font-size:10px; color:#555; max-height:40px; overflow-y:scroll; margin-top:5px; font-family:monospace;"></div>
                 </div>
 
                 <div class="chat-box" id="clan-chat"></div>
                 <div style="display: flex; gap: 5px;">
-                    <button onclick="app.toggleEnc()" id="btn-enc" style="width: 50px; font-size: 10px; color: #555;">ENC</button>
-                    <button onclick="app.toggleDict()" id="btn-dict" style="width: 50px; font-size: 10px; color: #555;">DICT</button>
                     <input type="text" id="clan-input" placeholder="Secure Message..." style="margin:0;">
                     <button onclick="app.sendClanMsg()" style="width: 60px;">SEND</button>
                 </div>
                 
-                <!-- CLAN LEADER COMMANDS (ALERTS) -->
-                <div id="clan-leader-cmds" class="hidden" style="margin-top: 10px; padding: 5px; border: 1px dashed white;">
-                    <small>COMMAND UPLINK:</small>
-                    <div class="grid-3">
-                        <button onclick="app.sendClanAlert('ANNOUNCE')" style="font-size: 10px; color: #00FF00; border-color: #00FF00;">ANNOUNCE</button>
-                        <button onclick="app.sendClanAlert('WARN')" style="font-size: 10px; color: #FFAA00; border-color: #FFAA00;">WARNING</button>
-                        <button onclick="app.sendClanAlert('ALERT')" style="font-size: 10px; background: #500; color: white; border-color: red;">RED ALERT</button>
-                    </div>
-                </div>
-
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px;">
-                    <button onclick="nav.to('dict')">DICTIONARY</button>
                     <button onclick="app.loadRoster()">ROSTER / RANKS</button>
-                    <button onclick="app.startSymbolEdit()">EDIT SYMBOLS</button>
                     <button onclick="app.leaveClan()" class="danger">LEAVE</button>
-                    <button onclick="app.deleteClan()" id="btn-delete-clan" class="danger hidden" style="grid-column: span 2; border-style: double;">// DELETE CLAN //</button>
                 </div>
             </div>
         </div>
 
+        <!-- GLOBAL TAB -->
         <div id="tab-global" class="hidden">
             <p style="font-size: 0.8em; opacity: 0.7;">// PUBLIC FREQUENCY</p>
             <div class="chat-box" id="global-chat"></div>
@@ -315,38 +219,7 @@
         <button onclick="location.reload()" style="margin-top: 20px; border: none; opacity: 0.5;">LOGOUT</button>
     </div>
 
-    <!-- VERIFIED ELITE SCREEN -->
-    <div id="screen-verified" class="screen hidden" style="border-color: gold;">
-        <h2 style="color: gold;">// ELITE_UPLINK_ESTABLISHED</h2>
-        <p style="font-size: 10px; color: #888;">SECURE GROUPCHAT FOR VERIFIED IDENTITIES ONLY.</p>
-        
-        <div style="border: 1px solid gold; padding: 5px; margin-bottom: 10px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:10px; height:10px; background:gold; border-radius:50%; animation: pulse 2s infinite;"></div>
-                <span style="color:gold; font-size: 10px;">ENCRYPTED VOICE TUNNEL: ACTIVE</span>
-            </div>
-        </div>
-
-        <div class="chat-box" id="verified-chat" style="border-color: gold;"></div>
-        <input type="text" id="verified-input" placeholder="Elite Message..." style="border-color: gold; color: gold;">
-        <button onclick="app.sendVerifiedMsg()" style="border-color: gold; color: gold;">TRANSMIT</button>
-        
-        <button onclick="nav.to('hub')">BACK</button>
-    </div>
-
-    <!-- DICTIONARY SCREEN -->
-    <div id="screen-dict" class="screen hidden">
-        <h3>// DICTIONARY_EDIT</h3>
-        <div class="grid-2">
-            <input type="text" id="dict-orig" placeholder="ENGLISH">
-            <input type="text" id="dict-new" placeholder="CLAN WORD">
-        </div>
-        <button onclick="app.addWord()">ADD/UPDATE WORD</button>
-        <div id="dict-list" style="height: 250px; overflow-y: scroll; border: 1px solid var(--dim-color); padding: 5px; margin-bottom: 10px;"></div>
-        <button onclick="nav.to('hub')">BACK</button>
-    </div>
-
-    <!-- SOCIAL SCREEN (UPDATED) -->
+    <!-- SOCIAL SCREEN -->
     <div id="screen-social" class="screen hidden">
         <h2>// NET_SOCIAL</h2>
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -367,7 +240,6 @@
                 <input type="text" id="poll-q" placeholder="Question">
                 <input type="text" id="poll-o1" placeholder="Option 1">
                 <input type="text" id="poll-o2" placeholder="Option 2">
-                <input type="text" id="poll-video" placeholder="Youtube URL (Optional)">
                 <button onclick="social.createPoll()">LAUNCH POLL</button>
             </div>
             <div id="feed-polls" style="height: 400px; overflow-y: scroll; margin-top: 10px;"></div>
@@ -375,46 +247,87 @@
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
-    <!-- RADIO SCREEN -->
-    <div id="screen-radio" class="screen hidden" style="border-color: yellow;">
-        <h2 style="color: yellow;">// SIGNAL_INTERCEPT (RADIO)</h2>
-        <div class="card" style="border-color: yellow; text-align: center;">
-            <div id="freq-viz" style="height: 50px; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; margin-bottom: 10px;"></div>
-            <div style="font-family: monospace; font-size: 20px; color: yellow; margin-bottom: 10px;">FREQ: <span id="radio-freq">462.5625</span> MHz</div>
-            <div class="grid-2">
-                <button onclick="radio.toggleNoise()" style="color: yellow; border-color: yellow;" id="btn-noise">TOGGLE SIMULATED STATIC</button>
-                <button onclick="radio.scan()" style="color: yellow; border-color: yellow;">SCAN NEXT</button>
-            </div>
+    <!-- ECTOTAPE SCREEN -->
+    <div id="screen-ectotape" class="screen hidden">
+        <h2 style="color:var(--rep-watch);text-align:center;">// ECTOTAPE_STREAM</h2>
+        <div id="upload-zone" style="border:1px solid #333; padding:10px; margin-bottom:10px;">
+            <input type="text" id="vid-title" placeholder="TITLE">
+            <input type="text" id="vid-url" placeholder="YOUTUBE URL (e.g. youtube.com/watch?v=...)">
+            <button onclick="app.uploadVideo()">BROADCAST</button>
         </div>
-        
-        <h3 style="color: #888;">// LIVE UPLINKS (EXTERNAL)</h3>
-        <p style="font-size: 10px; color: #666;">WARNING: Leaving ClanNet Encrypted Tunnel</p>
-        <div class="grid-2">
-            <a href="https://www.broadcastify.com/listen/" target="_blank" class="news-link" style="text-align: center; border-color: yellow; color: yellow;">OPEN BROADCASTIFY (POLICE/FIRE)</a>
-            <a href="https://tunein.com/radio/Police-Scanners-c100000/" target="_blank" class="news-link" style="text-align: center; border-color: yellow; color: yellow;">TUNEIN POLICE RADIO</a>
-        </div>
-        <button onclick="nav.to('hub')">BACK</button>
+        <div id="video-feed" style="height:400px;overflow-y:scroll;"></div>
+        <button onclick="nav.to('hub')">EXIT</button>
     </div>
 
     <!-- NEWS SCREEN -->
     <div id="screen-news" class="screen hidden" style="border-color: cyan;">
-        <h2 style="color: cyan;">// WORLD_WIRE (NEWS)</h2>
-        <h3 style="color: cyan; border-bottom: 1px solid cyan;">UNDERGROUND UPDATES</h3>
+        <h2 style="color: cyan;">// WORLD_WIRE</h2>
         <div style="border: 1px solid #333; padding: 5px; margin-bottom: 10px;">
              <input type="text" id="news-headline" placeholder="Headline...">
              <input type="text" id="news-link-input" placeholder="Source URL (Optional)...">
              <button onclick="news.post()" class="admin">BROADCAST UPDATE</button>
         </div>
-        <div id="news-feed-internal" style="height: 150px; overflow-y: scroll; border: 1px solid #333; margin-bottom: 20px; padding: 5px;"></div>
-        <h3 style="color: #fff; border-bottom: 1px solid #fff;">GLOBAL INTERCEPTS (EXTERNAL)</h3>
-        <p style="font-size: 10px; color: #aaa;">Direct Uplinks to Corp Media Nodes:</p>
-        <a href="https://www.foxnews.com" target="_blank" class="news-link">>> FOX_NEWS_NETWORK</a>
-        <a href="https://www.cbc.ca/news" target="_blank" class="news-link">>> CBC_NEWS_FEED</a>
-        <a href="https://www.cnn.com" target="_blank" class="news-link">>> CNN_GLOBAL</a>
-        <a href="https://www.bbc.com/news" target="_blank" class="news-link">>> BBC_WORLD_SERVICE</a>
-        <a href="https://news.google.com" target="_blank" class="news-link">>> GOOGLE_AGGREGATE</a>
+        <div id="news-feed-internal" style="height: 300px; overflow-y: scroll; border: 1px solid #333; margin-bottom: 20px; padding: 5px;"></div>
         <button onclick="nav.to('hub')">BACK</button>
     </div>
+
+    <!-- PROFILE SCREEN -->
+    <div id="screen-profile" class="screen hidden">
+        <h2 id="prof-header">// USER_PROFILE</h2>
+        <div class="card">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div id="prof-pfp-display" style="width: 50px; height: 50px; background: #222; border: 1px solid var(--main-color); background-size: cover; background-position: center;"></div>
+                <div>
+                    <h3 id="prof-displayname" style="margin: 0;"></h3>
+                    <small id="prof-username" style="color: #888;"></small>
+                </div>
+            </div>
+        </div>
+        <div id="prof-details">
+            <p>CLAN: <span id="prof-clan">LOADING...</span></p>
+            <p>STATUS: <span id="prof-rep">LOADING...</span></p>
+        </div>
+        <div id="prof-edit-panel" class="hidden" style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
+            <input type="text" id="edit-disp" placeholder="New Display Name">
+            <input type="text" id="edit-pfp" placeholder="PFP Image URL">
+            <button onclick="app.saveProfile()">SAVE CHANGES</button>
+        </div>
+        <button onclick="nav.to('hub')" style="margin-top: 10px;">BACK</button>
+    </div>
+
+    <!-- OTHER SCREENS -->
+    <div id="screen-ranks" class="screen hidden">
+        <h3>// ROSTER_CONTROL</h3>
+        <div id="roster-list" style="height: 300px; overflow-y: scroll;"></div>
+        <button onclick="nav.to('hub')">BACK</button>
+    </div>
+
+    <div id="screen-settings" class="screen hidden">
+        <h2>// SYSTEM_CONFIG</h2>
+        <div class="grid-2">
+            <div>BG: <input type="color" id="col-bg" onchange="settings.apply()"></div>
+            <div>MAIN: <input type="color" id="col-main" onchange="settings.apply()"></div>
+        </div>
+        <button onclick="settings.reset()" class="danger" style="margin-top:20px;">RESET DEFAULTS</button>
+        <button onclick="nav.to('hub')">BACK</button>
+    </div>
+
+    <div id="screen-events" class="screen hidden">
+        <h2>// EVENT_LOG</h2>
+        <div style="border:1px solid #333;padding:10px;margin-bottom:10px;"><input type="text" id="evt-name" placeholder="EVENT NAME"><input type="text" id="evt-desc" placeholder="DESCRIPTION"><div class="grid-2"><input type="date" id="evt-start"><input type="date" id="evt-end"></div><button onclick="app.createEvent()">PUBLISH</button></div>
+        <div id="event-list" style="height:200px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">BACK</button>
+    </div>
+    
+    <div id="screen-jobs" class="screen hidden">
+        <h2>// GIG_NETWORK</h2>
+        <div class="grid-2"><button onclick="document.getElementById('job-create-panel').classList.remove('hidden');">POST JOB</button><button onclick="app.loadJobs()">BROWSE</button></div>
+        <div id="job-create-panel" class="hidden" style="margin-top:10px;border:1px dashed #333;padding:10px;"><input type="text" id="job-title" placeholder="TITLE"><textarea id="job-desc" placeholder="DESC"></textarea><button onclick="app.createJob()">UPLOAD</button></div>
+        <div id="job-list-panel" style="margin-top:10px;"><div id="job-list" style="height:300px;overflow-y:scroll;"></div></div>
+        <div id="job-chat-panel" class="hidden" style="position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bg-color);z-index:10;padding:15px;"><div id="job-chat-box" class="chat-box" style="height:300px;"></div><input type="text" id="job-msg-input"><button onclick="app.sendJobMsg()">SEND</button><button onclick="app.closeJobChat()" class="warn">CLOSE</button></div>
+        <button onclick="nav.to('hub')">BACK</button>
+    </div>
+    
+    <div id="screen-create" class="screen hidden"><h2>// NEW_CLAN</h2><input type="text" id="create-name" placeholder="NAME"><input type="password" id="create-pass" placeholder="PASS"><button onclick="app.createClan()">CREATE</button><button onclick="nav.to('hub')">CANCEL</button></div>
 
     <!-- COMMENT OVERLAY -->
     <div id="comment-overlay" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:9000;display:flex;justify-content:center;align-items:center;">
@@ -429,360 +342,28 @@
         </div>
     </div>
 
-    <!-- PROFILE SCREEN -->
-    <div id="screen-profile" class="screen hidden">
-        <h2 id="prof-header">// USER_PROFILE</h2>
-        <div class="card">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <div id="prof-pfp-display" style="width: 50px; height: 50px; background: #222; border: 1px solid var(--main-color); background-size: cover; background-position: center;"></div>
-                <div>
-                    <h3 id="prof-displayname" style="margin: 0;"></h3>
-                    <small id="prof-username" style="color: #888;"></small>
-                </div>
-            </div>
-            <div id="prof-verified" class="hidden" style="color: cyan; margin-top: 5px;">⚠ VERIFIED IDENTITY ⚠</div>
-        </div>
-        <div id="prof-details">
-            <p>CLAN: <span id="prof-clan">LOADING...</span></p>
-            <p>STATUS: <span id="prof-rep">LOADING...</span></p>
-        </div>
-        <div id="prof-edit-panel" class="hidden" style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-            <input type="text" id="edit-disp" placeholder="New Display Name">
-            <input type="text" id="edit-pfp" placeholder="PFP Image URL">
-            <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
-                <input type="checkbox" id="edit-private" style="width: auto;"> <label>HIDE CLAN FROM PUBLIC</label>
-            </div>
-            <button onclick="app.saveProfile()">SAVE CHANGES</button>
-        </div>
-        <div id="prof-admin-panel" class="hidden" style="border: 1px solid cyan; padding: 10px; margin-top: 10px;">
-            <strong style="color: cyan;">SUPERUSER CONTROLS</strong>
-            <button onclick="app.verifyUser()" class="admin">GRANT VERIFICATION BADGE</button>
-        </div>
-        <button onclick="nav.to('hub')" style="margin-top: 10px;">BACK</button>
-    </div>
-
-    <!-- RANKS SCREEN -->
-    <div id="screen-ranks" class="screen hidden">
-        <h3>// ROSTER_CONTROL</h3>
-        <div id="roster-list" style="height: 300px; overflow-y: scroll;"></div>
-        <button onclick="nav.to('hub')">BACK</button>
-    </div>
-
-    <!-- SETTINGS SCREEN -->
-    <div id="screen-settings" class="screen hidden">
-        <h2>// SYSTEM_CONFIG</h2>
-        <label>MAIN THEME</label>
-        <div class="grid-2">
-            <div>BG: <input type="color" id="col-bg" onchange="settings.apply()"></div>
-            <div>MAIN: <input type="color" id="col-main" onchange="settings.apply()"></div>
-        </div>
-        <div class="grid-2">
-            <div>DIM: <input type="color" id="col-dim" onchange="settings.apply()"></div>
-            <div>WARN: <input type="color" id="col-warn" onchange="settings.apply()"></div>
-        </div>
-        <hr style="border-color: #333">
-        <label>REPUTATION COLORS</label>
-        <div class="grid-2">
-            <div>GOOD: <input type="color" id="col-r-good" onchange="settings.apply()"></div>
-            <div>WATCH: <input type="color" id="col-r-watch" onchange="settings.apply()"></div>
-        </div>
-        <div>BAD/BLK: <input type="color" id="col-r-bad" onchange="settings.apply()"></div>
-        <button onclick="settings.reset()" class="danger" style="margin-top:20px;">RETURN TO DEFAULT SETTINGS</button>
-        <button onclick="nav.to('hub')">BACK</button>
-    </div>
-
-    <!-- EVENTS SCREEN -->
-    <div id="screen-events" class="screen hidden">
-        <h2>// EVENT_LOG</h2>
-        <div style="border:1px solid #333;padding:10px;margin-bottom:10px;"><input type="text" id="evt-name" placeholder="EVENT NAME"><input type="text" id="evt-desc" placeholder="DESCRIPTION"><div class="grid-2"><input type="date" id="evt-start"><input type="date" id="evt-end"></div><button onclick="app.createEvent()">PUBLISH</button></div>
-        <div id="event-list" style="height:200px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">BACK</button>
-    </div>
-    
-    <!-- JOBS SCREEN -->
-    <div id="screen-jobs" class="screen hidden">
-        <h2>// GIG_NETWORK</h2>
-        <div class="grid-2"><button onclick="document.getElementById('job-create-panel').classList.remove('hidden');">POST JOB</button><button onclick="app.loadJobs()">BROWSE</button></div>
-        <div id="job-create-panel" class="hidden" style="margin-top:10px;border:1px dashed #333;padding:10px;"><input type="text" id="job-title" placeholder="TITLE"><textarea id="job-desc" placeholder="DESC"></textarea><button onclick="app.createJob()">UPLOAD</button></div>
-        <div id="job-list-panel" style="margin-top:10px;"><div id="job-list" style="height:300px;overflow-y:scroll;"></div></div>
-        <div id="job-chat-panel" class="hidden" style="position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bg-color);z-index:10;padding:15px;"><div id="job-chat-box" class="chat-box" style="height:300px;"></div><input type="text" id="job-msg-input"><button onclick="app.sendJobMsg()">SEND</button><button onclick="app.closeJobChat()" class="warn">CLOSE</button></div>
-        <button onclick="nav.to('hub')">BACK</button>
-    </div>
-    
-    <!-- ECTOTAPE SCREEN -->
-    <div id="screen-ectotape" class="screen hidden">
-        <h2 style="color:var(--rep-watch);text-align:center;">// ECTOTAPE_STREAM</h2>
-        <div id="upload-zone" class="hidden"><input type="text" id="vid-title" placeholder="TITLE"><input type="text" id="vid-url" placeholder="URL"><button onclick="app.uploadVideo()">BROADCAST</button></div>
-        <div id="video-feed" style="height:400px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">EXIT</button>
-    </div>
-    
-    <!-- DRAW SCREEN -->
-    <div id="screen-draw" class="screen hidden"><h3 id="draw-title">DRAW: A</h3><canvas id="draw-canvas" width="280" height="280"></canvas><div class="grid-2"><button onclick="drawing.clear()">CLEAR</button><button onclick="drawing.save()">NEXT</button></div><button onclick="drawing.cancel()">CANCEL</button></div>
-    
-    <!-- CREATE CLAN SCREEN -->
-    <div id="screen-create" class="screen hidden"><h2>// NEW_CLAN</h2><input type="text" id="create-name" placeholder="NAME"><input type="password" id="create-pass" placeholder="PASS"><button onclick="app.createClanStart()">START DRAWING</button><button onclick="nav.to('hub')">CANCEL</button></div>
-    
-    <!-- SOC SCREEN -->
-    <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2>
-        
-        <!-- NEW ALERT CONTROLS -->
-        <div style="border: 1px solid var(--main-color); padding: 5px; margin-bottom: 10px;">
-            <small style="color: #888;">GLOBAL ALERT SYSTEM CONTROLS</small>
-            <div class="grid-3">
-                <button onclick="sysAlerts.trigger('INFO')" style="color:var(--main-color); border-color:var(--main-color);">ANNOUNCE</button>
-                <button onclick="sysAlerts.trigger('WARN')" style="color:var(--warn-color); border-color:var(--warn-color);">WARNING</button>
-                <button onclick="sysAlerts.trigger('CRIT')" class="danger">RED ALERT</button>
-            </div>
-        </div>
-
-        <div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
-    
-    <!-- CYBERDECK COCKPIT -->
-    <div id="screen-cockpit" class="screen hidden" style="border-color: var(--warn-color); box-shadow: 0 0 20px rgba(255, 170, 0, 0.2); max-width: 900px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--warn-color); margin-bottom: 10px; padding-bottom: 5px;">
-            <h2 style="color: var(--warn-color); margin:0;">// CYBER_DECK_V2.0 - EDU SIM (BROWSER LIMITS APPLY)</h2>
-            <div style="font-size: 10px; color: var(--warn-color); animation: blink 2s infinite;">[ SYSTEM: ONLINE - REAL SCAN: USE NMAP CLI FOR FULL ACCESS ]</div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
-            <!-- LEFT COLUMN: CONTROLS -->
-            <div>
-                <!-- TOGGLE BANK -->
-                <div class="grid-3">
-                    <div class="switch-container">
-                        <span class="switch-label">PROXY CHAIN</span>
-                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
-                    </div>
-                    <div class="switch-container">
-                        <span class="switch-label">FIREWALL BYPASS</span>
-                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
-                    </div>
-                    <div class="switch-container">
-                        <span class="switch-label">ROOT MASK</span>
-                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
-                    </div>
-                </div>
-
-                <!-- SLIDERS -->
-                <div class="grid-2" style="margin-bottom: 10px;">
-                    <div class="dial-container">
-                        <span class="switch-label">SIGNAL GAIN</span>
-                        <input type="range" min="0" max="100" value="50" oninput="cockpit.updateGain(this.value)">
-                    </div>
-                    <div class="dial-container">
-                        <span class="switch-label">DECRYPTION RATE</span>
-                        <input type="range" min="0" max="100" value="30" oninput="cockpit.updateRate(this.value)">
-                    </div>
-                </div>
-
-                <!-- MAIN VISUALIZER -->
-                <div style="background: #000; border: 1px solid var(--warn-color); height: 120px; position: relative; overflow: hidden; margin-bottom: 10px;">
-                    <canvas id="cockpit-canvas" width="450" height="120"></canvas>
-                    <div id="visual-text" style="position: absolute; top: 5px; left: 5px; font-size: 10px; color: rgba(255,170,0,0.7); font-family: monospace;"></div>
-                </div>
-
-                <!-- ACTION GRID (BUTTONS) -->
-                <div class="grid-4">
-                    <div class="action-btn" onclick="cockpit.runAction('PING_SWEEP')"><div class="led"></div>PING</div>
-                    <div class="action-btn" onclick="cockpit.runAction('PORT_SCAN')"><div class="led"></div>SCAN</div>
-                    <div class="action-btn" onclick="cockpit.runAction('PACKET_SNIFF')"><div class="led"></div>SNIFF</div>
-                    <div class="action-btn" onclick="cockpit.runAction('TRACE_ROUTE')"><div class="led"></div>TRACE</div>
-                    <div class="action-btn" onclick="cockpit.runAction('BRUTE_FORCE')"><div class="led"></div>BRUTE</div>
-                    <div class="action-btn" onclick="cockpit.runAction('INJECT_SQL')"><div class="led"></div>INJECT</div>
-                    <div class="action-btn" onclick="cockpit.runAction('OVERFLOW')"><div class="led"></div>OVRFLW</div>
-                    <div class="action-btn warn" onclick="cockpit.runAction('EXECUTE_PAYLOAD')" style="border-style: dashed;"><div class="led busy"></div>EXECUTE</div>
-                </div>
-
-                <!-- ENHANCED: NETWORK DISCOVERY BUTTON WITH PROGRESS -->
-                <div style="margin-top: 10px;">
-                    <button onclick="cockpit.scanNetwork()" class="warn" style="width: 100%; padding: 10px; font-size: 12px;">LAN DISCOVERY (SIM + WEBRTC DETECT)</button>
-                    <div id="scan-progress"><div id="scan-progress-fill"></div></div>
-                </div>
-
-                <!-- REAL TOOLS PANEL -->
-                <div class="real-tools-panel hidden" id="real-tools-panel">
-                    <h4 style="color: cyan; margin: 0 0 5px 0;">>> REAL TOOLS (EDU LINKS) <<</h4>
-                    <p style="font-size: 9px; margin: 0 0 5px 0;">Browser limits scanning - Use these for actual work:</p>
-                    <ul style="font-size: 9px; margin: 5px 0; padding-left: 15px;">
-                        <li><a href="https://nmap.org/" target="_blank">Nmap: Full Network Scan</a></li>
-                        <li><a href="https://github.com/samyk/webscan" target="_blank">WebScan: Browser IP Detect</a></li>
-                        <li><a href="https://wireshark.org/" target="_blank">Wireshark: Packet Sniff</a></li>
-                        <li><a href="https://wii.hacks.guide/" target="_blank">Wii Homebrew Guide</a></li>
-                        <li><a href="https://www.splashtop.com/blog/remote-access-education-uses" target="_blank">Safe Remote Access</a></li>
-                    </ul>
-                    <button onclick="document.getElementById('real-tools-panel').classList.add('hidden')" style="font-size: 8px; width: auto; padding: 2px;">HIDE</button>
-                </div>
-                <button onclick="document.getElementById('real-tools-panel').classList.toggle('hidden')" style="width: 100%; margin-top: 5px; font-size: 10px; opacity: 0.7;">SHOW REAL TOOLS GUIDE</button>
-            </div>
-
-            <!-- RIGHT COLUMN: LOGS & TARGET -->
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div class="card" style="border-color: var(--warn-color); margin: 0;">
-                    <label style="font-size: 10px; color: var(--warn-color);">TARGET IP / URL</label>
-                    <input type="text" id="cockpit-target" value="192.168.1.1" style="font-family: monospace; color: var(--warn-color); border-color: var(--warn-color);">
-                    <label style="font-size: 10px; color: var(--warn-color);">PROTOCOL</label>
-                    <select id="cockpit-proto" style="color: var(--warn-color); border-color: var(--warn-color);">
-                        <option>SSH (22)</option>
-                        <option>HTTP (80)</option>
-                        <option>HTTPS (443)</option>
-                        <option>FTP (21)</option>
-                        <option>TELNET (23)</option>
-                    </select>
-                </div>
-                
-                <div class="chat-box" id="cockpit-log" style="flex: 1; border-color: var(--warn-color); font-size: 10px; color: var(--warn-color); font-family: monospace; margin: 0;">
-                    <div class="term-line">>> DECK INITIALIZED... (NOTE: BROWSER SECURITY BLOCKS REAL SCANS)</div>
-                    <div class="term-line">>> USE 'LAN DISCOVERY' FOR SIM + LIMITED DETECT</div>
-                    <div class="term-line">>> FOR REAL: RUN NMAP IN TERMINAL</div>
-                </div>
-
-                <!-- ENHANCED: NETWORK SCAN RESULTS PANEL -->
-                <div id="network-scan-panel" class="hidden">
-                    <div id="scan-results"></div>
-                </div>
-            </div>
-        </div>
-        
-        <button onclick="nav.to('hub')" style="margin-top: 10px; border-color: var(--warn-color); color: var(--warn-color);">DISCONNECT</button>
-    </div>
-
-    <!-- REMOTE ACCESS OVERLAY (SIMULATED GUI) -->
-    <div id="remote-access-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 4000; display: flex; justify-content: center; align-items: center;">
-        <div style="width: 90%; height: 80%; background: #000; border: 2px solid var(--warn-color); padding: 10px; color: var(--main-color); font-family: monospace;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px;">
-                <h3 id="remote-title" style="margin: 0; color: var(--warn-color);">REMOTE ACCESS: 192.168.1.X (SIM)</h3>
-                <button onclick="cockpit.closeRemote()" class="danger" style="width: auto; padding: 5px; font-size: 10px;">EXIT</button>
-            </div>
-            <div id="remote-content" style="height: 100%; overflow-y: scroll;">
-                <!-- DYNAMIC CONTENT HERE -->
-            </div>
-        </div>
-    </div>
-
-    <!-- KALI OVERLAY -->
-    <div id="screen-kali" class="hidden"><div id="kali-bar"><div style="display:flex;align-items:center;"><span class="kali-logo">🐉 KALI_EMU</span><button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications</button></div></div><div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()"><div id="win-term" class="window" style="z-index:10;"><div class="win-header" onmousedown="kali.startDrag(event,'win-term')"><span class="win-title">root@kali:~/python_scripts</span><div class="win-controls"><button onclick="nav.to('soc')" style="background:#ff5f56;width:15px;height:15px;border-radius:50%;padding:0;cursor:pointer;"></button></div></div><div class="win-body"><div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div><div id="py-input-line"><span style="color:cyan;margin-right:5px;">>>></span><input type="text" id="py-input" onkeydown="kali.handleInput(event)"></div></div></div><div id="kali-menu" class="hidden" style="position:absolute;top:0;left:0;width:200px;background:#2d2d2d;z-index:50;border:1px solid #444;"><button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button><button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button></div></div></div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, limit, serverTimestamp, where, getDocs, deleteField, deleteDoc, arrayUnion, arrayRemove } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyDxb5GEGx9LZYD4Ijo-N6K849rsneYlgqk", authDomain: "ectenopo.firebaseapp.com", projectId: "ectenopo", storageBucket: "ectenopo.firebasestorage.app", messagingSenderId: "283760497520", appId: "1:283760497520:web:c9fdda2d704ca95c0bf5b5" };
+        const firebaseConfig = { apiKey: "", authDomain: "ectenopo.firebaseapp.com", projectId: "ectenopo", storageBucket: "ectenopo.firebasestorage.app", messagingSenderId: "283760497520", appId: "1:283760497520:web:c9fdda2d704ca95c0bf5b5" };
         const fbApp = initializeApp(firebaseConfig);
         const db = getFirestore(fbApp);
 
-        // --- UTILS ---
         const loading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
-        
-        window.audioSys = {
-            ctx: new (window.AudioContext || window.webkitAudioContext)(),
-            playTone: (freq, type, dur) => {
-                if(audioSys.ctx.state==='suspended') audioSys.ctx.resume();
-                const o = audioSys.ctx.createOscillator();
-                const g = audioSys.ctx.createGain();
-                o.type = type; o.frequency.value = freq;
-                o.connect(g); g.connect(audioSys.ctx.destination);
-                o.start(); g.gain.exponentialRampToValueAtTime(0.0001, audioSys.ctx.currentTime + dur);
-                o.stop(audioSys.ctx.currentTime + dur);
-            }
-        };
 
-        // --- NEW: DEVICE DETECTION ---
-        window.deviceDetect = {
-            getInfo: () => {
-                const ua = navigator.userAgent;
-                let device = "Unknown";
-                let os = "Unknown";
-                
-                // OS Detection
-                if (ua.indexOf("Win") > -1) os = "Windows";
-                else if (ua.indexOf("Mac") > -1) os = "macOS";
-                else if (ua.indexOf("Linux") > -1) os = "Linux";
-                else if (ua.indexOf("Android") > -1) os = "Android";
-                else if (ua.indexOf("iOS") > -1 || ua.indexOf("iPhone") > -1 || ua.indexOf("iPad") > -1) os = "iOS";
-                
-                // Device Type
-                if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated/.test(ua)) device = "Mobile";
-                else if (/Tablet|iPad/.test(ua)) device = "Tablet";
-                else device = "Desktop";
-                
-                // Browser
-                let browser = "Unknown";
-                if (ua.indexOf("Firefox") > -1) browser = "Firefox";
-                else if (ua.indexOf("Chrome") > -1) browser = "Chrome";
-                else if (ua.indexOf("Safari") > -1) browser = "Safari";
-                else if (ua.indexOf("Edge") > -1) browser = "Edge";
-                
-                return `${device} | ${os} | ${browser}`;
-            }
-        };
-
-        // --- NEW: SYSTEM ALERT SYSTEM ---
-        window.sysAlerts = {
-            timer: null,
-            banner: document.getElementById('sys-alert-banner'),
-            msg: document.getElementById('sys-alert-msg'),
-            trigger: (type) => {
-                // Clear any existing alert
-                sysAlerts.banner.className = 'alert-off';
-                if(sysAlerts.timer) clearTimeout(sysAlerts.timer);
-                
-                let text = "";
-                let className = "alert-on ";
-                
-                if(type === 'INFO') {
-                    text = "SYSTEM ANNOUNCEMENT: ROUTINE MAINTENANCE SCHEDULED";
-                    className += "type-info";
-                    audioSys.playTone(600, 'sine', 0.5);
-                } else if(type === 'WARN') {
-                    text = "WARNING: UNIDENTIFIED NETWORK TRAFFIC DETECTED";
-                    className += "type-warn";
-                    // Double beep
-                    audioSys.playTone(300, 'square', 0.2);
-                    setTimeout(() => audioSys.playTone(300, 'square', 0.2), 300);
-                } else if(type === 'CRIT') {
-                    text = "CRITICAL ALERT: SECURITY BREACH IN PROGRESS - LOCKDOWN";
-                    className += "type-crit";
-                    // Siren effect
-                    let i = 0;
-                    const siren = setInterval(() => {
-                        audioSys.playTone(800 + (i%2)*200, 'sawtooth', 0.1);
-                        i++;
-                        if(i > 10) clearInterval(siren);
-                    }, 200);
-                }
-                
-                setTimeout(() => {
-                    sysAlerts.msg.innerText = text;
-                    sysAlerts.banner.className = className;
-                }, 100);
-
-                // Auto hide after 10s
-                sysAlerts.timer = setTimeout(sysAlerts.hide, 10000);
-            },
-            hide: () => {
-                sysAlerts.banner.className = 'alert-off';
-            }
-        };
-
-        // --- STATE ---
-        window.state = { user: null, clan: null, clanData: {}, viewedProfile: null, activeCommentId: null, activeCommentType: null, unsubComments: null, clanUnsub: null, voiceUnsub: null };
-
-        // --- NAV ---
+        // --- STATE & UTILS ---
+        window.state = { user: null, clan: null, clanData: {}, viewedProfile: null, activeCommentId: null, activeCommentType: null };
         window.nav = {
             to: (id) => {
-                document.querySelectorAll('.screen, #screen-kali').forEach(e => e.classList.add('hidden'));
-                if(id === 'kali') document.getElementById('screen-kali').classList.remove('hidden');
-                else document.getElementById('screen-' + id).classList.remove('hidden');
-                
+                document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden'));
+                document.getElementById('screen-' + id).classList.remove('hidden');
                 if(id === 'hub') app.initHub();
                 if(id === 'jobs') app.loadJobs();
                 if(id === 'social') social.loadPosts();
-                if(id === 'settings') settings.load();
-                if(id === 'dict') app.renderDict();
-                if(id === 'cockpit') cockpit.init(); 
-                if(id === 'radio') radio.init(); 
+                if(id === 'ectotape') app.loadEctoTape();
                 if(id === 'news') news.init();
-                if(id === 'verified') app.initVerifiedChat();
             },
             tab: (t) => { 
                 document.getElementById('tab-clans').classList.add('hidden'); 
@@ -791,17 +372,134 @@
             }
         };
 
-        // --- APP LOGIC ---
-        window.app = {
-            encMode: false, dictMode: false, clanUnsub: null, clanChatUnsub: null, alertInterval: null, voiceInterval: null,
-            // Voice Chat Variables
-            voiceContext: null,
-            voiceSource: null,
-            voiceAnalyser: null,
-            voiceAnim: null,
-            voiceActive: false,
-            voiceUnsubscribe: null,
+        // --- VOICE CHAT (PUSH TO TALK) ---
+        window.voice = {
+            mediaRecorder: null,
+            chunks: [],
+            unsub: null,
+            isMuted: false,
+            isRecording: false,
+            init: () => {
+                // Setup PTT Button
+                const btn = document.getElementById('btn-ptt');
+                
+                const startTx = () => {
+                    if(!voice.mediaRecorder || voice.mediaRecorder.state === 'recording') return;
+                    voice.chunks = [];
+                    voice.mediaRecorder.start();
+                    voice.isRecording = true;
+                    btn.classList.add('transmitting');
+                    btn.innerText = "TRANSMITTING...";
+                    document.getElementById('voice-status-text').innerText = "MIC LIVE";
+                    document.getElementById('voice-status-text').style.color = "red";
+                };
 
+                const stopTx = () => {
+                    if(!voice.mediaRecorder || voice.mediaRecorder.state !== 'recording') return;
+                    voice.mediaRecorder.stop(); // Triggers ondataavailable then onstop
+                    voice.isRecording = false;
+                    btn.classList.remove('transmitting');
+                    btn.innerText = "HOLD TO TALK";
+                    document.getElementById('voice-status-text').innerText = "STANDBY";
+                    document.getElementById('voice-status-text').style.color = "#888";
+                };
+
+                // Mouse & Touch Events
+                btn.addEventListener('mousedown', startTx);
+                btn.addEventListener('mouseup', stopTx);
+                btn.addEventListener('mouseleave', stopTx);
+                btn.addEventListener('touchstart', (e) => { e.preventDefault(); startTx(); });
+                btn.addEventListener('touchend', (e) => { e.preventDefault(); stopTx(); });
+            },
+            connect: async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    voice.mediaRecorder = new MediaRecorder(stream);
+                    
+                    voice.mediaRecorder.ondataavailable = (e) => {
+                        voice.chunks.push(e.data);
+                    };
+
+                    voice.mediaRecorder.onstop = async () => {
+                        if(voice.chunks.length === 0) return;
+                        const blob = new Blob(voice.chunks, { 'type' : 'audio/ogg; codecs=opus' });
+                        
+                        // Convert to Base64
+                        const reader = new FileReader();
+                        reader.readAsDataURL(blob);
+                        reader.onloadend = async () => {
+                            const base64data = reader.result;
+                            // Upload to Firestore
+                            if(state.clan) {
+                                await addDoc(collection(db, "clans", state.clan, "voice_comms"), {
+                                    u: state.user,
+                                    audio: base64data,
+                                    ts: serverTimestamp()
+                                });
+                                voice.log(">> SENT TRANSMISSION");
+                            }
+                        };
+                    };
+
+                    // UI Updates
+                    document.getElementById('voice-controls').classList.remove('hidden');
+                    document.getElementById('btn-connect-voice').classList.add('hidden');
+                    document.getElementById('voice-status-dot').style.background = "#00FF00";
+                    document.getElementById('voice-status-dot').style.boxShadow = "0 0 5px #00FF00";
+                    voice.init(); // Bind listeners
+                    voice.listen(); // Start listening for others
+                    voice.log(">> COMMS CHANNEL OPEN. PRESS PTT TO SPEAK.");
+
+                } catch(e) {
+                    alert("MIC ACCESS DENIED. CHECK PERMISSIONS.");
+                    console.error(e);
+                }
+            },
+            listen: () => {
+                if(!state.clan) return;
+                const q = query(collection(db, "clans", state.clan, "voice_comms"), orderBy("ts", "desc"), limit(1));
+                
+                voice.unsub = onSnapshot(q, (snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            const data = change.doc.data();
+                            // Only play if it's new (roughly) and not me
+                            const now = Date.now();
+                            const msgTime = data.ts ? data.ts.toMillis() : now;
+                            
+                            if (data.u !== state.user && (now - msgTime < 10000) && !voice.isMuted) {
+                                const audio = new Audio(data.audio);
+                                audio.play().catch(e => console.log("Audio play error", e));
+                                voice.log(`>> RX: ${data.u}`);
+                                document.getElementById('voice-status-text').innerText = `RX: ${data.u}`;
+                                audio.onended = () => {
+                                     document.getElementById('voice-status-text').innerText = "STANDBY";
+                                };
+                            }
+                        }
+                    });
+                });
+            },
+            toggleMute: () => {
+                voice.isMuted = !voice.isMuted;
+                const btn = document.getElementById('btn-mute');
+                if(voice.isMuted) {
+                    btn.classList.add('warn');
+                    btn.innerText = "UNMUTE";
+                } else {
+                    btn.classList.remove('warn');
+                    btn.innerText = "MUTE AUDIO";
+                }
+            },
+            log: (msg) => {
+                const l = document.getElementById('voice-log');
+                l.innerHTML += `<div>${msg}</div>`;
+                l.scrollTop = l.scrollHeight;
+            }
+        };
+
+        // --- MAIN APP ---
+        window.app = {
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
                 if(!u || !p) return; loading(true);
@@ -821,82 +519,54 @@
             },
             initHub: async () => {
                 loading(true);
-                
-                // Set device info
-                document.getElementById('device-info').innerText = "DEVICE: " + deviceDetect.getInfo();
-                
                 const docSnap = await getDoc(doc(db, "users", state.user)); 
                 const userData = docSnap.data();
-                let verifiedHTML = userData.verified ? `<span class="verified-badge">♦✓</span>` : '';
-                document.getElementById('hub-user').innerHTML = `${userData.displayName || state.user} ${verifiedHTML}`;
-                const admins = ["user1234", "user4321"];
-                if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
-                
-                if(userData.verified) {
-                    document.getElementById('btn-payload').classList.remove('hidden');
-                    document.getElementById('btn-verified').classList.remove('hidden');
-                } else {
-                    document.getElementById('btn-payload').classList.add('hidden');
-                    document.getElementById('btn-verified').classList.add('hidden');
+                document.getElementById('hub-user').innerText = userData.displayName || state.user;
+                document.getElementById('hub-rep').innerText = "REP: " + (userData.rep || 0);
+
+                if(userData.clan) { 
+                    state.clan = userData.clan; 
+                    document.getElementById('panel-no-clan').classList.add('hidden'); 
+                    document.getElementById('panel-in-clan').classList.remove('hidden'); 
+                    document.getElementById('clan-header').innerText = userData.clan;
+                    app.initClanChat();
+                } else { 
+                    state.clan = null; 
+                    document.getElementById('panel-no-clan').classList.remove('hidden'); 
+                    document.getElementById('panel-in-clan').classList.add('hidden'); 
                 }
-
-                const setupClanListener = (data) => {
-                    if(data.clan) { 
-                        state.clan = data.clan; 
-                        if (app.clanUnsub) app.clanUnsub();
-                        app.listenToClan(data.clan); 
-                        document.getElementById('panel-no-clan').classList.add('hidden'); 
-                        document.getElementById('panel-in-clan').classList.remove('hidden'); 
-                    }
-                    else { 
-                        state.clan = null; 
-                        document.getElementById('panel-no-clan').classList.remove('hidden'); 
-                        document.getElementById('panel-in-clan').classList.add('hidden'); 
-                    }
-                    document.getElementById('hub-rep').innerText = "REP: " + (data.rep || 0);
-                };
-
-                setupClanListener(userData);
-
-                // This listener handles clan switching if user data changes
-                app.userUnsub = onSnapshot(doc(db, "users", state.user), (d) => {
-                    const data = d.data();
-                    setupClanListener(data);
-                });
                 loading(false);
-
+                
+                // Global Chat
                 const q = query(collection(db, "global_chat"), orderBy("ts", "desc"), limit(50));
                 onSnapshot(q, (snap) => {
                     const d = document.getElementById('global-chat'); d.innerHTML = "";
-                    const msgs = []; snap.forEach(doc => msgs.push(doc.data()));
-                    msgs.reverse().forEach(m => d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`);
+                    const msgs = []; snap.forEach(doc => msgs.push({id: doc.id, ...doc.data()}));
+                    msgs.reverse().forEach(m => {
+                        let del = (m.u === state.user) ? `<button class="del-btn" onclick="app.deleteItem('global_chat', '${m.id}')">DEL</button>` : '';
+                        d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}${del}</div>`;
+                    });
                     d.scrollTop = d.scrollHeight;
+                });
+            },
+            initClanChat: () => {
+                const q = query(collection(db, "clans", state.clan, "msgs"), orderBy("ts", "desc"), limit(50));
+                onSnapshot(q, (snap) => { 
+                    const d = document.getElementById('clan-chat'); 
+                    d.innerHTML = ""; 
+                    const msgs = []; 
+                    snap.forEach(doc => msgs.push({id: doc.id, ...doc.data()})); 
+                    msgs.reverse().forEach(m => { 
+                        let del = (m.u === state.user) ? `<button class="del-btn" onclick="app.deleteItem('clans/${state.clan}/msgs', '${m.id}')">DEL</button>` : '';
+                        d.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}${del}</div>`; 
+                    }); 
+                    d.scrollTop = d.scrollHeight; 
                 });
             },
             sendGlobalMsg: async () => { const t = document.getElementById('global-input').value; if(t) { await addDoc(collection(db, "global_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('global-input').value=""; } },
+            sendClanMsg: async () => { const t = document.getElementById('clan-input').value; if(t) { await addDoc(collection(db, "clans", state.clan, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('clan-input').value=""; } },
             
-            // VERIFIED CHAT
-            initVerifiedChat: () => {
-                const d = document.getElementById('verified-chat');
-                d.innerHTML = "Establishing Secure Uplink...";
-                const q = query(collection(db, "verified_chat"), orderBy("ts", "desc"), limit(50));
-                onSnapshot(q, (snap) => {
-                    d.innerHTML = "";
-                    const msgs = [];
-                    snap.forEach(doc => msgs.push(doc.data()));
-                    msgs.reverse().forEach(m => d.innerHTML += `<div class="chat-msg" style="border-color:gold; color:gold;"><strong>${m.u}:</strong> ${m.txt}</div>`);
-                    d.scrollTop = d.scrollHeight;
-                });
-            },
-            sendVerifiedMsg: async () => {
-                const t = document.getElementById('verified-input').value; 
-                if(t) { 
-                    await addDoc(collection(db, "verified_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); 
-                    document.getElementById('verified-input').value=""; 
-                }
-            },
-
-            // PROFILES & CLAN
+            // PROFILE & SEARCH
             searchUser: () => { const u = document.getElementById('search-user-input').value.trim(); if(u) app.openProfile(u); },
             openProfile: async (targetUser) => {
                 loading(true); const snap = await getDoc(doc(db, "users", targetUser)); loading(false);
@@ -904,396 +574,114 @@
                 const d = snap.data(); state.viewedProfile = targetUser;
                 document.getElementById('prof-username').innerText = "@" + targetUser; document.getElementById('prof-displayname').innerText = d.displayName || targetUser;
                 const pfp = d.pfp || ""; document.getElementById('prof-pfp-display').style.backgroundImage = pfp ? `url('${pfp}')` : "none";
-                if(d.verified) document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
-                if(d.private && targetUser !== state.user) { document.getElementById('prof-clan').innerText = "[REDACTED]"; document.getElementById('prof-rep').innerText = "[REDACTED]"; }
-                else { document.getElementById('prof-clan').innerText = d.clan || "NONE"; document.getElementById('prof-rep').innerText = d.rep || "0"; }
-                if(targetUser === state.user) { document.getElementById('prof-edit-panel').classList.remove('hidden'); document.getElementById('edit-disp').value = d.displayName || ""; document.getElementById('edit-pfp').value = d.pfp || ""; document.getElementById('edit-private').checked = d.private || false; }
+                document.getElementById('prof-clan').innerText = d.clan || "NONE"; document.getElementById('prof-rep').innerText = d.rep || "0";
+                if(targetUser === state.user) { document.getElementById('prof-edit-panel').classList.remove('hidden'); document.getElementById('edit-disp').value = d.displayName || ""; document.getElementById('edit-pfp').value = d.pfp || ""; }
                 else { document.getElementById('prof-edit-panel').classList.add('hidden'); }
-                const admins = ["user1234", "user4321"];
-                if(admins.includes(state.user.toLowerCase()) && targetUser !== state.user) document.getElementById('prof-admin-panel').classList.remove('hidden'); else document.getElementById('prof-admin-panel').classList.add('hidden');
                 nav.to('profile');
             },
-            saveProfile: async () => { const dn = document.getElementById('edit-disp').value.trim(); const pf = document.getElementById('edit-pfp').value.trim(); const priv = document.getElementById('edit-private').checked; await updateDoc(doc(db, "users", state.user), { displayName: dn, pfp: pf, private: priv }); alert("SAVED"); app.openProfile(state.user); },
-            verifyUser: async () => { if(!confirm("VERIFY?")) return; await updateDoc(doc(db, "users", state.viewedProfile), { verified: true }); alert("VERIFIED"); app.openProfile(state.viewedProfile); },
+            saveProfile: async () => { const dn = document.getElementById('edit-disp').value.trim(); const pf = document.getElementById('edit-pfp').value.trim(); await updateDoc(doc(db, "users", state.user), { displayName: dn, pfp: pf }); alert("SAVED"); app.openProfile(state.user); },
 
-            listenToClan: (cName) => {
-                document.getElementById('panel-no-clan').classList.add('hidden'); 
-                document.getElementById('panel-in-clan').classList.remove('hidden'); 
-                document.getElementById('clan-header').innerText = cName;
-                
-                if (app.clanUnsub) { app.clanUnsub(); app.clanUnsub = null; }
-                if (app.clanChatUnsub) { app.clanChatUnsub(); app.clanChatUnsub = null; }
-                
-                app.clanUnsub = onSnapshot(doc(db, "clans", cName), (doc) => { 
-                    state.clanData = doc.data() || {}; 
-                    if(state.clanData && state.clanData.leader === state.user) {
-                        document.getElementById('btn-delete-clan').classList.remove('hidden'); 
-                        document.getElementById('clan-leader-cmds').classList.remove('hidden');
-                    } else {
-                        document.getElementById('btn-delete-clan').classList.add('hidden'); 
-                        document.getElementById('clan-leader-cmds').classList.add('hidden');
-                    }
-                    if(!document.getElementById('screen-dict').classList.contains('hidden')) app.renderDict(); 
-                });
-
-                const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
-                app.clanChatUnsub = onSnapshot(q, (snap) => { 
-                    const d = document.getElementById('clan-chat'); 
-                    d.innerHTML = ""; 
-                    const msgs = []; 
-                    snap.forEach(doc => msgs.push(doc.data())); 
-                    
-                    snap.docChanges().forEach(change => {
-                        if (change.type === "added") {
-                            const m = change.doc.data();
-                            const now = Date.now();
-                            const msgTime = m.ts ? m.ts.toMillis() : now; 
-                            
-                            if (now - msgTime < 15000) {
-                                if (m.type === 'WARN') {
-                                    audioSys.playTone(800, 'sine', 0.1);
-                                    setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 200);
-                                    setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 400);
-                                }
-                                if (m.type === 'ALERT') {
-                                    app.triggerClanRedAlert(m.txt);
-                                }
-                            }
-                        }
-                    });
-
-                    msgs.reverse().forEach(m => { 
-                        let txt = app.translate(m.txt); 
-                        let style = "";
-                        
-                        // Rank Prefix Logic
-                        const userRank = (state.clanData.ranks && state.clanData.ranks[m.u]) ? state.clanData.ranks[m.u].toUpperCase() : 'MEMBER';
-                        const prefix = `<span style="color: #aaa; font-size: 0.8em;">[${userRank}]</span>`;
-
-                        if(m.type === 'ANNOUNCE') style = "font-weight:bold; color: #00FF00; border: 1px solid #00FF00; padding: 5px; margin: 5px 0; background: rgba(0,255,0,0.1);";
-                        if(m.type === 'WARN') style = "font-weight:bold; color: #FFAA00; border: 1px solid #FFAA00; padding: 5px; margin: 5px 0; background: rgba(255,170,0,0.1);";
-                        if(m.type === 'ALERT') style = "font-weight:bold; color: white; background: red; padding: 5px; margin: 5px 0; border: 1px solid white;";
-                        
-                        // Don't show prefix on system alerts
-                        if (m.u === "SYSTEM") {
-                             d.innerHTML += `<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`; 
-                        } else {
-                             d.innerHTML += `<div class="chat-msg" style="${style}">${prefix} <strong>${m.u}:</strong> ${txt}</div>`; 
-                        }
-                    }); 
-                    d.scrollTop = d.scrollHeight; 
-                });
-                
-                // Start listening to voice users
-                app.listenToVoiceUsers();
-            },
-            sendClanAlert: async (level) => {
-                if(state.clanData.leader !== state.user) return;
-                const txt = prompt(`ENTER ${level} MESSAGE:`);
-                if(!txt) return;
-                await addDoc(collection(db, "clans", state.clan, "msgs"), {
-                    u: "SYSTEM",
-                    txt: txt,
-                    type: level,
-                    ts: serverTimestamp()
-                });
-            },
-            triggerClanRedAlert: (msg) => {
-                const el = document.getElementById('clan-alert-overlay');
-                document.getElementById('clan-alert-msg').innerText = msg;
-                el.classList.remove('hidden');
-                
-                if(app.alertInterval) clearInterval(app.alertInterval);
-                
-                // WEEE WOOO SIREN EFFECT
-                const ctx = audioSys.ctx;
-                app.alertInterval = setInterval(() => {
-                    if(ctx.state==='suspended') ctx.resume();
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.type = 'sawtooth';
-                    const now = ctx.currentTime;
-                    
-                    // Sweep Up
-                    osc.frequency.setValueAtTime(600, now);
-                    osc.frequency.linearRampToValueAtTime(1200, now + 0.5);
-                    
-                    // Sweep Down
-                    osc.frequency.linearRampToValueAtTime(600, now + 1.0);
-                    
-                    gain.gain.setValueAtTime(0.2, now);
-                    osc.start(now);
-                    osc.stop(now + 1.0);
-                }, 1000);
-            },
-            ackAlert: () => {
-                document.getElementById('clan-alert-overlay').classList.add('hidden');
-                if(app.alertInterval) clearInterval(app.alertInterval);
-            },
-            
-            // ENHANCED VOICE CHAT WITH USER LIST
-            listenToVoiceUsers: () => {
-                if (!state.clan) return;
-                
-                // Clean up previous listener
-                if (app.voiceUnsubscribe) {
-                    app.voiceUnsubscribe();
-                }
-                
-                // Listen to voice_users subcollection in clan
-                const voiceRef = collection(db, "clans", state.clan, "voice_users");
-                const q = query(voiceRef, orderBy("joinedAt", "desc"));
-                
-                app.voiceUnsubscribe = onSnapshot(q, (snapshot) => {
-                    const usersList = document.getElementById('voice-users-list');
-                    const container = document.getElementById('voice-users-container');
-                    
-                    if (snapshot.empty) {
-                        container.classList.add('hidden');
-                        return;
-                    }
-                    
-                    container.classList.remove('hidden');
-                    usersList.innerHTML = "";
-                    
-                    snapshot.forEach(doc => {
-                        const userData = doc.data();
-                        const now = Date.now();
-                        const lastSeen = userData.lastSeen ? userData.lastSeen.toMillis() : now;
-                        const isActive = (now - lastSeen) < 10000; // Active if seen in last 10 seconds
-                        
-                        if (isActive) {
-                            usersList.innerHTML += `
-                                <div class="voice-user-item">
-                                    <div class="voice-user-indicator ${userData.speaking ? 'voice-user-speaking' : ''}"></div>
-                                    <span>${doc.id}</span>
-                                    <small style="color: #555; margin-left: auto;">${userData.device || 'Unknown'}</small>
-                                </div>
-                            `;
-                        }
-                    });
-                });
-            },
-            
-            // REAL MICROPHONE VISUALIZATION + FIREBASE PRESENCE
-            toggleVoice: async () => {
-                const btn = document.getElementById('btn-voice-conn');
-                const status = document.getElementById('voice-status');
-                const viz = document.getElementById('voice-viz');
-                const muteBtn = document.getElementById('btn-voice-mute');
-                
-                if (app.voiceActive) {
-                    // Disconnect Logic
-                    if(app.voiceSource) {
-                        app.voiceSource.disconnect();
-                        app.voiceSource = null;
-                    }
-                    if(app.voiceAnim) {
-                        cancelAnimationFrame(app.voiceAnim);
-                        app.voiceAnim = null;
-                    }
-                    
-                    // Remove from Firebase voice_users
-                    if (state.clan && state.user) {
-                        try {
-                            await deleteDoc(doc(db, "clans", state.clan, "voice_users", state.user));
-                        } catch (e) {
-                            console.log("Voice user cleanup:", e);
-                        }
-                    }
-                    
-                    // Stop heartbeat
-                    if (app.voiceHeartbeat) {
-                        clearInterval(app.voiceHeartbeat);
-                        app.voiceHeartbeat = null;
-                    }
-                    
-                    // Reset UI
-                    btn.innerText = "CONNECT MIC";
-                    btn.style.color = "var(--main-color)";
-                    status.style.background = "red";
-                    viz.innerHTML = "";
-                    muteBtn.disabled = true;
-                    app.voiceActive = false;
-                } else {
-                    // Connect Logic
-                    try {
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        app.voiceContext = new (window.AudioContext || window.webkitAudioContext)();
-                        app.voiceAnalyser = app.voiceContext.createAnalyser();
-                        app.voiceSource = app.voiceContext.createMediaStreamSource(stream);
-                        app.voiceSource.connect(app.voiceAnalyser);
-                        app.voiceAnalyser.fftSize = 64; // Small fft for simple bars
-                        
-                        const bufferLength = app.voiceAnalyser.frequencyBinCount;
-                        const dataArray = new Uint8Array(bufferLength);
-                        
-                        // Setup Bars in DOM
-                        viz.innerHTML = "";
-                        for(let i=0; i<bufferLength; i++) {
-                            const bar = document.createElement('div');
-                            bar.className = 'voice-bar';
-                            bar.id = 'vbar-' + i;
-                            viz.appendChild(bar);
-                        }
-
-                        // Add to Firebase voice_users
-                        if (state.clan && state.user) {
-                            const deviceInfo = deviceDetect.getInfo();
-                            await setDoc(doc(db, "clans", state.clan, "voice_users", state.user), {
-                                joinedAt: serverTimestamp(),
-                                lastSeen: serverTimestamp(),
-                                speaking: false,
-                                device: deviceInfo
-                            });
-                            
-                            // Heartbeat to keep presence updated
-                            app.voiceHeartbeat = setInterval(async () => {
-                                if (state.clan && state.user && app.voiceActive) {
-                                    // Detect if speaking (simple threshold)
-                                    app.voiceAnalyser.getByteFrequencyData(dataArray);
-                                    const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-                                    const speaking = average > 30; // Threshold
-                                    
-                                    await updateDoc(doc(db, "clans", state.clan, "voice_users", state.user), {
-                                        lastSeen: serverTimestamp(),
-                                        speaking: speaking
-                                    });
-                                }
-                            }, 2000); // Update every 2 seconds
-                        }
-
-                        // Animation Loop
-                        const draw = () => {
-                            if(!app.voiceActive) return;
-                            app.voiceAnim = requestAnimationFrame(draw);
-                            app.voiceAnalyser.getByteFrequencyData(dataArray);
-                            
-                            for(let i=0; i<bufferLength; i++) {
-                                const val = dataArray[i];
-                                const bar = document.getElementById('vbar-' + i);
-                                if(bar) bar.style.height = (val / 5) + "px"; // Scale height
-                            }
-                        };
-                        
-                        app.voiceActive = true;
-                        draw();
-                        
-                        // UI Updates
-                        btn.innerText = "DISCONNECT";
-                        btn.style.color = "red";
-                        status.style.background = "#00FF00";
-                        muteBtn.disabled = false;
-
-                    } catch (err) {
-                        console.error(err);
-                        alert("MIC ACCESS DENIED OR NOT FOUND");
-                    }
-                }
-            },
-            muteVoice: () => {
-                // Visual simulation only for mute (disconnects stream logic)
-                const btn = document.getElementById('btn-voice-mute');
-                if(btn.innerText === "MUTE") {
-                    if(app.voiceSource) app.voiceSource.disconnect(app.voiceAnalyser);
-                    btn.innerText = "UNMUTE";
-                    btn.classList.add('warn');
-                } else {
-                    if(app.voiceSource) app.voiceSource.connect(app.voiceAnalyser);
-                    btn.innerText = "MUTE";
-                    btn.classList.remove('warn');
-                }
-            },
-
-            loadRoster: () => { 
+            // CLAN MANAGEMENT
+            joinClan: async () => { const n = document.getElementById('join-name').value.trim(); const p = document.getElementById('join-pass').value.trim(); const s = await getDoc(doc(db, "clans", n)); if(s.exists() && s.data().pass === p) { await updateDoc(doc(db, "users", state.user), { clan: n }); await updateDoc(doc(db, "clans", n), { [`ranks.${state.user}`]: 'member' }); nav.to('hub'); } else alert("INVALID"); },
+            createClan: async () => { const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p) return; await setDoc(doc(db, "clans", n), { pass: p, leader: state.user, ranks: { [state.user]: 'leader' } }); await updateDoc(doc(db, "users", state.user), { clan: n }); nav.to('hub'); },
+            leaveClan: async () => { if(!confirm("LEAVE?")) return; await updateDoc(doc(db, "users", state.user), { clan: null }); await updateDoc(doc(db, "clans", state.clan), { [`ranks.${state.user}`]: deleteField() }); nav.to('hub'); },
+            loadRoster: async () => { 
                 nav.to('ranks'); 
+                const snap = await getDoc(doc(db, "clans", state.clan));
+                const ranks = snap.data().ranks || {}; 
                 const list = document.getElementById('roster-list'); list.innerHTML = ""; 
-                const ranks = state.clanData.ranks || {}; 
-                const isLeader = state.clanData.leader === state.user; 
                 for (const [member, rank] of Object.entries(ranks)) { 
-                    let controls = ""; 
-                    if (isLeader && member !== state.user) {
-                        controls = `<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:2px;" class="danger">KICK</button>
-                                    <button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:2px;">SET RANK</button>`; 
-                    }
-                    list.innerHTML += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span>${member} <span style="color:yellow">[${rank.toUpperCase()}]</span></span><div>${controls}</div></div>`; 
+                    list.innerHTML += `<div class="card"><span>${member} <span style="color:yellow">[${rank.toUpperCase()}]</span></span></div>`; 
                 } 
             },
-            setCustomRank: async (member) => {
-                const r = prompt("ENTER CUSTOM RANK TITLE (e.g. COMMANDER, RECRUIT):");
-                if(r) {
-                    await updateDoc(doc(db, "clans", state.clan), { [`ranks.${member}`]: r.toUpperCase() }); 
-                    app.loadRoster();
-                }
-            },
-            clanKick: async (target) => { if(!confirm(`KICK ${target}?`)) return; await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: deleteField() }); await updateDoc(doc(db, "users", target), { clan: null }); app.loadRoster(); },
-            clanPromote: async (target) => { await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: 'admin' }); app.loadRoster(); },
-            deleteClan: async () => { const cName = state.clan; if(!confirm("WARNING: DELETE CLAN?")) return; loading(true); const cDoc = await getDoc(doc(db, "clans", cName)); const ranks = cDoc.data().ranks; for(const member of Object.keys(ranks)) await updateDoc(doc(db, "users", member), { clan: null }); await deleteDoc(doc(db, "clans", cName)); loading(false); alert("DELETED"); nav.to('hub'); },
-            joinClan: async () => { const n = document.getElementById('join-name').value.trim(); const p = document.getElementById('join-pass').value.trim(); const s = await getDoc(doc(db, "clans", n)); if(s.exists() && s.data().pass === p) { await updateDoc(doc(db, "users", state.user), { clan: n }); await updateDoc(doc(db, "clans", n), { [`ranks.${state.user}`]: 'member' }); } else alert("INVALID"); },
-            leaveClan: async () => { if(!confirm("LEAVE?")) return; await updateDoc(doc(db, "users", state.user), { clan: null }); await updateDoc(doc(db, "clans", state.clan), { [`ranks.${state.user}`]: deleteField() }); },
-            sendClanMsg: async () => { const t = document.getElementById('clan-input').value; if(t) { await addDoc(collection(db, "clans", state.clan, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('clan-input').value=""; } },
-            
-            // TRANS & DICT
-            toggleEnc: () => { app.encMode = !app.encMode; document.getElementById('btn-enc').style.color = app.encMode ? '#00FF00' : '#555'; },
-            toggleDict: () => { app.dictMode = !app.dictMode; document.getElementById('btn-dict').style.color = app.dictMode ? '#00FF00' : '#555'; },
-            translate: (txt) => { if (!app.encMode && !app.dictMode) return txt; let out = ""; const words = state.clanData.words || {}; const syms = state.clanData.symbols || {}; txt.split(" ").forEach(w => { const c = w.toLowerCase().replace(/[^a-z]/g,''); let finalWord = w; if (app.dictMode && words[c]) finalWord = words[c]; else if (app.encMode && words[c]) finalWord = words[c]; if (app.encMode) { const clean = finalWord.toLowerCase().replace(/[^a-z]/g,''); out += app.strToSym(clean, syms) + " "; } else { out += finalWord + " "; } }); return out; },
-            strToSym: (str, syms) => { let html = ""; for(let c of str) { if(syms[c.toUpperCase()]) html += `<img src="${syms[c.toUpperCase()]}" class="chat-img">`; else html += c; } return html; },
-            
-            renderDict: () => { const list = document.getElementById('dict-list'); list.innerHTML = ""; const words = state.clanData.words || {}; if(Object.keys(words).length === 0) { list.innerHTML = "<div style='color:#555;'>DICTIONARY EMPTY</div>"; return; } for(const [k, v] of Object.entries(words)) { list.innerHTML += `<div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between;"><span>${k} <span style="color:var(--main-color);">-></span> ${v}</span><button onclick="app.delWord('${k}')" style="width:20px;height:20px;padding:0;font-size:10px;border-color:red;color:red;">X</button></div>`; } },
-            addWord: async () => { const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan) await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]:v}); app.renderDict(); },
-            delWord: async (k) => { if(!confirm("DELETE?")) return; await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]: deleteField()}); app.renderDict(); },
 
-            // JOBS, EVENTS, ETC
+            // CONTENT CREATION
             createEvent: async () => { const n = document.getElementById('evt-name').value; if(!n) return; await addDoc(collection(db, "events"), { name: n, desc: document.getElementById('evt-desc').value, start: document.getElementById('evt-start').value, end: document.getElementById('evt-end').value, creator: state.user, ts: serverTimestamp() }); alert("CREATED"); app.loadEvents(); },
-            loadEvents: async () => { const list = document.getElementById('event-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "events"), orderBy("start", "asc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const e = d.data(); list.innerHTML += `<div class="card"><strong style="color:white;">${e.name}</strong><br><span>${e.start} // ${e.end || '?'}</span><br><p>${e.desc}</p><small>ORG: ${e.creator}</small></div>`; }); },
+            loadEvents: async () => { const list = document.getElementById('event-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "events"), orderBy("start", "asc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const e = d.data(); let del = (e.creator === state.user) ? `<button class="del-btn" onclick="app.deleteItem('events', '${d.id}', app.loadEvents)">DEL</button>` : ''; list.innerHTML += `<div class="card"><strong style="color:white;">${e.name}</strong>${del}<br><span>${e.start} // ${e.end || '?'}</span><br><p>${e.desc}</p><small>ORG: ${e.creator}</small></div>`; }); },
+            
+            // JOBS
             createJob: async () => { const t = document.getElementById('job-title').value; if(!t) return; await addDoc(collection(db, "jobs"), { title: t, desc: document.getElementById('job-desc').value, owner: state.user, worker: null, status: 'OPEN', ts: serverTimestamp() }); alert("POSTED"); app.loadJobs(); },
-            loadJobs: async () => { const list = document.getElementById('job-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "jobs"), orderBy("ts", "desc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const j = d.data(); const id = d.id; let action = ""; if(j.status === 'OPEN' && j.owner !== state.user) action = `<button onclick="app.acceptJob('${id}')">ACCEPT</button>`; else if (j.owner === state.user || j.worker === state.user) action = `<button onclick="app.openJobChat('${id}')" class="warn">OPEN CHAT</button>`; else action = `<button disabled>CLOSED</button>`; list.innerHTML += `<div class="card"><strong>${j.title}</strong> [${j.status}]<br><em>${j.desc}</em><br><small>CLIENT: ${j.owner}</small><br>${action}</div>`; }); },
+            loadJobs: async () => { const list = document.getElementById('job-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "jobs"), orderBy("ts", "desc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const j = d.data(); const id = d.id; let action = ""; if(j.status === 'OPEN' && j.owner !== state.user) action = `<button onclick="app.acceptJob('${id}')">ACCEPT</button>`; else if (j.owner === state.user || j.worker === state.user) action = `<button onclick="app.openJobChat('${id}')" class="warn">OPEN CHAT</button>`; else action = `<button disabled>CLOSED</button>`; let del = (j.owner === state.user) ? `<button class="del-btn" onclick="app.deleteItem('jobs', '${id}', app.loadJobs)">DEL</button>` : ''; list.innerHTML += `<div class="card"><strong>${j.title}</strong> [${j.status}]${del}<br><em>${j.desc}</em><br><small>CLIENT: ${j.owner}</small><br>${action}</div>`; }); },
             acceptJob: async (jid) => { if(!confirm("ACCEPT?")) return; await updateDoc(doc(db, "jobs", jid), { worker: state.user, status: 'ASSIGNED' }); app.openJobChat(jid); },
-            openJobChat: (jid) => { document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob = jid; onSnapshot(query(collection(db, "jobs", jid, "msgs"), orderBy("ts", "desc")), (snap) => { const div = document.getElementById('job-chat-box'); div.innerHTML = ""; const msgs = []; snap.forEach(d => msgs.push(d.data())); msgs.reverse().forEach(m => div.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`); div.scrollTop = div.scrollHeight; }); },
+            openJobChat: (jid) => { document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob = jid; onSnapshot(query(collection(db, "jobs", jid, "msgs"), orderBy("ts", "desc")), (snap) => { const div = document.getElementById('job-chat-box'); div.innerHTML = ""; const msgs = []; snap.forEach(d => msgs.push({id:d.id, ...d.data()})); msgs.reverse().forEach(m => { let del = (m.u === state.user) ? `<button class="del-btn" onclick="app.deleteItem('jobs/${jid}/msgs', '${m.id}')">DEL</button>` : ''; div.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}${del}</div>`; }); div.scrollTop = div.scrollHeight; }); },
             sendJobMsg: async () => { const t = document.getElementById('job-msg-input').value; if(t) await addDoc(collection(db, "jobs", state.currentJob, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('job-msg-input').value = ""; },
             closeJobChat: () => { document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob = null; },
-            loadEctoTape: async () => { const admins=["user1234","user4321"]; const q = query(collection(db, "ectotape_vids"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); const feed = document.getElementById('video-feed'); feed.innerHTML = ""; snap.forEach(d => { const v = d.data(); feed.innerHTML += `<div class="card"><strong>${v.title}</strong><iframe width="100%" height="150" src="${v.url.replace('watch?v=','embed/')}" frameborder="0"></iframe></div>`; }); if(admins.includes(state.user.toLowerCase())) document.getElementById('upload-zone').classList.remove('hidden'); },
-            uploadVideo: async () => { await addDoc(collection(db, "ectotape_vids"), { title: document.getElementById('vid-title').value, url: document.getElementById('vid-url').value, uploader: state.user, ts: serverTimestamp() }); alert("UPLOADED"); app.loadEctoTape(); },
-            createClanStart: () => { const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p) return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
-            startSymbolEdit: () => { drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
-            runSecurityScan: (type) => { const c=document.getElementById('soc-console'); c.innerHTML+=`<div>> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div>> COMPLETE. CLEAN.</div>`,1500); },
-            getEmbedUrl: (url) => { if(!url) return null; let vidId = url.split('v=')[1]; if(!vidId && url.indexOf('youtu.be/') > -1) vidId = url.split('youtu.be/')[1]; if(vidId) { const amp = vidId.indexOf('&'); if(amp != -1) vidId = vidId.substring(0, amp); return `https://www.youtube.com/embed/${vidId}`; } return null; }
+
+            // ECTOTAPE (FIXED)
+            loadEctoTape: async () => { 
+                const q = query(collection(db, "ectotape_vids"), orderBy("ts", "desc"), limit(20)); 
+                const snap = await getDocs(q); 
+                const feed = document.getElementById('video-feed'); 
+                feed.innerHTML = ""; 
+                snap.forEach(d => { 
+                    const v = d.data(); 
+                    let del = (v.uploader === state.user) ? `<button class="del-btn" onclick="app.deleteItem('ectotape_vids', '${d.id}', app.loadEctoTape)">DEL</button>` : '';
+                    
+                    // Fixed Youtube Embed logic
+                    let embedUrl = "";
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = v.url.match(regExp);
+                    if (match && match[2].length == 11) {
+                        embedUrl = "https://www.youtube.com/embed/" + match[2];
+                    }
+
+                    if(embedUrl) {
+                        feed.innerHTML += `<div class="card"><strong>${v.title}</strong>${del}<iframe width="100%" height="200" src="${embedUrl}" frameborder="0" allowfullscreen></iframe></div>`; 
+                    } else {
+                        feed.innerHTML += `<div class="card"><strong>${v.title}</strong>${del}<br><span style="color:red;">INVALID VIDEO URL</span></div>`;
+                    }
+                }); 
+            },
+            uploadVideo: async () => { 
+                const t = document.getElementById('vid-title').value;
+                const u = document.getElementById('vid-url').value;
+                if(!t || !u) return;
+                await addDoc(collection(db, "ectotape_vids"), { title: t, url: u, uploader: state.user, ts: serverTimestamp() }); 
+                alert("UPLOADED"); app.loadEctoTape(); 
+            },
+
+            // UNIVERSAL DELETE
+            deleteItem: async (collectionPath, id, callback) => {
+                if(!confirm("DELETE ITEM?")) return;
+                try {
+                    await deleteDoc(doc(db, collectionPath, id));
+                    if(callback) callback();
+                } catch(e) {
+                    console.error(e);
+                    alert("ERROR DELETING");
+                }
+            }
         };
 
-        // --- SOCIAL ---
+        // --- SOCIAL MODULE ---
         window.social = {
             tab: (t) => { document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden'); if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls(); },
             like: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); else { await updateDoc(ref, { likes: arrayUnion(state.user) }); if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
             dislike: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); else { await updateDoc(ref, { dislikes: arrayUnion(state.user) }); if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
-            openComments: (id, type) => { state.activeCommentId = id; state.activeCommentType = type; const col = type === 'post' ? 'posts' : 'polls'; document.getElementById('comment-overlay').classList.remove('hidden'); if(state.unsubComments) state.unsubComments(); const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc")); state.unsubComments = onSnapshot(q, (snap) => { const div = document.getElementById('active-comment-list'); div.innerHTML = ""; if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; snap.forEach(d => { const c = d.data(); div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; }); }); },
-            closeComments: () => { document.getElementById('comment-overlay').classList.add('hidden'); if(state.unsubComments) { state.unsubComments(); state.unsubComments = null; } },
+            openComments: (id, type) => { state.activeCommentId = id; state.activeCommentType = type; const col = type === 'post' ? 'posts' : 'polls'; document.getElementById('comment-overlay').classList.remove('hidden'); const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc")); onSnapshot(q, (snap) => { const div = document.getElementById('active-comment-list'); div.innerHTML = ""; if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; snap.forEach(d => { const c = d.data(); let del = (c.u === state.user) ? `<button class="del-btn" onclick="app.deleteItem('${col}/${id}/comments', '${d.id}')">DEL</button>` : ''; div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}${del}</div>`; }); }); },
+            closeComments: () => { document.getElementById('comment-overlay').classList.add('hidden'); },
             submitComment: async () => { const txt = document.getElementById('new-comment-input').value.trim(); if(!txt || !state.activeCommentId) return; const col = state.activeCommentType === 'post' ? 'posts' : 'polls'; await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() }); document.getElementById('new-comment-input').value = ""; },
             createPost: async () => { const txt = document.getElementById('post-content').value; const vid = document.getElementById('post-video').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, video: vid || null, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; document.getElementById('post-video').value = ""; social.loadPosts(); },
             loadPosts: async () => { const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED..."; const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; 
-                let vidHtml = ""; if(p.video) { const embed = app.getEmbedUrl(p.video); if(embed) vidHtml = `<iframe class="vid-embed" src="${embed}" allowfullscreen></iframe>`; }
-                div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div>${vidHtml}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`; }); },
-            createPoll: async () => { const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value; const vid = document.getElementById('poll-video').value; if(!q || !o1 || !o2) return; await addDoc(collection(db, "polls"), { u: state.user, q: q, video: vid || null, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() }); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
+                let vidHtml = ""; if(p.video) { const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/; const match = p.video.match(regExp); if (match && match[2].length == 11) vidHtml = `<iframe class="vid-embed" src="https://www.youtube.com/embed/${match[2]}" allowfullscreen></iframe>`; }
+                let del = (p.u === state.user) ? `<button class="del-btn" onclick="app.deleteItem('posts', '${d.id}', social.loadPosts)">DEL</button>` : '';
+                div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span>${del} <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div>${vidHtml}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`; }); },
+            createPoll: async () => { const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value; if(!q || !o1 || !o2) return; await addDoc(collection(db, "polls"), { u: state.user, q: q, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() }); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
             loadPolls: async () => { const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS..."; const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let optsHTML = ""; p.opts.forEach((opt, idx) => { const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100); optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`; }); 
-                let vidHtml = ""; if(p.video) { const embed = app.getEmbedUrl(p.video); if(embed) vidHtml = `<iframe class="vid-embed" src="${embed}" allowfullscreen></iframe>`; }
-                div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${vidHtml}${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`; }); },
+                let del = (p.u === state.user) ? `<button class="del-btn" onclick="app.deleteItem('polls', '${d.id}', social.loadPolls)">DEL</button>` : '';
+                div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span>${del}</div><strong>${p.q}</strong>${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`; }); },
             vote: async (id, optIdx) => { const ref = doc(db, "polls", id); const snap = await getDoc(ref); const d = snap.data(); if(d.voters.includes(state.user)) return alert("ALREADY VOTED"); d.opts[optIdx].v++; d.voters.push(state.user); await updateDoc(ref, { opts: d.opts, voters: d.voters }); social.loadPolls(); }
         };
 
-        // NEW: NEWS MODULE
+        // --- NEWS MODULE ---
         window.news = {
-            init: async () => {
-                 news.loadInternal();
-            },
+            init: async () => { news.loadInternal(); },
             post: async () => {
                 const h = document.getElementById('news-headline').value;
                 const l = document.getElementById('news-link-input').value;
                 if(!h) return;
                 await addDoc(collection(db, "news"), { title: h, link: l || null, u: state.user, ts: serverTimestamp() });
-                document.getElementById('news-headline').value = "";
-                document.getElementById('news-link-input').value = "";
-                news.loadInternal();
+                document.getElementById('news-headline').value = ""; document.getElementById('news-link-input').value = ""; news.loadInternal();
             },
             loadInternal: async () => {
                 const d = document.getElementById('news-feed-internal');
@@ -1303,298 +691,27 @@
                 d.innerHTML = "";
                 snap.forEach(doc => {
                     const n = doc.data();
-                    d.innerHTML += `<div style="border-bottom:1px solid #222; margin-bottom:5px; padding-bottom:5px;">
-                        <strong style="color:cyan;">${n.title}</strong>
-                        ${n.link ? `<br><a href="${n.link}" target="_blank" style="font-size:10px; color:#666;">[SOURCE LINK]</a>` : ''}
-                        <br><small style="color:#444;">REPORT: @${n.u}</small>
-                    </div>`;
+                    let del = (n.u === state.user) ? `<button class="del-btn" onclick="app.deleteItem('news', '${doc.id}', news.loadInternal)">DEL</button>` : '';
+                    d.innerHTML += `<div style="border-bottom:1px solid #222; margin-bottom:5px; padding-bottom:5px;"><strong style="color:cyan;">${n.title}</strong>${del}${n.link ? `<br><a href="${n.link}" target="_blank" style="font-size:10px; color:#666;">[SOURCE LINK]</a>` : ''}<br><small style="color:#444;">REPORT: @${n.u}</small></div>`;
                 });
             }
         };
 
-        // NEW: RADIO MODULE
-        window.radio = {
-            interval: null,
-            noiseNode: null,
-            init: () => {
-                const viz = document.getElementById('freq-viz');
-                viz.innerHTML = "";
-                for(let i=0; i<20; i++) {
-                    viz.innerHTML += `<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*50}px"></div>`;
-                }
-                if(radio.interval) clearInterval(radio.interval);
-                radio.interval = setInterval(radio.anim, 100);
-            },
-            anim: () => {
-                for(let i=0; i<20; i++) {
-                    document.getElementById(`fb-${i}`).style.height = (Math.random()*40 + 5) + "px";
-                }
-            },
-            scan: () => {
-                audioSys.playTone(800, 'sawtooth', 0.1);
-                let f = (400 + Math.random()*100).toFixed(4);
-                document.getElementById('radio-freq').innerText = f;
-            },
-            toggleNoise: () => {
-                if(radio.noiseNode) {
-                    radio.noiseNode.disconnect();
-                    radio.noiseNode = null;
-                    document.getElementById('btn-noise').style.background = "transparent";
-                    document.getElementById('btn-noise').style.color = "yellow";
-                } else {
-                    const ctx = audioSys.ctx;
-                    if(ctx.state==='suspended') ctx.resume();
-                    const bufferSize = 4096;
-                    const whiteNoise = ctx.createScriptProcessor(bufferSize, 1, 1);
-                    whiteNoise.onaudioprocess = function(e) {
-                        const output = e.outputBuffer.getChannelData(0);
-                        for (let i = 0; i < bufferSize; i++) {
-                            output[i] = Math.random() * 0.1 - 0.05; // Low volume static
-                        }
-                    };
-                    whiteNoise.connect(ctx.destination);
-                    radio.noiseNode = whiteNoise;
-                    document.getElementById('btn-noise').style.background = "yellow";
-                    document.getElementById('btn-noise').style.color = "black";
-                }
-            }
-        };
-
-        window.cockpit = {
-            running: false,
-            ctx: null,
-            canvas: null,
-            gain: 50,
-            rate: 30,
-            currentDevices: [],
-            currentRemote: null,
-            init: () => {
-                cockpit.canvas = document.getElementById('cockpit-canvas');
-                cockpit.ctx = cockpit.canvas.getContext('2d');
-                cockpit.running = true;
-                cockpit.animate();
-                cockpit.detectLocalIP(); 
-            },
-            toggle: (el) => {
-                el.classList.toggle('toggle-active');
-                audioSys.playTone(600, 'square', 0.05);
-            },
-            updateGain: (v) => cockpit.gain = v,
-            updateRate: (v) => cockpit.rate = v,
-            log: (txt) => {
-                const l = document.getElementById('cockpit-log');
-                l.innerHTML += `<div class="term-line" style="color:#${Math.floor(Math.random()*999)}">${txt}</div>`;
-                l.scrollTop = l.scrollHeight;
-            },
-            runAction: (action) => {
-                audioSys.playTone(200, 'sawtooth', 0.1);
-                const t = document.getElementById('cockpit-target').value;
-                const p = document.getElementById('cockpit-proto').value;
-                const led = event.currentTarget.querySelector('.led');
-                led.classList.add('on');
-                
-                cockpit.log(`>> EXEC: ${action} ON ${t} (${p})...`);
-                
-                setTimeout(() => {
-                    if(action === 'PING_SWEEP') cockpit.log(`>> REPLY FROM ${t}: BYTES=32 TIME=${Math.floor(Math.random()*50)}ms TTL=54`);
-                    else if(action === 'PORT_SCAN') cockpit.log(`>> PORT ${Math.floor(Math.random()*65535)} [OPEN] SERVICE: UNKNOWN`);
-                    else if(action === 'BRUTE_FORCE') cockpit.log(`>> TRYING CREDENTIALS... [FAIL]`);
-                    else if(action === 'EXECUTE_PAYLOAD') {
-                          cockpit.log(`>> UPLOADING BINARY... [||||||||||] 100%`);
-                          cockpit.log(`>> <span style="background:var(--warn-color); color:black">ROOT ACCESS GRANTED</span>`);
-                          audioSys.playTone(1000, 'square', 0.5);
-                    }
-                    else cockpit.log(`>> PROCESS COMPLETE. DATA LOGGED.`);
-                    
-                    setTimeout(() => led.classList.remove('on'), 200);
-                }, 1000 + Math.random() * 2000);
-            },
-            detectLocalIP: () => {
-                const rtc = new RTCPeerConnection({ iceServers: [] });
-                rtc.createDataChannel('');
-                rtc.createOffer().then(offer => rtc.setLocalDescription(offer));
-                rtc.onicecandidate = (e) => {
-                    if (e.candidate) {
-                        const ip = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate)?.[1];
-                        if (ip && !ip.startsWith('192.168') && !ip.startsWith('10.') && !ip.startsWith('172.')) return;
-                        cockpit.log(`>> LOCAL IP DETECTED: ${ip || 'UNABLE'} (BROWSER LIMIT)`);
-                    }
-                };
-                setTimeout(() => rtc.close(), 1000);
-            },
-            scanNetwork: () => {
-                cockpit.log(`>> INITIATING LAN DISCOVERY... (SIM + WEBRTC EDU MODE)`);
-                audioSys.playTone(400, 'sawtooth', 0.2);
-                const progress = document.getElementById('scan-progress-fill');
-                let prog = 0;
-                const interval = setInterval(() => {
-                    prog += Math.random() * 10;
-                    if (prog > 100) prog = 100;
-                    progress.style.width = prog + '%';
-                }, 100);
-
-                setTimeout(() => {
-                    clearInterval(interval);
-                    progress.style.width = '100%';
-                    cockpit.currentDevices = [
-                        { ip: '192.168.1.1', mac: '00:11:22:33:44:55', os: 'Router (Firmware v2.1)', ports: '80(open), 443(open), 22(closed)', vuln: 'Low', type: 'Router' },
-                        { ip: '192.168.1.10', mac: 'AA:BB:CC:DD:EE:FF', os: 'Windows 10', ports: '3389(open), 445(open)', vuln: 'Medium', type: 'PC' },
-                        { ip: '192.168.1.15', mac: '11:22:33:44:55:66', os: 'iOS 17 (iPhone)', ports: '5353(open)', vuln: 'Low', type: 'Mobile' },
-                        { ip: '192.168.1.20', mac: 'FF:EE:DD:CC:BB:AA', os: 'Linux Ubuntu 22.04', ports: '22(open), 80(closed)', vuln: 'High', type: 'Server' },
-                        { ip: '192.168.1.50', mac: '77:88:99:00:11:22', os: 'Nintendo Wii (v4.3)', ports: '80(open)', vuln: 'High', type: 'Console' }, 
-                        { ip: '192.168.1.100', mac: '33:44:55:66:77:88', os: 'Smart TV (Android)', ports: '8080(open)', vuln: 'Medium', type: 'IoT' }
-                    ];
-                    const resultsDiv = document.getElementById('scan-results');
-                    resultsDiv.innerHTML = '<div style="color: cyan; font-weight: bold;">DISCOVERED DEVICES (SIMULATED - 6 FOUND):</div>';
-                    cockpit.currentDevices.forEach(device => {
-                        resultsDiv.innerHTML += `
-                            <div class="device-card" onclick="cockpit.showDeviceDetails('${device.ip}')">
-                                <div class="device-info">
-                                    <span>IP: ${device.ip} | Type: ${device.type}</span>
-                                    <span>MAC: ${device.mac} | OS: ${device.os}</span>
-                                    <span>Ports: ${device.ports}</span>
-                                    <span>Vuln: <span style="color: ${device.vuln === 'High' ? 'red' : device.vuln === 'Medium' ? 'orange' : 'green'}">${device.vuln}</span></span>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    document.getElementById('network-scan-panel').classList.remove('hidden');
-                    cockpit.log(`>> SCAN COMPLETE: ${cockpit.currentDevices.length} DEVICES. CLICK FOR DETAILS. REAL: nmap -sn 192.168.1.0/24`);
-                }, 3000);
-            },
-            showDeviceDetails: (ip) => {
-                const device = cockpit.currentDevices.find(d => d.ip === ip);
-                if (!device) return;
-                document.getElementById('remote-title').innerText = `DETAILS: ${device.ip} (${device.type})`;
-                let content = `<div style="font-size: 11px;">`;
-                content += `<strong>OS:</strong> ${device.os}<br>`;
-                content += `<strong>Open Ports:</strong> ${device.ports}<br>`;
-                content += `<strong>Vulnerability:</strong> ${device.vuln} - ${device.vuln === 'High' ? 'Patch now! (e.g., Update firmware)' : 'Monitor.'}<br><br>`;
-                if (device.type === 'Console' && device.os.includes('Wii')) {
-                    content += `<strong>EDU TIP (Wii Hack):</strong> For homebrew, use LetterBomb exploit. <a href="https://wii.hacks.guide/" target="_blank" style="color: cyan;">Full Guide</a><br>`;
-                }
-                content += `<div style="margin-top: 10px;">`;
-                content += `<button onclick="cockpit.remoteInto('${ip}')" style="font-size: 10px; padding: 5px; margin: 2px;">REMOTE ACCESS (SIM)</button>`;
-                content += `<button onclick="cockpit.showStats('${ip}')" style="font-size: 10px; padding: 5px; margin: 2px;">STATS</button>`;
-                content += `<button class="hack-btn" onclick="cockpit.hackDevice('${ip}', '${device.vuln}')" style="font-size: 10px; padding: 5px; margin: 2px;">HACK/DEFEND (SIM)</button>`;
-                content += `</div>`;
-                content += `</div>`;
-                document.getElementById('remote-content').innerHTML = content;
-                document.getElementById('remote-access-overlay').classList.remove('hidden');
-                audioSys.playTone(500, 'square', 0.1);
-            },
-            remoteInto: (ip) => {
-                const device = cockpit.currentDevices.find(d => d.ip === ip);
-                cockpit.currentRemote = ip;
-                let gui = `<h4 style="color: var(--warn-color);">REMOTE GUI: ${device.os} (${ip}) - SIM VIEW</h4>`;
-                if (device.type === 'PC') gui += `<iframe class="remote-iframe" src="https://www.remotelysave.com/demoviewer.php" title="RDP Sim"></iframe><p style="font-size: 9px;">(Sim RDP - Real: Use RDP/VNC with VPN)</p>`;
-                else if (device.type === 'Console') gui += `<div style="background: #111; padding: 20px; text-align: center; color: #ff6b35;"><h5>Wii Dashboard Sim</h5><p>Menu > Settings > Exploit LetterBomb for Homebrew</p><button onclick="alert('SIM: Homebrew Installed! Real: Follow wii.hacks.guide')" style="background: #ff6b35; color: black; padding: 5px;">INSTALL HOMEBREW</button></div>`;
-                else gui += `<div style="height: 300px; background: #000; color: #888; display: flex; align-items: center; justify-content: center;">Device GUI Sim - ${device.type} Dashboard<br><small>(Real: SSH/Telnet if enabled)</small></div>`;
-                document.getElementById('remote-content').innerHTML = gui;
-                audioSys.playTone(800, 'sine', 0.3);
-            },
-            closeRemote: () => {
-                document.getElementById('remote-access-overlay').classList.add('hidden');
-                cockpit.currentRemote = null;
-            },
-            showStats: (ip) => {
-                const device = cockpit.currentDevices.find(d => d.ip === ip);
-                cockpit.log(`>> STATS ${ip}: ${device.os} | VULN: ${device.vuln} | TIP: ${device.vuln === 'High' ? 'Close ports/ update - e.g., Wii: Use official exploits only' : 'Secure'}`);
-                if (device.vuln === 'High') setTimeout(() => alert(`EDU: Fix ${ip} - Search 'secure ${device.type.toLowerCase()}'`), 500);
-            },
-            hackDevice: (ip, vuln) => {
-                cockpit.log(`>> SIM HACK/DEFEND ${ip} (${vuln}):`);
-                setTimeout(() => {
-                    if (vuln === 'Low') cockpit.log(`>> DEFEND: Patched. No breach.`);
-                    else if (vuln === 'Medium') cockpit.log(`>> PARTIAL: Fixed port. Run updates.`);
-                    else cockpit.log(`>> BREACH SIM: Access granted. DEFEND: Change defaults. Wii? Use ethical homebrew.`);
-                    cockpit.log(`>> ETHICAL END: Learn via guides.`);
-                }, 1000);
-                audioSys.playTone(300, 'sawtooth', 0.2);
-            },
-            animate: () => {
-                if(!cockpit.running || document.getElementById('screen-cockpit').classList.contains('hidden')) return;
-                
-                const w = cockpit.canvas.width;
-                const h = cockpit.canvas.height;
-                const ctx = cockpit.ctx;
-                
-                ctx.fillStyle = 'rgba(0,0,0,0.1)';
-                ctx.fillRect(0, 0, w, h);
-                
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = `rgba(255, 170, 0, ${cockpit.gain / 100})`;
-                ctx.beginPath();
-                
-                for(let i=0; i<w; i+=5) {
-                    const y = h/2 + Math.sin(i * 0.05 + Date.now() * (cockpit.rate * 0.001)) * (h/3);
-                    ctx.lineTo(i, y);
-                }
-                ctx.stroke();
-                
-                if(Math.random() > 0.8) {
-                   document.getElementById('visual-text').innerText = "HEX_DUMP: " + Math.random().toString(16).substr(2, 8).toUpperCase(); 
-                }
-                
-                requestAnimationFrame(cockpit.animate);
-            }
-        };
-
-        window.drawing = { canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing: false, mode: 'create', init: () => { drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00'; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; }, clear: () => drawing.ctx.clearRect(0,0,300,300), cancel: () => nav.to('hub'), save: async () => { const char = drawing.letters[drawing.idx]; drawing.tempData.syms[char] = drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx < drawing.letters.length) { drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx]; } else { loading(true); if(drawing.mode === 'create') { await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } }); await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name }); } else if (drawing.mode === 'edit') { await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms }); } loading(false); nav.to('hub'); } } }; drawing.init();
-        window.kali = { toggleMenu: () => document.getElementById('kali-menu').classList.toggle('hidden'), dragTarget: null, offsetX: 0, offsetY: 0, vars: {}, openApp: (app) => { const con = document.getElementById('py-console'); con.innerHTML += `\n<span class="term-info">root@kali:~# start ${app}</span>\n`; setTimeout(() => con.scrollTop = con.scrollHeight, 100); }, handleInput: (e) => { if(e.key === 'Enter') { const inp = document.getElementById('py-input'); const cmd = inp.value.trim(); const con = document.getElementById('py-console'); con.innerHTML += `\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value = ""; con.scrollTop = con.scrollHeight; audioSys.playTone(600, 'sine', 0.1); } else { audioSys.playTone(800, 'sine', 0.05); } }, startDrag: (e, id) => { kali.dragTarget = document.getElementById(id); const rect = kali.dragTarget.getBoundingClientRect(); kali.offsetX = e.clientX - rect.left; kali.offsetY = e.clientY - rect.top; }, drag: (e) => { if(kali.dragTarget) { kali.dragTarget.style.left = (e.clientX - kali.offsetX) + 'px'; kali.dragTarget.style.top = (e.clientY - kali.offsetY) + 'px'; } }, stopDrag: () => { kali.dragTarget = null; } };
-        
+        // --- SETTINGS MODULE ---
         window.settings = {
             apply: () => {
                 const r = document.documentElement.style;
                 const getVal = (id) => document.getElementById(id).value;
                 r.setProperty('--bg-color', getVal('col-bg'));
                 r.setProperty('--main-color', getVal('col-main'));
-                r.setProperty('--dim-color', getVal('col-dim'));
-                r.setProperty('--warn-color', getVal('col-warn'));
-                r.setProperty('--rep-good', getVal('col-r-good'));
-                r.setProperty('--rep-watch', getVal('col-r-watch'));
-                r.setProperty('--rep-black', getVal('col-r-bad'));
-                const vals = { bg: getVal('col-bg'), main: getVal('col-main'), dim: getVal('col-dim'), warn: getVal('col-warn'), rGood: getVal('col-r-good'), rWatch: getVal('col-r-watch'), rBad: getVal('col-r-bad') };
-                localStorage.setItem('clanNetSettings', JSON.stringify(vals));
-            },
-            load: () => {
-                const s = localStorage.getItem('clanNetSettings');
-                if(s) {
-                    const v = JSON.parse(s);
-                    document.getElementById('col-bg').value = v.bg || "#000000";
-                    document.getElementById('col-main').value = v.main || "#00FF00";
-                    document.getElementById('col-dim').value = v.dim || "#004400";
-                    document.getElementById('col-warn').value = v.warn || "#FFAA00";
-                    document.getElementById('col-r-good').value = v.rGood || "#00FF00";
-                    document.getElementById('col-r-watch').value = v.rWatch || "#D000FF";
-                    document.getElementById('col-r-bad').value = v.rBad || "#FF0000";
-                    const r = document.documentElement.style;
-                    r.setProperty('--bg-color', v.bg); r.setProperty('--main-color', v.main);
-                    r.setProperty('--dim-color', v.dim); r.setProperty('--warn-color', v.warn);
-                    r.setProperty('--rep-good', v.rGood); r.setProperty('--rep-watch', v.rWatch);
-                    r.setProperty('--rep-black', v.rBad);
-                }
             },
             reset: () => {
-                if(!confirm("RESET?")) return;
-                localStorage.removeItem('clanNetSettings');
-                document.getElementById('col-bg').value = "#000000"; document.getElementById('col-main').value = "#00FF00";
-                document.getElementById('col-dim').value = "#004400"; document.getElementById('col-warn').value = "#FFAA00";
-                document.getElementById('col-r-good').value = "#00FF00"; document.getElementById('col-r-watch').value = "#D000FF";
-                document.getElementById('col-r-bad').value = "#FF0000";
+                document.getElementById('col-bg').value = "#000000";
+                document.getElementById('col-main').value = "#00FF00";
                 settings.apply();
             }
         };
 
-        document.addEventListener('keydown', (e) => {
-             if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                if(e.key === 'Enter') audioSys.playTone(400, 'square', 0.1);
-                else if(e.key === 'Backspace') audioSys.playTone(300, 'sawtooth', 0.1);
-                else audioSys.playTone(800, 'sine', 0.05);
-             }
-        });
-        
-        settings.load();
     </script>
 </body>
 </html>
