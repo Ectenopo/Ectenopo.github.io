@@ -102,6 +102,11 @@
         #clan-alert-box { background: black; border: 4px double white; padding: 40px; text-align: center; max-width: 80%; }
         #clan-alert-msg { color: white; font-size: 2em; font-weight: bold; font-family: 'Courier New', monospace; margin-bottom: 20px; display: block; }
 
+        /* VOICE CHAT VISUALS */
+        .voice-bar-container { display: flex; align-items: flex-end; justify-content: center; height: 30px; gap: 2px; margin-top: 5px; }
+        .voice-bar { width: 4px; background: #333; height: 5px; transition: height 0.1s; }
+        .voice-active .voice-bar { background: var(--main-color); }
+
         /* COCKPIT SPECIFIC STYLES */
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 5px; border: 1px solid #333; margin-bottom: 5px; }
         .switch-label { font-size: 0.8em; color: #888; }
@@ -214,6 +219,9 @@
             <button onclick="nav.to('news')" style="color: cyan; border-color: cyan;">[ WORLD_WIRE ]</button>
             <button onclick="nav.to('radio')" style="color: yellow; border-color: yellow;">[ SIGNAL_INTERCEPT ]</button>
 
+            <!-- VERIFIED ONLY -->
+            <button onclick="nav.to('verified')" id="btn-verified" class="hidden" style="color: gold; border-color: gold;">[ ELITE_UPLINK ]</button>
+
             <button onclick="nav.to('ectotape')" style="border-color: var(--rep-watch); color: var(--rep-watch);">[ ECTOTAPE ]</button>
             <button onclick="nav.to('soc')" id="btn-soc" class="hidden admin" style="grid-column: span 2;">[ SECURITY OPS CENTER ]</button>
             <button onclick="nav.to('cockpit')" id="btn-payload" class="hidden warn" style="grid-column: span 2; border-style: dashed;">[ CYBER_DECK COMMAND ]</button>
@@ -231,6 +239,20 @@
             </div>
             <div id="panel-in-clan" class="hidden">
                 <h2 id="clan-header">CLAN_NAME</h2>
+                
+                <!-- VOICE COMMS UI -->
+                <div style="border: 1px solid #333; padding: 5px; margin-bottom: 10px; background: rgba(0,20,0,0.5);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <small>VOICE COMMS</small>
+                        <div id="voice-status" style="width:10px; height:10px; border-radius:50%; background:red;"></div>
+                    </div>
+                    <div class="voice-bar-container" id="voice-viz"></div>
+                    <div class="grid-2" style="margin-top:5px;">
+                        <button onclick="app.toggleVoice()" id="btn-voice-conn" style="font-size:10px;">CONNECT</button>
+                        <button onclick="app.muteVoice()" id="btn-voice-mute" style="font-size:10px;" disabled>MUTE</button>
+                    </div>
+                </div>
+
                 <div class="chat-box" id="clan-chat"></div>
                 <div style="display: flex; gap: 5px;">
                     <button onclick="app.toggleEnc()" id="btn-enc" style="width: 50px; font-size: 10px; color: #555;">ENC</button>
@@ -267,6 +289,25 @@
         </div>
         
         <button onclick="location.reload()" style="margin-top: 20px; border: none; opacity: 0.5;">LOGOUT</button>
+    </div>
+
+    <!-- VERIFIED ELITE SCREEN -->
+    <div id="screen-verified" class="screen hidden" style="border-color: gold;">
+        <h2 style="color: gold;">// ELITE_UPLINK_ESTABLISHED</h2>
+        <p style="font-size: 10px; color: #888;">SECURE GROUPCHAT FOR VERIFIED IDENTITIES ONLY.</p>
+        
+        <div style="border: 1px solid gold; padding: 5px; margin-bottom: 10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:10px; height:10px; background:gold; border-radius:50%; animation: pulse 2s infinite;"></div>
+                <span style="color:gold; font-size: 10px;">ENCRYPTED VOICE TUNNEL: ACTIVE</span>
+            </div>
+        </div>
+
+        <div class="chat-box" id="verified-chat" style="border-color: gold;"></div>
+        <input type="text" id="verified-input" placeholder="Elite Message..." style="border-color: gold; color: gold;">
+        <button onclick="app.sendVerifiedMsg()" style="border-color: gold; color: gold;">TRANSMIT</button>
+        
+        <button onclick="nav.to('hub')">BACK</button>
     </div>
 
     <!-- DICTIONARY SCREEN -->
@@ -475,7 +516,7 @@
     <div id="screen-cockpit" class="screen hidden" style="border-color: var(--warn-color); box-shadow: 0 0 20px rgba(255, 170, 0, 0.2); max-width: 900px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--warn-color); margin-bottom: 10px; padding-bottom: 5px;">
             <h2 style="color: var(--warn-color); margin:0;">// CYBER_DECK_V2.0 - EDU SIM (BROWSER LIMITS APPLY)</h2>
-            <div style="font-size: 10px; color: var(--warn-color); animation: blink 2s infinite;">[ SYSTEM: ONLINE ]</div>
+            <div style="font-size: 10px; color: var(--warn-color); animation: blink 2s infinite;">[ SYSTEM: ONLINE - REAL SCAN: USE NMAP CLI FOR FULL ACCESS ]</div>
         </div>
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
@@ -567,6 +608,7 @@
                 <div class="chat-box" id="cockpit-log" style="flex: 1; border-color: var(--warn-color); font-size: 10px; color: var(--warn-color); font-family: monospace; margin: 0;">
                     <div class="term-line">>> DECK INITIALIZED... (NOTE: BROWSER SECURITY BLOCKS REAL SCANS)</div>
                     <div class="term-line">>> USE 'LAN DISCOVERY' FOR SIM + LIMITED DETECT</div>
+                    <div class="term-line">>> FOR REAL: RUN NMAP IN TERMINAL</div>
                 </div>
 
                 <!-- ENHANCED: NETWORK SCAN RESULTS PANEL -->
@@ -686,6 +728,7 @@
                 if(id === 'cockpit') cockpit.init(); 
                 if(id === 'radio') radio.init(); 
                 if(id === 'news') news.init();
+                if(id === 'verified') app.initVerifiedChat();
             },
             tab: (t) => { 
                 document.getElementById('tab-clans').classList.add('hidden'); 
@@ -696,7 +739,7 @@
 
         // --- APP LOGIC ---
         window.app = {
-            encMode: false, dictMode: false, clanUnsub: null, clanChatUnsub: null, alertInterval: null,
+            encMode: false, dictMode: false, clanUnsub: null, clanChatUnsub: null, alertInterval: null, voiceInterval: null,
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
                 if(!u || !p) return; loading(true);
@@ -723,12 +766,18 @@
                 const admins = ["user1234", "user4321"];
                 if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
                 
-                if(userData.verified) document.getElementById('btn-payload').classList.remove('hidden');
-                else document.getElementById('btn-payload').classList.add('hidden');
+                if(userData.verified) {
+                    document.getElementById('btn-payload').classList.remove('hidden');
+                    document.getElementById('btn-verified').classList.remove('hidden');
+                } else {
+                    document.getElementById('btn-payload').classList.add('hidden');
+                    document.getElementById('btn-verified').classList.add('hidden');
+                }
 
                 const setupClanListener = (data) => {
                     if(data.clan) { 
                         state.clan = data.clan; 
+                        if (app.clanUnsub) app.clanUnsub();
                         app.listenToClan(data.clan); 
                         document.getElementById('panel-no-clan').classList.add('hidden'); 
                         document.getElementById('panel-in-clan').classList.remove('hidden'); 
@@ -760,6 +809,27 @@
             },
             sendGlobalMsg: async () => { const t = document.getElementById('global-input').value; if(t) { await addDoc(collection(db, "global_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('global-input').value=""; } },
             
+            // VERIFIED CHAT
+            initVerifiedChat: () => {
+                const d = document.getElementById('verified-chat');
+                d.innerHTML = "Establishing Secure Uplink...";
+                const q = query(collection(db, "verified_chat"), orderBy("ts", "desc"), limit(50));
+                onSnapshot(q, (snap) => {
+                    d.innerHTML = "";
+                    const msgs = [];
+                    snap.forEach(doc => msgs.push(doc.data()));
+                    msgs.reverse().forEach(m => d.innerHTML += `<div class="chat-msg" style="border-color:gold; color:gold;"><strong>${m.u}:</strong> ${m.txt}</div>`);
+                    d.scrollTop = d.scrollHeight;
+                });
+            },
+            sendVerifiedMsg: async () => {
+                const t = document.getElementById('verified-input').value; 
+                if(t) { 
+                    await addDoc(collection(db, "verified_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); 
+                    document.getElementById('verified-input').value=""; 
+                }
+            },
+
             // PROFILES & CLAN
             searchUser: () => { const u = document.getElementById('search-user-input').value.trim(); if(u) app.openProfile(u); },
             openProfile: async (targetUser) => {
@@ -785,11 +855,9 @@
                 document.getElementById('panel-in-clan').classList.remove('hidden'); 
                 document.getElementById('clan-header').innerText = cName;
                 
-                // Cleanup previous listeners
                 if (app.clanUnsub) { app.clanUnsub(); app.clanUnsub = null; }
                 if (app.clanChatUnsub) { app.clanChatUnsub(); app.clanChatUnsub = null; }
                 
-                // Listener 1: Clan Data
                 app.clanUnsub = onSnapshot(doc(db, "clans", cName), (doc) => { 
                     state.clanData = doc.data() || {}; 
                     if(state.clanData && state.clanData.leader === state.user) {
@@ -802,7 +870,6 @@
                     if(!document.getElementById('screen-dict').classList.contains('hidden')) app.renderDict(); 
                 });
 
-                // Listener 2: Chat Messages (Now stored in app.clanChatUnsub)
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
                 app.clanChatUnsub = onSnapshot(q, (snap) => { 
                     const d = document.getElementById('clan-chat'); 
@@ -810,24 +877,19 @@
                     const msgs = []; 
                     snap.forEach(doc => msgs.push(doc.data())); 
                     
-                    // HANDLE ALERT EFFECTS FOR NEW MESSAGES
                     snap.docChanges().forEach(change => {
                         if (change.type === "added") {
                             const m = change.doc.data();
                             const now = Date.now();
-                            // Firestore timestamp to millis, handle null (pending write)
                             const msgTime = m.ts ? m.ts.toMillis() : now; 
                             
-                            // Check if message is new (within last 15 seconds) to avoid replay
                             if (now - msgTime < 15000) {
                                 if (m.type === 'WARN') {
-                                    // DING DING DING
                                     audioSys.playTone(800, 'sine', 0.1);
                                     setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 200);
                                     setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 400);
                                 }
                                 if (m.type === 'ALERT') {
-                                    // Full Screen Alert
                                     app.triggerClanRedAlert(m.txt);
                                 }
                             }
@@ -837,12 +899,21 @@
                     msgs.reverse().forEach(m => { 
                         let txt = app.translate(m.txt); 
                         let style = "";
-                        // Styling for special message types
+                        
+                        // Rank Prefix Logic
+                        const userRank = (state.clanData.ranks && state.clanData.ranks[m.u]) ? state.clanData.ranks[m.u].toUpperCase() : 'MEMBER';
+                        const prefix = `<span style="color: #aaa; font-size: 0.8em;">[${userRank}]</span>`;
+
                         if(m.type === 'ANNOUNCE') style = "font-weight:bold; color: #00FF00; border: 1px solid #00FF00; padding: 5px; margin: 5px 0; background: rgba(0,255,0,0.1);";
                         if(m.type === 'WARN') style = "font-weight:bold; color: #FFAA00; border: 1px solid #FFAA00; padding: 5px; margin: 5px 0; background: rgba(255,170,0,0.1);";
                         if(m.type === 'ALERT') style = "font-weight:bold; color: white; background: red; padding: 5px; margin: 5px 0; border: 1px solid white;";
                         
-                        d.innerHTML += `<div class="chat-msg" style="${style}"><strong>${m.u}:</strong> ${txt}</div>`; 
+                        // Don't show prefix on system alerts
+                        if (m.u === "SYSTEM") {
+                             d.innerHTML += `<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`; 
+                        } else {
+                             d.innerHTML += `<div class="chat-msg" style="${style}">${prefix} <strong>${m.u}:</strong> ${txt}</div>`; 
+                        }
                     }); 
                     d.scrollTop = d.scrollHeight; 
                 });
@@ -864,16 +935,85 @@
                 el.classList.remove('hidden');
                 
                 if(app.alertInterval) clearInterval(app.alertInterval);
+                
+                // WEEE WOOO SIREN EFFECT
+                const ctx = audioSys.ctx;
                 app.alertInterval = setInterval(() => {
-                    // Annoying beep loop
-                    audioSys.playTone(800, 'sawtooth', 0.2);
-                    setTimeout(() => audioSys.playTone(600, 'sawtooth', 0.2), 200);
+                    if(ctx.state==='suspended') ctx.resume();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.type = 'sawtooth';
+                    const now = ctx.currentTime;
+                    
+                    // Sweep Up
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.linearRampToValueAtTime(1200, now + 0.5);
+                    
+                    // Sweep Down
+                    osc.frequency.linearRampToValueAtTime(600, now + 1.0);
+                    
+                    gain.gain.setValueAtTime(0.2, now);
+                    osc.start(now);
+                    osc.stop(now + 1.0);
                 }, 1000);
             },
             ackAlert: () => {
                 document.getElementById('clan-alert-overlay').classList.add('hidden');
                 if(app.alertInterval) clearInterval(app.alertInterval);
             },
+            
+            // VOICE CHAT SIMULATION
+            toggleVoice: () => {
+                const btn = document.getElementById('btn-voice-conn');
+                const status = document.getElementById('voice-status');
+                const viz = document.getElementById('voice-viz');
+                const muteBtn = document.getElementById('btn-voice-mute');
+                
+                if (app.voiceInterval) {
+                    // Disconnect
+                    clearInterval(app.voiceInterval);
+                    app.voiceInterval = null;
+                    btn.innerText = "CONNECT";
+                    btn.style.color = "var(--main-color)";
+                    status.style.background = "red";
+                    viz.innerHTML = "";
+                    muteBtn.disabled = true;
+                } else {
+                    // Connect
+                    btn.innerText = "DISCONNECT";
+                    btn.style.color = "red";
+                    status.style.background = "#00FF00";
+                    muteBtn.disabled = false;
+                    
+                    // Render initial bars
+                    viz.innerHTML = "";
+                    for(let i=0; i<40; i++) {
+                        viz.innerHTML += `<div class="voice-bar" id="vb-${i}" style="height:2px;"></div>`;
+                    }
+                    
+                    // Animate bars (Simulated input)
+                    app.voiceInterval = setInterval(() => {
+                        for(let i=0; i<40; i++) {
+                            const h = Math.random() > 0.7 ? Math.random() * 20 : 2;
+                            document.getElementById(`vb-${i}`).style.height = h + "px";
+                        }
+                    }, 100);
+                }
+            },
+            muteVoice: () => {
+                // Visual simulation only
+                const btn = document.getElementById('btn-voice-mute');
+                if(btn.innerText === "MUTE") {
+                    btn.innerText = "UNMUTE";
+                    btn.classList.add('warn');
+                } else {
+                    btn.innerText = "MUTE";
+                    btn.classList.remove('warn');
+                }
+            },
+
             loadRoster: () => { 
                 nav.to('ranks'); 
                 const list = document.getElementById('roster-list'); list.innerHTML = ""; 
@@ -881,9 +1021,19 @@
                 const isLeader = state.clanData.leader === state.user; 
                 for (const [member, rank] of Object.entries(ranks)) { 
                     let controls = ""; 
-                    if (isLeader && member !== state.user) controls = `<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:2px;" class="danger">KICK</button><button onclick="app.clanPromote('${member}')" style="width:auto;font-size:10px;padding:2px;">PROMOTE</button>`; 
+                    if (isLeader && member !== state.user) {
+                        controls = `<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:2px;" class="danger">KICK</button>
+                                    <button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:2px;">SET RANK</button>`; 
+                    }
                     list.innerHTML += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span>${member} <span style="color:yellow">[${rank.toUpperCase()}]</span></span><div>${controls}</div></div>`; 
                 } 
+            },
+            setCustomRank: async (member) => {
+                const r = prompt("ENTER CUSTOM RANK TITLE (e.g. COMMANDER, RECRUIT):");
+                if(r) {
+                    await updateDoc(doc(db, "clans", state.clan), { [`ranks.${member}`]: r.toUpperCase() }); 
+                    app.loadRoster();
+                }
             },
             clanKick: async (target) => { if(!confirm(`KICK ${target}?`)) return; await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: deleteField() }); await updateDoc(doc(db, "users", target), { clan: null }); app.loadRoster(); },
             clanPromote: async (target) => { await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: 'admin' }); app.loadRoster(); },
@@ -1196,7 +1346,6 @@
                 audioSys.playTone(300, 'sawtooth', 0.2);
             },
             animate: () => {
-                // Same as before
                 if(!cockpit.running || document.getElementById('screen-cockpit').classList.contains('hidden')) return;
                 
                 const w = cockpit.canvas.width;
