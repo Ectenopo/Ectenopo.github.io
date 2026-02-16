@@ -126,6 +126,8 @@
         .led.on { background: #00FF00; box-shadow: 0 0 5px #00FF00; border-color: #fff; }
         .led.busy { background: #FFAA00; box-shadow: 0 0 5px #FFAA00; animation: blink 0.2s infinite; }
         
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
         /* KALI STYLE */
         #screen-kali { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'), #101010; z-index: 2000; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
         #kali-bar { height: 40px; background: var(--kali-bar); border-bottom: 1px solid #444; display: flex; align-items: center; padding: 0 10px; color: #ddd; justify-content: space-between; }
@@ -243,12 +245,14 @@
                 <!-- VOICE COMMS UI -->
                 <div style="border: 1px solid #333; padding: 5px; margin-bottom: 10px; background: rgba(0,20,0,0.5);">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <small>VOICE COMMS</small>
+                        <small>VOICE COMMS (MIC REQUIRED)</small>
                         <div id="voice-status" style="width:10px; height:10px; border-radius:50%; background:red;"></div>
                     </div>
-                    <div class="voice-bar-container" id="voice-viz"></div>
+                    <div class="voice-bar-container" id="voice-viz">
+                        <!-- Bars injected here -->
+                    </div>
                     <div class="grid-2" style="margin-top:5px;">
-                        <button onclick="app.toggleVoice()" id="btn-voice-conn" style="font-size:10px;">CONNECT</button>
+                        <button onclick="app.toggleVoice()" id="btn-voice-conn" style="font-size:10px;">CONNECT MIC</button>
                         <button onclick="app.muteVoice()" id="btn-voice-mute" style="font-size:10px;" disabled>MUTE</button>
                     </div>
                 </div>
@@ -740,6 +744,13 @@
         // --- APP LOGIC ---
         window.app = {
             encMode: false, dictMode: false, clanUnsub: null, clanChatUnsub: null, alertInterval: null, voiceInterval: null,
+            // Voice Chat Variables
+            voiceContext: null,
+            voiceSource: null,
+            voiceAnalyser: null,
+            voiceAnim: null,
+            voiceActive: false,
+
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
                 if(!u || !p) return; loading(true);
@@ -964,51 +975,89 @@
                 if(app.alertInterval) clearInterval(app.alertInterval);
             },
             
-            // VOICE CHAT SIMULATION
-            toggleVoice: () => {
+            // REAL MICROPHONE VISUALIZATION
+            toggleVoice: async () => {
                 const btn = document.getElementById('btn-voice-conn');
                 const status = document.getElementById('voice-status');
                 const viz = document.getElementById('voice-viz');
                 const muteBtn = document.getElementById('btn-voice-mute');
                 
-                if (app.voiceInterval) {
-                    // Disconnect
-                    clearInterval(app.voiceInterval);
-                    app.voiceInterval = null;
-                    btn.innerText = "CONNECT";
+                if (app.voiceActive) {
+                    // Disconnect Logic
+                    if(app.voiceSource) {
+                        app.voiceSource.disconnect();
+                        app.voiceSource = null;
+                    }
+                    if(app.voiceAnim) {
+                        cancelAnimationFrame(app.voiceAnim);
+                        app.voiceAnim = null;
+                    }
+                    // Reset UI
+                    btn.innerText = "CONNECT MIC";
                     btn.style.color = "var(--main-color)";
                     status.style.background = "red";
                     viz.innerHTML = "";
                     muteBtn.disabled = true;
+                    app.voiceActive = false;
                 } else {
-                    // Connect
-                    btn.innerText = "DISCONNECT";
-                    btn.style.color = "red";
-                    status.style.background = "#00FF00";
-                    muteBtn.disabled = false;
-                    
-                    // Render initial bars
-                    viz.innerHTML = "";
-                    for(let i=0; i<40; i++) {
-                        viz.innerHTML += `<div class="voice-bar" id="vb-${i}" style="height:2px;"></div>`;
-                    }
-                    
-                    // Animate bars (Simulated input)
-                    app.voiceInterval = setInterval(() => {
-                        for(let i=0; i<40; i++) {
-                            const h = Math.random() > 0.7 ? Math.random() * 20 : 2;
-                            document.getElementById(`vb-${i}`).style.height = h + "px";
+                    // Connect Logic
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        app.voiceContext = new (window.AudioContext || window.webkitAudioContext)();
+                        app.voiceAnalyser = app.voiceContext.createAnalyser();
+                        app.voiceSource = app.voiceContext.createMediaStreamSource(stream);
+                        app.voiceSource.connect(app.voiceAnalyser);
+                        app.voiceAnalyser.fftSize = 64; // Small fft for simple bars
+                        
+                        const bufferLength = app.voiceAnalyser.frequencyBinCount;
+                        const dataArray = new Uint8Array(bufferLength);
+                        
+                        // Setup Bars in DOM
+                        viz.innerHTML = "";
+                        for(let i=0; i<bufferLength; i++) {
+                            const bar = document.createElement('div');
+                            bar.className = 'voice-bar';
+                            bar.id = 'vbar-' + i;
+                            viz.appendChild(bar);
                         }
-                    }, 100);
+
+                        // Animation Loop
+                        const draw = () => {
+                            if(!app.voiceActive) return;
+                            app.voiceAnim = requestAnimationFrame(draw);
+                            app.voiceAnalyser.getByteFrequencyData(dataArray);
+                            
+                            for(let i=0; i<bufferLength; i++) {
+                                const val = dataArray[i];
+                                const bar = document.getElementById('vbar-' + i);
+                                if(bar) bar.style.height = (val / 5) + "px"; // Scale height
+                            }
+                        };
+                        
+                        app.voiceActive = true;
+                        draw();
+                        
+                        // UI Updates
+                        btn.innerText = "DISCONNECT";
+                        btn.style.color = "red";
+                        status.style.background = "#00FF00";
+                        muteBtn.disabled = false;
+
+                    } catch (err) {
+                        console.error(err);
+                        alert("MIC ACCESS DENIED OR NOT FOUND");
+                    }
                 }
             },
             muteVoice: () => {
-                // Visual simulation only
+                // Visual simulation only for mute (disconnects stream logic)
                 const btn = document.getElementById('btn-voice-mute');
                 if(btn.innerText === "MUTE") {
+                    if(app.voiceSource) app.voiceSource.disconnect(app.voiceAnalyser);
                     btn.innerText = "UNMUTE";
                     btn.classList.add('warn');
                 } else {
+                    if(app.voiceSource) app.voiceSource.connect(app.voiceAnalyser);
                     btn.innerText = "MUTE";
                     btn.classList.remove('warn');
                 }
@@ -1074,34 +1123,7 @@
             tab: (t) => { document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden'); if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls(); },
             like: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); else { await updateDoc(ref, { likes: arrayUnion(state.user) }); if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
             dislike: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); else { await updateDoc(ref, { dislikes: arrayUnion(state.user) }); if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
-            openComments: (id, type) => { 
-                state.activeCommentId = id; 
-                state.activeCommentType = type; 
-                const col = type === 'post' ? 'posts' : 'polls'; 
-                document.getElementById('comment-overlay').classList.remove('hidden'); 
-                
-                if(state.unsubComments) state.unsubComments();
-                
-                const listDiv = document.getElementById('active-comment-list');
-                listDiv.innerHTML = "<div style='color:var(--main-color);'>LOADING COMMENTS...</div>";
-
-                const q = query(collection(db, col, id, "comments"), orderBy("ts", "asc")); 
-                state.unsubComments = onSnapshot(q, (snap) => { 
-                    listDiv.innerHTML = ""; 
-                    if(snap.empty) listDiv.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; 
-                    snap.forEach(d => { 
-                        const c = d.data(); 
-                        listDiv.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; 
-                    });
-                    listDiv.scrollTop = listDiv.scrollHeight;
-                }); 
-            },
-            closeComments: () => {
-                document.getElementById('comment-overlay').classList.add('hidden');
-                if(state.unsubComments) state.unsubComments();
-                state.unsubComments = null;
-                state.activeCommentId = null;
-            },
+            openComments: (id, type) => { state.activeCommentId = id; state.activeCommentType = type; const col = type === 'post' ? 'posts' : 'polls'; document.getElementById('comment-overlay').classList.remove('hidden'); if(state.unsubComments) state.unsubComments(); const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc")); state.unsubComments = onSnapshot(q, (snap) => { const div = document.getElementById('active-comment-list'); div.innerHTML = ""; if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; snap.forEach(d => { const c = d.data(); div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; }); }); },
             submitComment: async () => { const txt = document.getElementById('new-comment-input').value.trim(); if(!txt || !state.activeCommentId) return; const col = state.activeCommentType === 'post' ? 'posts' : 'polls'; await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() }); document.getElementById('new-comment-input').value = ""; },
             createPost: async () => { const txt = document.getElementById('post-content').value; const vid = document.getElementById('post-video').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, video: vid || null, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; document.getElementById('post-video').value = ""; social.loadPosts(); },
             loadPosts: async () => { const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED..."; const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; 
