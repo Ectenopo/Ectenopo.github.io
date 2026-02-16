@@ -696,7 +696,7 @@
 
         // --- APP LOGIC ---
         window.app = {
-            encMode: false, dictMode: false, clanUnsub: null, alertInterval: null,
+            encMode: false, dictMode: false, clanUnsub: null, clanChatUnsub: null, alertInterval: null,
             login: async () => {
                 const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
                 if(!u || !p) return; loading(true);
@@ -729,7 +729,6 @@
                 const setupClanListener = (data) => {
                     if(data.clan) { 
                         state.clan = data.clan; 
-                        if (app.clanUnsub) app.clanUnsub();
                         app.listenToClan(data.clan); 
                         document.getElementById('panel-no-clan').classList.add('hidden'); 
                         document.getElementById('panel-in-clan').classList.remove('hidden'); 
@@ -744,7 +743,8 @@
 
                 setupClanListener(userData);
 
-                app.clanUnsub = onSnapshot(doc(db, "users", state.user), (d) => {
+                // This listener handles clan switching if user data changes
+                app.userUnsub = onSnapshot(doc(db, "users", state.user), (d) => {
                     const data = d.data();
                     setupClanListener(data);
                 });
@@ -781,8 +781,15 @@
             verifyUser: async () => { if(!confirm("VERIFY?")) return; await updateDoc(doc(db, "users", state.viewedProfile), { verified: true }); alert("VERIFIED"); app.openProfile(state.viewedProfile); },
 
             listenToClan: (cName) => {
-                document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText = cName;
-                if (app.clanUnsub) app.clanUnsub(); // Clean up previous
+                document.getElementById('panel-no-clan').classList.add('hidden'); 
+                document.getElementById('panel-in-clan').classList.remove('hidden'); 
+                document.getElementById('clan-header').innerText = cName;
+                
+                // Cleanup previous listeners
+                if (app.clanUnsub) { app.clanUnsub(); app.clanUnsub = null; }
+                if (app.clanChatUnsub) { app.clanChatUnsub(); app.clanChatUnsub = null; }
+                
+                // Listener 1: Clan Data
                 app.clanUnsub = onSnapshot(doc(db, "clans", cName), (doc) => { 
                     state.clanData = doc.data() || {}; 
                     if(state.clanData && state.clanData.leader === state.user) {
@@ -794,25 +801,33 @@
                     }
                     if(!document.getElementById('screen-dict').classList.contains('hidden')) app.renderDict(); 
                 });
+
+                // Listener 2: Chat Messages (Now stored in app.clanChatUnsub)
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
-                onSnapshot(q, (snap) => { 
-                    const d = document.getElementById('clan-chat'); d.innerHTML = ""; 
-                    const msgs = []; snap.forEach(doc => msgs.push(doc.data())); 
+                app.clanChatUnsub = onSnapshot(q, (snap) => { 
+                    const d = document.getElementById('clan-chat'); 
+                    d.innerHTML = ""; 
+                    const msgs = []; 
+                    snap.forEach(doc => msgs.push(doc.data())); 
                     
                     // HANDLE ALERT EFFECTS FOR NEW MESSAGES
                     snap.docChanges().forEach(change => {
                         if (change.type === "added") {
                             const m = change.doc.data();
                             const now = Date.now();
-                            const msgTime = m.ts ? m.ts.toMillis() : now;
-                            // Only play effects if message is less than 10 seconds old (prevents replay on refresh)
-                            if (now - msgTime < 10000) {
+                            // Firestore timestamp to millis, handle null (pending write)
+                            const msgTime = m.ts ? m.ts.toMillis() : now; 
+                            
+                            // Check if message is new (within last 15 seconds) to avoid replay
+                            if (now - msgTime < 15000) {
                                 if (m.type === 'WARN') {
-                                    audioSys.playTone(600, 'square', 0.1);
-                                    setTimeout(() => audioSys.playTone(600, 'square', 0.1), 200);
-                                    setTimeout(() => audioSys.playTone(600, 'square', 0.1), 400);
+                                    // DING DING DING
+                                    audioSys.playTone(800, 'sine', 0.1);
+                                    setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 200);
+                                    setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 400);
                                 }
                                 if (m.type === 'ALERT') {
+                                    // Full Screen Alert
                                     app.triggerClanRedAlert(m.txt);
                                 }
                             }
@@ -822,9 +837,10 @@
                     msgs.reverse().forEach(m => { 
                         let txt = app.translate(m.txt); 
                         let style = "";
-                        if(m.type === 'ANNOUNCE') style = "font-weight:bold; color: #00FF00; border: 1px solid #00FF00; padding: 2px;";
-                        if(m.type === 'WARN') style = "font-weight:bold; color: #FFAA00; border: 1px solid #FFAA00; padding: 2px;";
-                        if(m.type === 'ALERT') style = "font-weight:bold; color: white; background: red; padding: 2px;";
+                        // Styling for special message types
+                        if(m.type === 'ANNOUNCE') style = "font-weight:bold; color: #00FF00; border: 1px solid #00FF00; padding: 5px; margin: 5px 0; background: rgba(0,255,0,0.1);";
+                        if(m.type === 'WARN') style = "font-weight:bold; color: #FFAA00; border: 1px solid #FFAA00; padding: 5px; margin: 5px 0; background: rgba(255,170,0,0.1);";
+                        if(m.type === 'ALERT') style = "font-weight:bold; color: white; background: red; padding: 5px; margin: 5px 0; border: 1px solid white;";
                         
                         d.innerHTML += `<div class="chat-msg" style="${style}"><strong>${m.u}:</strong> ${txt}</div>`; 
                     }); 
@@ -849,6 +865,7 @@
                 
                 if(app.alertInterval) clearInterval(app.alertInterval);
                 app.alertInterval = setInterval(() => {
+                    // Annoying beep loop
                     audioSys.playTone(800, 'sawtooth', 0.2);
                     setTimeout(() => audioSys.playTone(600, 'sawtooth', 0.2), 200);
                 }, 1000);
