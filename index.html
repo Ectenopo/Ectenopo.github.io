@@ -29,10 +29,9 @@
             padding: 10px;
             overflow-x: hidden;
             font-size: 14px;
-            padding-top: 40px; /* Space for alert banner */
+            padding-top: 40px;
         }
 
-        /* --- UI COMPONENTS --- */
         .hidden { display: none !important; }
         .screen { max-width: 800px; margin: 0 auto; border: 1px solid var(--dim-color); padding: 15px; box-shadow: 0 0 10px rgba(0, 255, 0, 0.1); position: relative; margin-bottom: 20px; background: rgba(0,0,0,0.9); }
         
@@ -57,16 +56,13 @@
         button.admin { border-color: cyan; color: cyan; border-style: double; }
         button.admin:hover { background: cyan; color: black; }
         
-        /* SOCIAL ACTIONS */
         .social-actions { display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #333; padding-top: 5px; }
         .social-btn { flex: 1; font-size: 10px; padding: 5px; background: transparent; border: 1px solid #333; cursor: pointer; color: #888; }
         .social-btn:hover { background: #111; border-color: var(--main-color); color: var(--main-color); }
         .active-action { color: var(--warn-color) !important; border-color: var(--warn-color) !important; font-weight: bold; }
 
-        /* COMMENTS SECTION */
         .comment-item { border-bottom: 1px solid #222; padding: 6px 0; font-size: 0.9em; word-wrap: break-word; }
         
-        /* BADGES & LAYOUT */
         .verified-badge { display: inline-block; color: cyan; margin-left: 4px; font-size: 1.1em; text-shadow: 0 0 5px cyan; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
@@ -84,7 +80,6 @@
         .poll-fill { height: 100%; background: var(--main-color); width: 0%; transition: width 0.5s; }
         .post-header { display: flex; justify-content: space-between; font-size: 0.8em; color: #888; border-bottom: 1px solid #333; margin-bottom: 5px; }
 
-        /* ALERT SYSTEM STYLES */
         #sys-alert-banner { position: fixed; top: 0; left: 0; width: 100%; min-height: 30px; z-index: 10000; display: flex; align-items: center; justify-content: center; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: 0.3s; }
         .alert-off { transform: translateY(-100%); }
         .alert-on { transform: translateY(0); }
@@ -96,25 +91,21 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         @keyframes shake { 0% { transform: translate(0, 0); } 25% { transform: translate(2px, 0); } 75% { transform: translate(-2px, 0); } 100% { transform: translate(0, 0); } }
 
-        /* NEW: CLAN FULL SCREEN ALERT */
         #clan-alert-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: red; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: alertBg 0.5s infinite; }
         @keyframes alertBg { 0% { background: #500; } 50% { background: #f00; } 100% { background: #500; } }
         #clan-alert-box { background: black; border: 4px double white; padding: 40px; text-align: center; max-width: 80%; }
         #clan-alert-msg { color: white; font-size: 2em; font-weight: bold; font-family: 'Courier New', monospace; margin-bottom: 20px; display: block; }
 
-        /* VOICE CHAT VISUALS - ENHANCED */
         .voice-bar-container { display: flex; align-items: flex-end; justify-content: center; height: 30px; gap: 2px; margin-top: 5px; }
         .voice-bar { width: 4px; background: #333; height: 5px; transition: height 0.1s; }
         .voice-active .voice-bar { background: var(--main-color); }
         
-        /* NEW: Voice Users List */
         .voice-users-list { max-height: 100px; overflow-y: auto; border: 1px solid #222; padding: 5px; margin: 5px 0; background: rgba(0,0,0,0.5); }
         .voice-user-item { display: flex; align-items: center; gap: 5px; padding: 3px; border-bottom: 1px solid #111; font-size: 10px; }
         .voice-user-indicator { width: 8px; height: 8px; border-radius: 50%; background: #00FF00; box-shadow: 0 0 5px #00FF00; animation: pulse 2s infinite; }
         .voice-user-speaking { animation: speaking 0.3s infinite; }
         @keyframes speaking { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
-        /* COCKPIT SPECIFIC STYLES */
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 5px; border: 1px solid #333; margin-bottom: 5px; }
         .switch-label { font-size: 0.8em; color: #888; }
         .toggle-switch { position: relative; width: 40px; height: 20px; background: #333; cursor: pointer; }
@@ -135,7 +126,6 @@
         
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        /* KALI STYLE */
         #screen-kali { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://www.transparenttextures.com/patterns/dark-matter.png'), #101010; z-index: 2000; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
         #kali-bar { height: 40px; background: var(--kali-bar); border-bottom: 1px solid #444; display: flex; align-items: center; padding: 0 10px; color: #ddd; justify-content: space-between; }
         .kali-btn { background: transparent; border: none; color: #ddd; width: auto; padding: 5px 15px; cursor: pointer; } .kali-btn:hover { background: #444; }
@@ -149,7 +139,6 @@
         .term-line { font-family: monospace; font-size: 12px; margin: 2px 0; }
         .term-info { color: cyan; } .term-err { color: red; }
 
-        /* ENHANCED NETWORK STYLES */
         #network-scan-panel { background: #000; border: 1px solid var(--warn-color); height: 250px; overflow-y: scroll; font-family: monospace; font-size: 10px; color: var(--warn-color); padding: 10px; margin: 10px 0; }
         .device-card { border: 1px solid #333; padding: 8px; margin-bottom: 5px; background: rgba(255,170,0,0.05); cursor: pointer; }
         .device-card:hover { background: rgba(255,170,0,0.1); }
@@ -164,7 +153,6 @@
         #scan-progress { width: 100%; height: 5px; background: #333; margin: 5px 0; }
         #scan-progress-fill { height: 100%; background: var(--warn-color); width: 0%; transition: width 0.1s; }
         
-        /* NEW MODULE STYLES */
         .freq-bar { width: 5px; background: #333; margin: 1px; display: inline-block; vertical-align: bottom; }
         .news-link { display: block; padding: 10px; border: 1px solid #333; margin-bottom: 5px; color: #aaa; text-decoration: none; transition: 0.2s; }
         .news-link:hover { border-color: cyan; color: cyan; background: #111; padding-left: 15px; }
@@ -173,13 +161,11 @@
 </head>
 <body>
 
-    <!-- SYSTEM ALERT BANNER -->
     <div id="sys-alert-banner" class="alert-off">
         <span id="sys-alert-msg">SYSTEM NORMAL</span>
         <button onclick="sysAlerts.hide()" style="background:transparent; border:none; color:inherit; font-size:16px; margin-left:20px; cursor:pointer;">[X]</button>
     </div>
 
-    <!-- CLAN RED ALERT OVERLAY -->
     <div id="clan-alert-overlay" class="hidden">
         <div id="clan-alert-box">
             <h1 style="color: yellow; font-size: 3em; margin: 0;">⚠ ALERT ⚠</h1>
@@ -231,7 +217,6 @@
             <button onclick="nav.to('news')" style="color: cyan; border-color: cyan;">[ WORLD_WIRE ]</button>
             <button onclick="nav.to('radio')" style="color: yellow; border-color: yellow;">[ SIGNAL_INTERCEPT ]</button>
 
-            <!-- VERIFIED ONLY -->
             <button onclick="nav.to('verified')" id="btn-verified" class="hidden" style="color: gold; border-color: gold;">[ ELITE_UPLINK ]</button>
 
             <button onclick="nav.to('ectotape')" style="border-color: var(--rep-watch); color: var(--rep-watch);">[ ECTOTAPE ]</button>
@@ -252,22 +237,18 @@
             <div id="panel-in-clan" class="hidden">
                 <h2 id="clan-header">CLAN_NAME</h2>
                 
-                <!-- ENHANCED VOICE COMMS UI -->
                 <div style="border: 1px solid #333; padding: 5px; margin-bottom: 10px; background: rgba(0,20,0,0.5);">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <small>VOICE COMMS (LIVE MIC + PEER AUDIO)</small>
                         <div id="voice-status" style="width:10px; height:10px; border-radius:50%; background:red;"></div>
                     </div>
                     
-                    <!-- CONNECTED USERS LIST -->
                     <div id="voice-users-container" class="hidden">
                         <div style="font-size: 9px; color: #888; margin-top: 5px;">CONNECTED USERS:</div>
                         <div id="voice-users-list" class="voice-users-list"></div>
                     </div>
                     
-                    <div class="voice-bar-container" id="voice-viz">
-                        <!-- Bars injected here -->
-                    </div>
+                    <div class="voice-bar-container" id="voice-viz"></div>
                     <div class="grid-2" style="margin-top:5px;">
                         <button onclick="app.toggleVoice()" id="btn-voice-conn" style="font-size:10px;">CONNECT MIC</button>
                         <button onclick="app.muteVoice()" id="btn-voice-mute" style="font-size:10px;" disabled>MUTE</button>
@@ -285,7 +266,6 @@
                     <button onclick="app.sendClanMsg()" style="width: 60px;">SEND</button>
                 </div>
                 
-                <!-- CLAN LEADER COMMANDS (ALERTS) -->
                 <div id="clan-leader-cmds" class="hidden" style="margin-top: 10px; padding: 5px; border: 1px dashed white;">
                     <small>COMMAND UPLINK:</small>
                     <div class="grid-3">
@@ -330,7 +310,6 @@
         <div class="chat-box" id="verified-chat" style="border-color: gold;"></div>
         <input type="text" id="verified-input" placeholder="Elite Message..." style="border-color: gold; color: gold;">
         <button onclick="app.sendVerifiedMsg()" style="border-color: gold; color: gold;">TRANSMIT</button>
-        
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
@@ -346,7 +325,7 @@
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
-    <!-- SOCIAL SCREEN (UPDATED) -->
+    <!-- SOCIAL SCREEN -->
     <div id="screen-social" class="screen hidden">
         <h2>// NET_SOCIAL</h2>
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -416,7 +395,9 @@
         <button onclick="nav.to('hub')">BACK</button>
     </div>
 
-    <!-- COMMENT OVERLAY -->
+    <!-- =====================================================================
+         FIX: COMMENT OVERLAY — added id to inner list div for scroll control
+         ===================================================================== -->
     <div id="comment-overlay" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:9000;display:flex;justify-content:center;align-items:center;">
         <div class="screen" style="width:90%; height:80%; display:flex; flex-direction:column; background: #000; border: 1px solid var(--main-color);">
             <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom:10px;">
@@ -424,8 +405,8 @@
                 <button onclick="social.closeComments()" class="warn" style="width:auto; padding: 2px 10px;">CLOSE [X]</button>
             </div>
             <div id="active-comment-list" style="flex:1; overflow-y:scroll; padding:10px; margin-bottom:10px; border: 1px solid #222;"></div>
-            <input type="text" id="new-comment-input" placeholder="Add comment...">
-            <button onclick="social.submitComment()">POST COMMENT</button>
+            <input type="text" id="new-comment-input" placeholder="Add comment..." style="flex-shrink:0;">
+            <button onclick="social.submitComment()" style="flex-shrink:0;">POST COMMENT</button>
         </div>
     </div>
 
@@ -511,8 +492,13 @@
     <!-- ECTOTAPE SCREEN -->
     <div id="screen-ectotape" class="screen hidden">
         <h2 style="color:var(--rep-watch);text-align:center;">// ECTOTAPE_STREAM</h2>
-        <div id="upload-zone" class="hidden"><input type="text" id="vid-title" placeholder="TITLE"><input type="text" id="vid-url" placeholder="URL"><button onclick="app.uploadVideo()">BROADCAST</button></div>
-        <div id="video-feed" style="height:400px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">EXIT</button>
+        <div id="upload-zone" class="hidden">
+            <input type="text" id="vid-title" placeholder="TITLE">
+            <input type="text" id="vid-url" placeholder="YouTube URL">
+            <button onclick="app.uploadVideo()">BROADCAST</button>
+        </div>
+        <div id="video-feed" style="height:400px;overflow-y:scroll;"></div>
+        <button onclick="nav.to('hub')">EXIT</button>
     </div>
     
     <!-- DRAW SCREEN -->
@@ -523,8 +509,6 @@
     
     <!-- SOC SCREEN -->
     <div id="screen-soc" class="screen hidden" style="border-color:cyan;box-shadow:0 0 15px cyan;"><h2 style="color:cyan;">// SECURITY_OPS_CENTER</h2>
-        
-        <!-- NEW ALERT CONTROLS -->
         <div style="border: 1px solid var(--main-color); padding: 5px; margin-bottom: 10px;">
             <small style="color: #888;">GLOBAL ALERT SYSTEM CONTROLS</small>
             <div class="grid-3">
@@ -533,54 +517,29 @@
                 <button onclick="sysAlerts.trigger('CRIT')" class="danger">RED ALERT</button>
             </div>
         </div>
-
         <div class="grid-2"><button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button><button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button></div><button onclick="nav.to('kali')" style="background:#111;color:var(--kali-accent);border:1px solid var(--kali-accent);">[ BOOT KALI_LINUX_EMU]</button><div id="soc-console" style="background:#000;border:1px solid cyan;height:150px;padding:10px;overflow-y:scroll;font-family:monospace;font-size:11px;margin-top:10px;"><span class="term-line">> SOC_INIT... READY.</span></div><button onclick="nav.to('hub')" style="margin-top:10px;border-color:cyan;color:cyan;">DISCONNECT</button></div>
     
     <!-- CYBERDECK COCKPIT -->
     <div id="screen-cockpit" class="screen hidden" style="border-color: var(--warn-color); box-shadow: 0 0 20px rgba(255, 170, 0, 0.2); max-width: 900px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--warn-color); margin-bottom: 10px; padding-bottom: 5px;">
             <h2 style="color: var(--warn-color); margin:0;">// CYBER_DECK_V2.0 - EDU SIM (BROWSER LIMITS APPLY)</h2>
-            <div style="font-size: 10px; color: var(--warn-color); animation: blink 2s infinite;">[ SYSTEM: ONLINE - REAL SCAN: USE NMAP CLI FOR FULL ACCESS ]</div>
+            <div style="font-size: 10px; color: var(--warn-color); animation: blink 2s infinite;">[ SYSTEM: ONLINE ]</div>
         </div>
-
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
-            <!-- LEFT COLUMN: CONTROLS -->
             <div>
-                <!-- TOGGLE BANK -->
                 <div class="grid-3">
-                    <div class="switch-container">
-                        <span class="switch-label">PROXY CHAIN</span>
-                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
-                    </div>
-                    <div class="switch-container">
-                        <span class="switch-label">FIREWALL BYPASS</span>
-                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
-                    </div>
-                    <div class="switch-container">
-                        <span class="switch-label">ROOT MASK</span>
-                        <div class="toggle-switch" onclick="cockpit.toggle(this)"></div>
-                    </div>
+                    <div class="switch-container"><span class="switch-label">PROXY CHAIN</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
+                    <div class="switch-container"><span class="switch-label">FIREWALL BYPASS</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
+                    <div class="switch-container"><span class="switch-label">ROOT MASK</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
                 </div>
-
-                <!-- SLIDERS -->
                 <div class="grid-2" style="margin-bottom: 10px;">
-                    <div class="dial-container">
-                        <span class="switch-label">SIGNAL GAIN</span>
-                        <input type="range" min="0" max="100" value="50" oninput="cockpit.updateGain(this.value)">
-                    </div>
-                    <div class="dial-container">
-                        <span class="switch-label">DECRYPTION RATE</span>
-                        <input type="range" min="0" max="100" value="30" oninput="cockpit.updateRate(this.value)">
-                    </div>
+                    <div class="dial-container"><span class="switch-label">SIGNAL GAIN</span><input type="range" min="0" max="100" value="50" oninput="cockpit.updateGain(this.value)"></div>
+                    <div class="dial-container"><span class="switch-label">DECRYPTION RATE</span><input type="range" min="0" max="100" value="30" oninput="cockpit.updateRate(this.value)"></div>
                 </div>
-
-                <!-- MAIN VISUALIZER -->
                 <div style="background: #000; border: 1px solid var(--warn-color); height: 120px; position: relative; overflow: hidden; margin-bottom: 10px;">
                     <canvas id="cockpit-canvas" width="450" height="120"></canvas>
                     <div id="visual-text" style="position: absolute; top: 5px; left: 5px; font-size: 10px; color: rgba(255,170,0,0.7); font-family: monospace;"></div>
                 </div>
-
-                <!-- ACTION GRID (BUTTONS) -->
                 <div class="grid-4">
                     <div class="action-btn" onclick="cockpit.runAction('PING_SWEEP')"><div class="led"></div>PING</div>
                     <div class="action-btn" onclick="cockpit.runAction('PORT_SCAN')"><div class="led"></div>SCAN</div>
@@ -591,70 +550,48 @@
                     <div class="action-btn" onclick="cockpit.runAction('OVERFLOW')"><div class="led"></div>OVRFLW</div>
                     <div class="action-btn warn" onclick="cockpit.runAction('EXECUTE_PAYLOAD')" style="border-style: dashed;"><div class="led busy"></div>EXECUTE</div>
                 </div>
-
-                <!-- ENHANCED: NETWORK DISCOVERY BUTTON WITH PROGRESS -->
                 <div style="margin-top: 10px;">
                     <button onclick="cockpit.scanNetwork()" class="warn" style="width: 100%; padding: 10px; font-size: 12px;">LAN DISCOVERY (SIM + WEBRTC DETECT)</button>
                     <div id="scan-progress"><div id="scan-progress-fill"></div></div>
                 </div>
-
-                <!-- REAL TOOLS PANEL -->
                 <div class="real-tools-panel hidden" id="real-tools-panel">
                     <h4 style="color: cyan; margin: 0 0 5px 0;">>> REAL TOOLS (EDU LINKS) <<</h4>
-                    <p style="font-size: 9px; margin: 0 0 5px 0;">Browser limits scanning - Use these for actual work:</p>
                     <ul style="font-size: 9px; margin: 5px 0; padding-left: 15px;">
                         <li><a href="https://nmap.org/" target="_blank">Nmap: Full Network Scan</a></li>
                         <li><a href="https://github.com/samyk/webscan" target="_blank">WebScan: Browser IP Detect</a></li>
                         <li><a href="https://wireshark.org/" target="_blank">Wireshark: Packet Sniff</a></li>
                         <li><a href="https://wii.hacks.guide/" target="_blank">Wii Homebrew Guide</a></li>
-                        <li><a href="https://www.splashtop.com/blog/remote-access-education-uses" target="_blank">Safe Remote Access</a></li>
                     </ul>
                     <button onclick="document.getElementById('real-tools-panel').classList.add('hidden')" style="font-size: 8px; width: auto; padding: 2px;">HIDE</button>
                 </div>
                 <button onclick="document.getElementById('real-tools-panel').classList.toggle('hidden')" style="width: 100%; margin-top: 5px; font-size: 10px; opacity: 0.7;">SHOW REAL TOOLS GUIDE</button>
             </div>
-
-            <!-- RIGHT COLUMN: LOGS & TARGET -->
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <div class="card" style="border-color: var(--warn-color); margin: 0;">
                     <label style="font-size: 10px; color: var(--warn-color);">TARGET IP / URL</label>
                     <input type="text" id="cockpit-target" value="192.168.1.1" style="font-family: monospace; color: var(--warn-color); border-color: var(--warn-color);">
                     <label style="font-size: 10px; color: var(--warn-color);">PROTOCOL</label>
                     <select id="cockpit-proto" style="color: var(--warn-color); border-color: var(--warn-color);">
-                        <option>SSH (22)</option>
-                        <option>HTTP (80)</option>
-                        <option>HTTPS (443)</option>
-                        <option>FTP (21)</option>
-                        <option>TELNET (23)</option>
+                        <option>SSH (22)</option><option>HTTP (80)</option><option>HTTPS (443)</option><option>FTP (21)</option><option>TELNET (23)</option>
                     </select>
                 </div>
-                
                 <div class="chat-box" id="cockpit-log" style="flex: 1; border-color: var(--warn-color); font-size: 10px; color: var(--warn-color); font-family: monospace; margin: 0;">
-                    <div class="term-line">>> DECK INITIALIZED... (NOTE: BROWSER SECURITY BLOCKS REAL SCANS)</div>
-                    <div class="term-line">>> USE 'LAN DISCOVERY' FOR SIM + LIMITED DETECT</div>
-                    <div class="term-line">>> FOR REAL: RUN NMAP IN TERMINAL</div>
+                    <div class="term-line">>> DECK INITIALIZED...</div>
                 </div>
-
-                <!-- ENHANCED: NETWORK SCAN RESULTS PANEL -->
-                <div id="network-scan-panel" class="hidden">
-                    <div id="scan-results"></div>
-                </div>
+                <div id="network-scan-panel" class="hidden"><div id="scan-results"></div></div>
             </div>
         </div>
-        
         <button onclick="nav.to('hub')" style="margin-top: 10px; border-color: var(--warn-color); color: var(--warn-color);">DISCONNECT</button>
     </div>
 
-    <!-- REMOTE ACCESS OVERLAY (SIMULATED GUI) -->
+    <!-- REMOTE ACCESS OVERLAY -->
     <div id="remote-access-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 4000; display: flex; justify-content: center; align-items: center;">
         <div style="width: 90%; height: 80%; background: #000; border: 2px solid var(--warn-color); padding: 10px; color: var(--main-color); font-family: monospace;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px;">
-                <h3 id="remote-title" style="margin: 0; color: var(--warn-color);">REMOTE ACCESS: 192.168.1.X (SIM)</h3>
+                <h3 id="remote-title" style="margin: 0; color: var(--warn-color);">REMOTE ACCESS</h3>
                 <button onclick="cockpit.closeRemote()" class="danger" style="width: auto; padding: 5px; font-size: 10px;">EXIT</button>
             </div>
-            <div id="remote-content" style="height: 100%; overflow-y: scroll;">
-                <!-- DYNAMIC CONTENT HERE -->
-            </div>
+            <div id="remote-content" style="height: 100%; overflow-y: scroll;"></div>
         </div>
     </div>
 
@@ -670,7 +607,6 @@
         const fbApp = initializeApp(firebaseConfig);
         const db = getFirestore(fbApp);
 
-        // --- UTILS ---
         const loading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
         
         window.audioSys = {
@@ -686,88 +622,48 @@
             }
         };
 
-        // --- NEW: DEVICE DETECTION ---
         window.deviceDetect = {
             getInfo: () => {
                 const ua = navigator.userAgent;
-                let device = "Unknown";
-                let os = "Unknown";
-                
-                // OS Detection
+                let device = "Unknown", os = "Unknown", browser = "Unknown";
                 if (ua.indexOf("Win") > -1) os = "Windows";
                 else if (ua.indexOf("Mac") > -1) os = "macOS";
                 else if (ua.indexOf("Linux") > -1) os = "Linux";
                 else if (ua.indexOf("Android") > -1) os = "Android";
-                else if (ua.indexOf("iOS") > -1 || ua.indexOf("iPhone") > -1 || ua.indexOf("iPad") > -1) os = "iOS";
-                
-                // Device Type
-                if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated/.test(ua)) device = "Mobile";
+                else if (ua.indexOf("iPhone") > -1 || ua.indexOf("iPad") > -1) os = "iOS";
+                if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle/.test(ua)) device = "Mobile";
                 else if (/Tablet|iPad/.test(ua)) device = "Tablet";
                 else device = "Desktop";
-                
-                // Browser
-                let browser = "Unknown";
                 if (ua.indexOf("Firefox") > -1) browser = "Firefox";
                 else if (ua.indexOf("Chrome") > -1) browser = "Chrome";
                 else if (ua.indexOf("Safari") > -1) browser = "Safari";
                 else if (ua.indexOf("Edge") > -1) browser = "Edge";
-                
                 return `${device} | ${os} | ${browser}`;
             }
         };
 
-        // --- NEW: SYSTEM ALERT SYSTEM ---
         window.sysAlerts = {
             timer: null,
             banner: document.getElementById('sys-alert-banner'),
             msg: document.getElementById('sys-alert-msg'),
             trigger: (type) => {
-                // Clear any existing alert
                 sysAlerts.banner.className = 'alert-off';
                 if(sysAlerts.timer) clearTimeout(sysAlerts.timer);
-                
-                let text = "";
-                let className = "alert-on ";
-                
-                if(type === 'INFO') {
-                    text = "SYSTEM ANNOUNCEMENT: ROUTINE MAINTENANCE SCHEDULED";
-                    className += "type-info";
-                    audioSys.playTone(600, 'sine', 0.5);
-                } else if(type === 'WARN') {
-                    text = "WARNING: UNIDENTIFIED NETWORK TRAFFIC DETECTED";
-                    className += "type-warn";
-                    // Double beep
-                    audioSys.playTone(300, 'square', 0.2);
-                    setTimeout(() => audioSys.playTone(300, 'square', 0.2), 300);
-                } else if(type === 'CRIT') {
-                    text = "CRITICAL ALERT: SECURITY BREACH IN PROGRESS - LOCKDOWN";
-                    className += "type-crit";
-                    // Siren effect
-                    let i = 0;
-                    const siren = setInterval(() => {
-                        audioSys.playTone(800 + (i%2)*200, 'sawtooth', 0.1);
-                        i++;
-                        if(i > 10) clearInterval(siren);
-                    }, 200);
-                }
-                
-                setTimeout(() => {
-                    sysAlerts.msg.innerText = text;
-                    sysAlerts.banner.className = className;
-                }, 100);
-
-                // Auto hide after 10s
+                let text = "", className = "alert-on ";
+                if(type === 'INFO') { text = "SYSTEM ANNOUNCEMENT: ROUTINE MAINTENANCE SCHEDULED"; className += "type-info"; audioSys.playTone(600, 'sine', 0.5); }
+                else if(type === 'WARN') { text = "WARNING: UNIDENTIFIED NETWORK TRAFFIC DETECTED"; className += "type-warn"; audioSys.playTone(300, 'square', 0.2); setTimeout(() => audioSys.playTone(300, 'square', 0.2), 300); }
+                else if(type === 'CRIT') { text = "CRITICAL ALERT: SECURITY BREACH IN PROGRESS - LOCKDOWN"; className += "type-crit"; let i = 0; const siren = setInterval(() => { audioSys.playTone(800 + (i%2)*200, 'sawtooth', 0.1); i++; if(i > 10) clearInterval(siren); }, 200); }
+                setTimeout(() => { sysAlerts.msg.innerText = text; sysAlerts.banner.className = className; }, 100);
                 sysAlerts.timer = setTimeout(sysAlerts.hide, 10000);
             },
-            hide: () => {
-                sysAlerts.banner.className = 'alert-off';
-            }
+            hide: () => { sysAlerts.banner.className = 'alert-off'; }
         };
 
-        // --- STATE ---
         window.state = { user: null, clan: null, clanData: {}, viewedProfile: null, activeCommentId: null, activeCommentType: null, unsubComments: null, clanUnsub: null, voiceUnsub: null };
 
-        // --- NAV ---
+        // =====================================================================
+        // NAV — FIX 1: Added `if(id === 'ectotape') app.loadEctoTape();`
+        // =====================================================================
         window.nav = {
             to: (id) => {
                 document.querySelectorAll('.screen, #screen-kali').forEach(e => e.classList.add('hidden'));
@@ -779,10 +675,12 @@
                 if(id === 'social') social.loadPosts();
                 if(id === 'settings') settings.load();
                 if(id === 'dict') app.renderDict();
-                if(id === 'cockpit') cockpit.init(); 
-                if(id === 'radio') radio.init(); 
+                if(id === 'cockpit') cockpit.init();
+                if(id === 'radio') radio.init();
                 if(id === 'news') news.init();
                 if(id === 'verified') app.initVerifiedChat();
+                if(id === 'ectotape') app.loadEctoTape();   // ← FIX 1
+                if(id === 'events') app.loadEvents();
             },
             tab: (t) => { 
                 document.getElementById('tab-clans').classList.add('hidden'); 
@@ -791,28 +689,21 @@
             }
         };
 
-        // --- APP LOGIC ---
         window.app = {
-            encMode: false, dictMode: false, clanUnsub: null, clanChatUnsub: null, alertInterval: null, voiceInterval: null,
-            // Voice Chat Variables
-            voiceContext: null,
-            voiceSource: null,
-            voiceAnalyser: null,
-            voiceAnim: null,
-            voiceActive: false,
-            voiceUnsubscribe: null,
+            encMode: false, dictMode: false, clanUnsub: null, clanChatUnsub: null, alertInterval: null,
+            voiceContext: null, voiceSource: null, voiceAnalyser: null, voiceAnim: null, voiceActive: false, voiceUnsubscribe: null,
 
             login: async () => {
-                const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
+                const u = document.getElementById('auth-user').value.trim(); 
+                const p = document.getElementById('auth-pass').value.trim();
                 if(!u || !p) return; loading(true);
                 const docSnap = await getDoc(doc(db, "users", u)); loading(false);
-                if (docSnap.exists() && docSnap.data().pass === p) { 
-                    state.user = u; 
-                    nav.to('hub'); 
-                } else alert("INVALID");
+                if (docSnap.exists() && docSnap.data().pass === p) { state.user = u; nav.to('hub'); } 
+                else alert("INVALID");
             },
             register: async () => {
-                const u = document.getElementById('auth-user').value.trim(); const p = document.getElementById('auth-pass').value.trim();
+                const u = document.getElementById('auth-user').value.trim(); 
+                const p = document.getElementById('auth-pass').value.trim();
                 if(!u || !p) return; loading(true);
                 const check = await getDoc(doc(db, "users", u));
                 if (check.exists()) { loading(false); return alert("TAKEN"); }
@@ -821,24 +712,15 @@
             },
             initHub: async () => {
                 loading(true);
-                
-                // Set device info
                 document.getElementById('device-info').innerText = "DEVICE: " + deviceDetect.getInfo();
-                
                 const docSnap = await getDoc(doc(db, "users", state.user)); 
                 const userData = docSnap.data();
                 let verifiedHTML = userData.verified ? `<span class="verified-badge">♦✓</span>` : '';
                 document.getElementById('hub-user').innerHTML = `${userData.displayName || state.user} ${verifiedHTML}`;
                 const admins = ["user1234", "user4321"];
                 if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
-                
-                if(userData.verified) {
-                    document.getElementById('btn-payload').classList.remove('hidden');
-                    document.getElementById('btn-verified').classList.remove('hidden');
-                } else {
-                    document.getElementById('btn-payload').classList.add('hidden');
-                    document.getElementById('btn-verified').classList.add('hidden');
-                }
+                if(userData.verified) { document.getElementById('btn-payload').classList.remove('hidden'); document.getElementById('btn-verified').classList.remove('hidden'); }
+                else { document.getElementById('btn-payload').classList.add('hidden'); document.getElementById('btn-verified').classList.add('hidden'); }
 
                 const setupClanListener = (data) => {
                     if(data.clan) { 
@@ -847,8 +729,7 @@
                         app.listenToClan(data.clan); 
                         document.getElementById('panel-no-clan').classList.add('hidden'); 
                         document.getElementById('panel-in-clan').classList.remove('hidden'); 
-                    }
-                    else { 
+                    } else { 
                         state.clan = null; 
                         document.getElementById('panel-no-clan').classList.remove('hidden'); 
                         document.getElementById('panel-in-clan').classList.add('hidden'); 
@@ -857,12 +738,7 @@
                 };
 
                 setupClanListener(userData);
-
-                // This listener handles clan switching if user data changes
-                app.userUnsub = onSnapshot(doc(db, "users", state.user), (d) => {
-                    const data = d.data();
-                    setupClanListener(data);
-                });
+                app.userUnsub = onSnapshot(doc(db, "users", state.user), (d) => setupClanListener(d.data()));
                 loading(false);
 
                 const q = query(collection(db, "global_chat"), orderBy("ts", "desc"), limit(50));
@@ -875,7 +751,6 @@
             },
             sendGlobalMsg: async () => { const t = document.getElementById('global-input').value; if(t) { await addDoc(collection(db, "global_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('global-input').value=""; } },
             
-            // VERIFIED CHAT
             initVerifiedChat: () => {
                 const d = document.getElementById('verified-chat');
                 d.innerHTML = "Establishing Secure Uplink...";
@@ -890,27 +765,26 @@
             },
             sendVerifiedMsg: async () => {
                 const t = document.getElementById('verified-input').value; 
-                if(t) { 
-                    await addDoc(collection(db, "verified_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); 
-                    document.getElementById('verified-input').value=""; 
-                }
+                if(t) { await addDoc(collection(db, "verified_chat"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('verified-input').value=""; }
             },
 
-            // PROFILES & CLAN
             searchUser: () => { const u = document.getElementById('search-user-input').value.trim(); if(u) app.openProfile(u); },
             openProfile: async (targetUser) => {
                 loading(true); const snap = await getDoc(doc(db, "users", targetUser)); loading(false);
                 if(!snap.exists()) return alert("USER NOT FOUND");
                 const d = snap.data(); state.viewedProfile = targetUser;
-                document.getElementById('prof-username').innerText = "@" + targetUser; document.getElementById('prof-displayname').innerText = d.displayName || targetUser;
+                document.getElementById('prof-username').innerText = "@" + targetUser; 
+                document.getElementById('prof-displayname').innerText = d.displayName || targetUser;
                 const pfp = d.pfp || ""; document.getElementById('prof-pfp-display').style.backgroundImage = pfp ? `url('${pfp}')` : "none";
-                if(d.verified) document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
+                if(d.verified) document.getElementById('prof-verified').classList.remove('hidden'); 
+                else document.getElementById('prof-verified').classList.add('hidden');
                 if(d.private && targetUser !== state.user) { document.getElementById('prof-clan').innerText = "[REDACTED]"; document.getElementById('prof-rep').innerText = "[REDACTED]"; }
                 else { document.getElementById('prof-clan').innerText = d.clan || "NONE"; document.getElementById('prof-rep').innerText = d.rep || "0"; }
                 if(targetUser === state.user) { document.getElementById('prof-edit-panel').classList.remove('hidden'); document.getElementById('edit-disp').value = d.displayName || ""; document.getElementById('edit-pfp').value = d.pfp || ""; document.getElementById('edit-private').checked = d.private || false; }
                 else { document.getElementById('prof-edit-panel').classList.add('hidden'); }
                 const admins = ["user1234", "user4321"];
-                if(admins.includes(state.user.toLowerCase()) && targetUser !== state.user) document.getElementById('prof-admin-panel').classList.remove('hidden'); else document.getElementById('prof-admin-panel').classList.add('hidden');
+                if(admins.includes(state.user.toLowerCase()) && targetUser !== state.user) document.getElementById('prof-admin-panel').classList.remove('hidden'); 
+                else document.getElementById('prof-admin-panel').classList.add('hidden');
                 nav.to('profile');
             },
             saveProfile: async () => { const dn = document.getElementById('edit-disp').value.trim(); const pf = document.getElementById('edit-pfp').value.trim(); const priv = document.getElementById('edit-private').checked; await updateDoc(doc(db, "users", state.user), { displayName: dn, pfp: pf, private: priv }); alert("SAVED"); app.openProfile(state.user); },
@@ -920,7 +794,6 @@
                 document.getElementById('panel-no-clan').classList.add('hidden'); 
                 document.getElementById('panel-in-clan').classList.remove('hidden'); 
                 document.getElementById('clan-header').innerText = cName;
-                
                 if (app.clanUnsub) { app.clanUnsub(); app.clanUnsub = null; }
                 if (app.clanChatUnsub) { app.clanChatUnsub(); app.clanChatUnsub = null; }
                 
@@ -938,273 +811,128 @@
 
                 const q = query(collection(db, "clans", cName, "msgs"), orderBy("ts", "desc"), limit(50));
                 app.clanChatUnsub = onSnapshot(q, (snap) => { 
-                    const d = document.getElementById('clan-chat'); 
-                    d.innerHTML = ""; 
-                    const msgs = []; 
-                    snap.forEach(doc => msgs.push(doc.data())); 
-                    
+                    const d = document.getElementById('clan-chat'); d.innerHTML = ""; 
+                    const msgs = []; snap.forEach(doc => msgs.push(doc.data())); 
                     snap.docChanges().forEach(change => {
                         if (change.type === "added") {
                             const m = change.doc.data();
                             const now = Date.now();
                             const msgTime = m.ts ? m.ts.toMillis() : now; 
-                            
                             if (now - msgTime < 15000) {
-                                if (m.type === 'WARN') {
-                                    audioSys.playTone(800, 'sine', 0.1);
-                                    setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 200);
-                                    setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 400);
-                                }
-                                if (m.type === 'ALERT') {
-                                    app.triggerClanRedAlert(m.txt);
-                                }
+                                if (m.type === 'WARN') { audioSys.playTone(800, 'sine', 0.1); setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 200); setTimeout(() => audioSys.playTone(800, 'sine', 0.1), 400); }
+                                if (m.type === 'ALERT') { app.triggerClanRedAlert(m.txt); }
                             }
                         }
                     });
-
                     msgs.reverse().forEach(m => { 
-                        let txt = app.translate(m.txt); 
-                        let style = "";
-                        
-                        // Rank Prefix Logic
+                        let txt = app.translate(m.txt); let style = "";
                         const userRank = (state.clanData.ranks && state.clanData.ranks[m.u]) ? state.clanData.ranks[m.u].toUpperCase() : 'MEMBER';
                         const prefix = `<span style="color: #aaa; font-size: 0.8em;">[${userRank}]</span>`;
-
                         if(m.type === 'ANNOUNCE') style = "font-weight:bold; color: #00FF00; border: 1px solid #00FF00; padding: 5px; margin: 5px 0; background: rgba(0,255,0,0.1);";
                         if(m.type === 'WARN') style = "font-weight:bold; color: #FFAA00; border: 1px solid #FFAA00; padding: 5px; margin: 5px 0; background: rgba(255,170,0,0.1);";
                         if(m.type === 'ALERT') style = "font-weight:bold; color: white; background: red; padding: 5px; margin: 5px 0; border: 1px solid white;";
-                        
-                        // Don't show prefix on system alerts
-                        if (m.u === "SYSTEM") {
-                             d.innerHTML += `<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`; 
-                        } else {
-                             d.innerHTML += `<div class="chat-msg" style="${style}">${prefix} <strong>${m.u}:</strong> ${txt}</div>`; 
-                        }
+                        if (m.u === "SYSTEM") d.innerHTML += `<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`; 
+                        else d.innerHTML += `<div class="chat-msg" style="${style}">${prefix} <strong>${m.u}:</strong> ${txt}</div>`; 
                     }); 
                     d.scrollTop = d.scrollHeight; 
                 });
-                
-                // Start listening to voice users
                 app.listenToVoiceUsers();
             },
+
             sendClanAlert: async (level) => {
                 if(state.clanData.leader !== state.user) return;
                 const txt = prompt(`ENTER ${level} MESSAGE:`);
                 if(!txt) return;
-                await addDoc(collection(db, "clans", state.clan, "msgs"), {
-                    u: "SYSTEM",
-                    txt: txt,
-                    type: level,
-                    ts: serverTimestamp()
-                });
+                await addDoc(collection(db, "clans", state.clan, "msgs"), { u: "SYSTEM", txt: txt, type: level, ts: serverTimestamp() });
             },
             triggerClanRedAlert: (msg) => {
                 const el = document.getElementById('clan-alert-overlay');
                 document.getElementById('clan-alert-msg').innerText = msg;
                 el.classList.remove('hidden');
-                
                 if(app.alertInterval) clearInterval(app.alertInterval);
-                
-                // WEEE WOOO SIREN EFFECT
                 const ctx = audioSys.ctx;
                 app.alertInterval = setInterval(() => {
                     if(ctx.state==='suspended') ctx.resume();
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.type = 'sawtooth';
+                    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                    osc.connect(gain); gain.connect(ctx.destination); osc.type = 'sawtooth';
                     const now = ctx.currentTime;
-                    
-                    // Sweep Up
-                    osc.frequency.setValueAtTime(600, now);
-                    osc.frequency.linearRampToValueAtTime(1200, now + 0.5);
-                    
-                    // Sweep Down
-                    osc.frequency.linearRampToValueAtTime(600, now + 1.0);
-                    
-                    gain.gain.setValueAtTime(0.2, now);
-                    osc.start(now);
-                    osc.stop(now + 1.0);
+                    osc.frequency.setValueAtTime(600, now); osc.frequency.linearRampToValueAtTime(1200, now + 0.5); osc.frequency.linearRampToValueAtTime(600, now + 1.0);
+                    gain.gain.setValueAtTime(0.2, now); osc.start(now); osc.stop(now + 1.0);
                 }, 1000);
             },
-            ackAlert: () => {
-                document.getElementById('clan-alert-overlay').classList.add('hidden');
-                if(app.alertInterval) clearInterval(app.alertInterval);
-            },
-            
-            // ENHANCED VOICE CHAT WITH USER LIST
+            ackAlert: () => { document.getElementById('clan-alert-overlay').classList.add('hidden'); if(app.alertInterval) clearInterval(app.alertInterval); },
+
             listenToVoiceUsers: () => {
                 if (!state.clan) return;
-                
-                // Clean up previous listener
-                if (app.voiceUnsubscribe) {
-                    app.voiceUnsubscribe();
-                }
-                
-                // Listen to voice_users subcollection in clan
+                if (app.voiceUnsubscribe) app.voiceUnsubscribe();
                 const voiceRef = collection(db, "clans", state.clan, "voice_users");
                 const q = query(voiceRef, orderBy("joinedAt", "desc"));
-                
                 app.voiceUnsubscribe = onSnapshot(q, (snapshot) => {
                     const usersList = document.getElementById('voice-users-list');
                     const container = document.getElementById('voice-users-container');
-                    
-                    if (snapshot.empty) {
-                        container.classList.add('hidden');
-                        return;
-                    }
-                    
-                    container.classList.remove('hidden');
-                    usersList.innerHTML = "";
-                    
+                    if (snapshot.empty) { container.classList.add('hidden'); return; }
+                    container.classList.remove('hidden'); usersList.innerHTML = "";
                     snapshot.forEach(doc => {
                         const userData = doc.data();
                         const now = Date.now();
                         const lastSeen = userData.lastSeen ? userData.lastSeen.toMillis() : now;
-                        const isActive = (now - lastSeen) < 10000; // Active if seen in last 10 seconds
-                        
-                        if (isActive) {
-                            usersList.innerHTML += `
-                                <div class="voice-user-item">
-                                    <div class="voice-user-indicator ${userData.speaking ? 'voice-user-speaking' : ''}"></div>
-                                    <span>${doc.id}</span>
-                                    <small style="color: #555; margin-left: auto;">${userData.device || 'Unknown'}</small>
-                                </div>
-                            `;
+                        if ((now - lastSeen) < 10000) {
+                            usersList.innerHTML += `<div class="voice-user-item"><div class="voice-user-indicator ${userData.speaking ? 'voice-user-speaking' : ''}"></div><span>${doc.id}</span><small style="color: #555; margin-left: auto;">${userData.device || 'Unknown'}</small></div>`;
                         }
                     });
                 });
             },
-            
-            // REAL MICROPHONE VISUALIZATION + FIREBASE PRESENCE
+
             toggleVoice: async () => {
                 const btn = document.getElementById('btn-voice-conn');
                 const status = document.getElementById('voice-status');
                 const viz = document.getElementById('voice-viz');
                 const muteBtn = document.getElementById('btn-voice-mute');
-                
                 if (app.voiceActive) {
-                    // Disconnect Logic
-                    if(app.voiceSource) {
-                        app.voiceSource.disconnect();
-                        app.voiceSource = null;
-                    }
-                    if(app.voiceAnim) {
-                        cancelAnimationFrame(app.voiceAnim);
-                        app.voiceAnim = null;
-                    }
-                    
-                    // Remove from Firebase voice_users
-                    if (state.clan && state.user) {
-                        try {
-                            await deleteDoc(doc(db, "clans", state.clan, "voice_users", state.user));
-                        } catch (e) {
-                            console.log("Voice user cleanup:", e);
-                        }
-                    }
-                    
-                    // Stop heartbeat
-                    if (app.voiceHeartbeat) {
-                        clearInterval(app.voiceHeartbeat);
-                        app.voiceHeartbeat = null;
-                    }
-                    
-                    // Reset UI
-                    btn.innerText = "CONNECT MIC";
-                    btn.style.color = "var(--main-color)";
-                    status.style.background = "red";
-                    viz.innerHTML = "";
-                    muteBtn.disabled = true;
+                    if(app.voiceSource) { app.voiceSource.disconnect(); app.voiceSource = null; }
+                    if(app.voiceAnim) { cancelAnimationFrame(app.voiceAnim); app.voiceAnim = null; }
+                    if (state.clan && state.user) { try { await deleteDoc(doc(db, "clans", state.clan, "voice_users", state.user)); } catch (e) {} }
+                    if (app.voiceHeartbeat) { clearInterval(app.voiceHeartbeat); app.voiceHeartbeat = null; }
+                    btn.innerText = "CONNECT MIC"; btn.style.color = "var(--main-color)"; status.style.background = "red"; viz.innerHTML = ""; muteBtn.disabled = true;
                     app.voiceActive = false;
                 } else {
-                    // Connect Logic
                     try {
                         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                         app.voiceContext = new (window.AudioContext || window.webkitAudioContext)();
                         app.voiceAnalyser = app.voiceContext.createAnalyser();
                         app.voiceSource = app.voiceContext.createMediaStreamSource(stream);
                         app.voiceSource.connect(app.voiceAnalyser);
-                        app.voiceAnalyser.fftSize = 64; // Small fft for simple bars
-                        
+                        app.voiceAnalyser.fftSize = 64;
                         const bufferLength = app.voiceAnalyser.frequencyBinCount;
                         const dataArray = new Uint8Array(bufferLength);
-                        
-                        // Setup Bars in DOM
                         viz.innerHTML = "";
-                        for(let i=0; i<bufferLength; i++) {
-                            const bar = document.createElement('div');
-                            bar.className = 'voice-bar';
-                            bar.id = 'vbar-' + i;
-                            viz.appendChild(bar);
-                        }
-
-                        // Add to Firebase voice_users
+                        for(let i=0; i<bufferLength; i++) { const bar = document.createElement('div'); bar.className = 'voice-bar'; bar.id = 'vbar-' + i; viz.appendChild(bar); }
                         if (state.clan && state.user) {
                             const deviceInfo = deviceDetect.getInfo();
-                            await setDoc(doc(db, "clans", state.clan, "voice_users", state.user), {
-                                joinedAt: serverTimestamp(),
-                                lastSeen: serverTimestamp(),
-                                speaking: false,
-                                device: deviceInfo
-                            });
-                            
-                            // Heartbeat to keep presence updated
+                            await setDoc(doc(db, "clans", state.clan, "voice_users", state.user), { joinedAt: serverTimestamp(), lastSeen: serverTimestamp(), speaking: false, device: deviceInfo });
                             app.voiceHeartbeat = setInterval(async () => {
                                 if (state.clan && state.user && app.voiceActive) {
-                                    // Detect if speaking (simple threshold)
                                     app.voiceAnalyser.getByteFrequencyData(dataArray);
                                     const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-                                    const speaking = average > 30; // Threshold
-                                    
-                                    await updateDoc(doc(db, "clans", state.clan, "voice_users", state.user), {
-                                        lastSeen: serverTimestamp(),
-                                        speaking: speaking
-                                    });
+                                    await updateDoc(doc(db, "clans", state.clan, "voice_users", state.user), { lastSeen: serverTimestamp(), speaking: average > 30 });
                                 }
-                            }, 2000); // Update every 2 seconds
+                            }, 2000);
                         }
-
-                        // Animation Loop
                         const draw = () => {
                             if(!app.voiceActive) return;
                             app.voiceAnim = requestAnimationFrame(draw);
                             app.voiceAnalyser.getByteFrequencyData(dataArray);
-                            
-                            for(let i=0; i<bufferLength; i++) {
-                                const val = dataArray[i];
-                                const bar = document.getElementById('vbar-' + i);
-                                if(bar) bar.style.height = (val / 5) + "px"; // Scale height
-                            }
+                            for(let i=0; i<bufferLength; i++) { const bar = document.getElementById('vbar-' + i); if(bar) bar.style.height = (dataArray[i] / 5) + "px"; }
                         };
-                        
-                        app.voiceActive = true;
-                        draw();
-                        
-                        // UI Updates
-                        btn.innerText = "DISCONNECT";
-                        btn.style.color = "red";
-                        status.style.background = "#00FF00";
-                        muteBtn.disabled = false;
-
-                    } catch (err) {
-                        console.error(err);
-                        alert("MIC ACCESS DENIED OR NOT FOUND");
-                    }
+                        app.voiceActive = true; draw();
+                        btn.innerText = "DISCONNECT"; btn.style.color = "red"; status.style.background = "#00FF00"; muteBtn.disabled = false;
+                    } catch (err) { console.error(err); alert("MIC ACCESS DENIED OR NOT FOUND"); }
                 }
             },
             muteVoice: () => {
-                // Visual simulation only for mute (disconnects stream logic)
                 const btn = document.getElementById('btn-voice-mute');
-                if(btn.innerText === "MUTE") {
-                    if(app.voiceSource) app.voiceSource.disconnect(app.voiceAnalyser);
-                    btn.innerText = "UNMUTE";
-                    btn.classList.add('warn');
-                } else {
-                    if(app.voiceSource) app.voiceSource.connect(app.voiceAnalyser);
-                    btn.innerText = "MUTE";
-                    btn.classList.remove('warn');
-                }
+                if(btn.innerText === "MUTE") { if(app.voiceSource) app.voiceSource.disconnect(app.voiceAnalyser); btn.innerText = "UNMUTE"; btn.classList.add('warn'); }
+                else { if(app.voiceSource) app.voiceSource.connect(app.voiceAnalyser); btn.innerText = "MUTE"; btn.classList.remove('warn'); }
             },
 
             loadRoster: () => { 
@@ -1214,28 +942,17 @@
                 const isLeader = state.clanData.leader === state.user; 
                 for (const [member, rank] of Object.entries(ranks)) { 
                     let controls = ""; 
-                    if (isLeader && member !== state.user) {
-                        controls = `<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:2px;" class="danger">KICK</button>
-                                    <button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:2px;">SET RANK</button>`; 
-                    }
+                    if (isLeader && member !== state.user) controls = `<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:2px;" class="danger">KICK</button><button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:2px;">SET RANK</button>`; 
                     list.innerHTML += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span>${member} <span style="color:yellow">[${rank.toUpperCase()}]</span></span><div>${controls}</div></div>`; 
                 } 
             },
-            setCustomRank: async (member) => {
-                const r = prompt("ENTER CUSTOM RANK TITLE (e.g. COMMANDER, RECRUIT):");
-                if(r) {
-                    await updateDoc(doc(db, "clans", state.clan), { [`ranks.${member}`]: r.toUpperCase() }); 
-                    app.loadRoster();
-                }
-            },
+            setCustomRank: async (member) => { const r = prompt("ENTER CUSTOM RANK TITLE:"); if(r) { await updateDoc(doc(db, "clans", state.clan), { [`ranks.${member}`]: r.toUpperCase() }); app.loadRoster(); } },
             clanKick: async (target) => { if(!confirm(`KICK ${target}?`)) return; await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: deleteField() }); await updateDoc(doc(db, "users", target), { clan: null }); app.loadRoster(); },
-            clanPromote: async (target) => { await updateDoc(doc(db, "clans", state.clan), { [`ranks.${target}`]: 'admin' }); app.loadRoster(); },
             deleteClan: async () => { const cName = state.clan; if(!confirm("WARNING: DELETE CLAN?")) return; loading(true); const cDoc = await getDoc(doc(db, "clans", cName)); const ranks = cDoc.data().ranks; for(const member of Object.keys(ranks)) await updateDoc(doc(db, "users", member), { clan: null }); await deleteDoc(doc(db, "clans", cName)); loading(false); alert("DELETED"); nav.to('hub'); },
             joinClan: async () => { const n = document.getElementById('join-name').value.trim(); const p = document.getElementById('join-pass').value.trim(); const s = await getDoc(doc(db, "clans", n)); if(s.exists() && s.data().pass === p) { await updateDoc(doc(db, "users", state.user), { clan: n }); await updateDoc(doc(db, "clans", n), { [`ranks.${state.user}`]: 'member' }); } else alert("INVALID"); },
             leaveClan: async () => { if(!confirm("LEAVE?")) return; await updateDoc(doc(db, "users", state.user), { clan: null }); await updateDoc(doc(db, "clans", state.clan), { [`ranks.${state.user}`]: deleteField() }); },
             sendClanMsg: async () => { const t = document.getElementById('clan-input').value; if(t) { await addDoc(collection(db, "clans", state.clan, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('clan-input').value=""; } },
-            
-            // TRANS & DICT
+
             toggleEnc: () => { app.encMode = !app.encMode; document.getElementById('btn-enc').style.color = app.encMode ? '#00FF00' : '#555'; },
             toggleDict: () => { app.dictMode = !app.dictMode; document.getElementById('btn-dict').style.color = app.dictMode ? '#00FF00' : '#555'; },
             translate: (txt) => { if (!app.encMode && !app.dictMode) return txt; let out = ""; const words = state.clanData.words || {}; const syms = state.clanData.symbols || {}; txt.split(" ").forEach(w => { const c = w.toLowerCase().replace(/[^a-z]/g,''); let finalWord = w; if (app.dictMode && words[c]) finalWord = words[c]; else if (app.encMode && words[c]) finalWord = words[c]; if (app.encMode) { const clean = finalWord.toLowerCase().replace(/[^a-z]/g,''); out += app.strToSym(clean, syms) + " "; } else { out += finalWord + " "; } }); return out; },
@@ -1245,7 +962,6 @@
             addWord: async () => { const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan) await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]:v}); app.renderDict(); },
             delWord: async (k) => { if(!confirm("DELETE?")) return; await updateDoc(doc(db,"clans",state.clan), {[`words.${k}`]: deleteField()}); app.renderDict(); },
 
-            // JOBS, EVENTS, ETC
             createEvent: async () => { const n = document.getElementById('evt-name').value; if(!n) return; await addDoc(collection(db, "events"), { name: n, desc: document.getElementById('evt-desc').value, start: document.getElementById('evt-start').value, end: document.getElementById('evt-end').value, creator: state.user, ts: serverTimestamp() }); alert("CREATED"); app.loadEvents(); },
             loadEvents: async () => { const list = document.getElementById('event-list'); list.innerHTML = "LOADING..."; const q = query(collection(db, "events"), orderBy("start", "asc")); const snap = await getDocs(q); list.innerHTML = ""; snap.forEach(d => { const e = d.data(); list.innerHTML += `<div class="card"><strong style="color:white;">${e.name}</strong><br><span>${e.start} // ${e.end || '?'}</span><br><p>${e.desc}</p><small>ORG: ${e.creator}</small></div>`; }); },
             createJob: async () => { const t = document.getElementById('job-title').value; if(!t) return; await addDoc(collection(db, "jobs"), { title: t, desc: document.getElementById('job-desc').value, owner: state.user, worker: null, status: 'OPEN', ts: serverTimestamp() }); alert("POSTED"); app.loadJobs(); },
@@ -1254,38 +970,134 @@
             openJobChat: (jid) => { document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob = jid; onSnapshot(query(collection(db, "jobs", jid, "msgs"), orderBy("ts", "desc")), (snap) => { const div = document.getElementById('job-chat-box'); div.innerHTML = ""; const msgs = []; snap.forEach(d => msgs.push(d.data())); msgs.reverse().forEach(m => div.innerHTML += `<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`); div.scrollTop = div.scrollHeight; }); },
             sendJobMsg: async () => { const t = document.getElementById('job-msg-input').value; if(t) await addDoc(collection(db, "jobs", state.currentJob, "msgs"), { u: state.user, txt: t, ts: serverTimestamp() }); document.getElementById('job-msg-input').value = ""; },
             closeJobChat: () => { document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob = null; },
-            loadEctoTape: async () => { const admins=["user1234","user4321"]; const q = query(collection(db, "ectotape_vids"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); const feed = document.getElementById('video-feed'); feed.innerHTML = ""; snap.forEach(d => { const v = d.data(); feed.innerHTML += `<div class="card"><strong>${v.title}</strong><iframe width="100%" height="150" src="${v.url.replace('watch?v=','embed/')}" frameborder="0"></iframe></div>`; }); if(admins.includes(state.user.toLowerCase())) document.getElementById('upload-zone').classList.remove('hidden'); },
-            uploadVideo: async () => { await addDoc(collection(db, "ectotape_vids"), { title: document.getElementById('vid-title').value, url: document.getElementById('vid-url').value, uploader: state.user, ts: serverTimestamp() }); alert("UPLOADED"); app.loadEctoTape(); },
+
+            // =====================================================================
+            // FIX 2: Ectotape — loadEctoTape is now actually called via nav.to hook
+            // Also fixed YouTube URL regex to handle more URL formats
+            // =====================================================================
+            loadEctoTape: async () => {
+                const admins = ["user1234", "user4321"];
+                const feed = document.getElementById('video-feed');
+                feed.innerHTML = "<div style='color:#555; padding:10px;'>LOADING STREAM...</div>";
+                try {
+                    const q = query(collection(db, "ectotape_vids"), orderBy("ts", "desc"), limit(20));
+                    const snap = await getDocs(q);
+                    feed.innerHTML = "";
+                    if (snap.empty) { feed.innerHTML = "<div style='color:#555; padding:20px; text-align:center;'>NO BROADCASTS YET.</div>"; }
+                    snap.forEach(d => {
+                        const v = d.data();
+                        const embedUrl = app.getEmbedUrl(v.url);
+                        const videoHtml = embedUrl
+                            ? `<iframe width="100%" height="150" src="${embedUrl}" frameborder="0" allowfullscreen style="display:block; margin-top:5px;"></iframe>`
+                            : `<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`;
+                        feed.innerHTML += `<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="color:#555;">BY: ${v.uploader || '?'}</small>${videoHtml}</div>`;
+                    });
+                } catch(e) {
+                    feed.innerHTML = "<div style='color:red;'>ERROR LOADING STREAM: " + e.message + "</div>";
+                }
+                if(admins.includes(state.user.toLowerCase())) document.getElementById('upload-zone').classList.remove('hidden');
+            },
+            uploadVideo: async () => { 
+                const title = document.getElementById('vid-title').value.trim();
+                const url = document.getElementById('vid-url').value.trim();
+                if(!title || !url) return alert("TITLE AND URL REQUIRED");
+                await addDoc(collection(db, "ectotape_vids"), { title, url, uploader: state.user, ts: serverTimestamp() }); 
+                document.getElementById('vid-title').value = "";
+                document.getElementById('vid-url').value = "";
+                alert("BROADCAST UPLOADED"); 
+                app.loadEctoTape(); 
+            },
+
             createClanStart: () => { const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p) return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
             startSymbolEdit: () => { drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
             runSecurityScan: (type) => { const c=document.getElementById('soc-console'); c.innerHTML+=`<div>> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div>> COMPLETE. CLEAN.</div>`,1500); },
-            getEmbedUrl: (url) => { if(!url) return null; let vidId = url.split('v=')[1]; if(!vidId && url.indexOf('youtu.be/') > -1) vidId = url.split('youtu.be/')[1]; if(vidId) { const amp = vidId.indexOf('&'); if(amp != -1) vidId = vidId.substring(0, amp); return `https://www.youtube.com/embed/${vidId}`; } return null; }
+            getEmbedUrl: (url) => { 
+                if(!url) return null; 
+                let vidId = null;
+                // Handle youtu.be shortlinks
+                const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+                if(shortMatch) vidId = shortMatch[1];
+                // Handle youtube.com/watch?v=
+                const longMatch = url.match(/[?&]v=([^?&]+)/);
+                if(!vidId && longMatch) vidId = longMatch[1];
+                // Handle youtube.com/embed/ already
+                const embedMatch = url.match(/embed\/([^?&]+)/);
+                if(!vidId && embedMatch) vidId = embedMatch[1];
+                return vidId ? `https://www.youtube.com/embed/${vidId}` : null;
+            }
         };
 
-        // --- SOCIAL ---
+        // =====================================================================
+        // SOCIAL — FIX 3: Comments now use orderBy("ts", "asc") so chronological
+        // order is preserved and new docs with pending serverTimestamp() aren't
+        // silently excluded. Also added scrollTop after render and after submit.
+        // =====================================================================
         window.social = {
             tab: (t) => { document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-' + t).classList.remove('hidden'); if(t === 'posts') social.loadPosts(); if(t === 'polls') social.loadPolls(); },
             like: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); else { await updateDoc(ref, { likes: arrayUnion(state.user) }); if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
             dislike: async (id, type) => { const col = type === 'post' ? 'posts' : 'polls'; const ref = doc(db, col, id); const snap = await getDoc(ref); const d = snap.data(); const likes = d.likes || []; const dislikes = d.dislikes || []; if(dislikes.includes(state.user)) await updateDoc(ref, { dislikes: arrayRemove(state.user) }); else { await updateDoc(ref, { dislikes: arrayUnion(state.user) }); if(likes.includes(state.user)) await updateDoc(ref, { likes: arrayRemove(state.user) }); } type === 'post' ? social.loadPosts() : social.loadPolls(); },
-            openComments: (id, type) => { state.activeCommentId = id; state.activeCommentType = type; const col = type === 'post' ? 'posts' : 'polls'; document.getElementById('comment-overlay').classList.remove('hidden'); if(state.unsubComments) state.unsubComments(); const q = query(collection(db, col, id, "comments"), orderBy("ts", "desc")); state.unsubComments = onSnapshot(q, (snap) => { const div = document.getElementById('active-comment-list'); div.innerHTML = ""; if(snap.empty) div.innerHTML = "<div style='color:#555;'>No comments yet.</div>"; snap.forEach(d => { const c = d.data(); div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; }); }); },
-            closeComments: () => { document.getElementById('comment-overlay').classList.add('hidden'); if(state.unsubComments) { state.unsubComments(); state.unsubComments = null; } },
-            submitComment: async () => { const txt = document.getElementById('new-comment-input').value.trim(); if(!txt || !state.activeCommentId) return; const col = state.activeCommentType === 'post' ? 'posts' : 'polls'; await addDoc(collection(db, col, state.activeCommentId, "comments"), { u: state.user, txt: txt, ts: serverTimestamp() }); document.getElementById('new-comment-input').value = ""; },
+
+            openComments: (id, type) => {
+                state.activeCommentId = id;
+                state.activeCommentType = type;
+                const col = type === 'post' ? 'posts' : 'polls';
+                document.getElementById('comment-overlay').classList.remove('hidden');
+                document.getElementById('active-comment-list').innerHTML = "<div style='color:#555;'>Loading...</div>";
+
+                // Unsubscribe any previous listener
+                if(state.unsubComments) { state.unsubComments(); state.unsubComments = null; }
+
+                // FIX: Use "asc" so oldest-first display works correctly, and new
+                // documents with pending serverTimestamp() aren't skipped.
+                const q = query(collection(db, col, id, "comments"), orderBy("ts", "asc"));
+                state.unsubComments = onSnapshot(q, (snap) => {
+                    const div = document.getElementById('active-comment-list');
+                    div.innerHTML = "";
+                    if(snap.empty) {
+                        div.innerHTML = "<div style='color:#555; padding:10px;'>No comments yet. Be first!</div>";
+                        return;
+                    }
+                    snap.forEach(d => {
+                        const c = d.data();
+                        div.innerHTML += `<div class="comment-item"><strong style="color:var(--main-color);">${c.u}:</strong> ${c.txt}</div>`;
+                    });
+                    div.scrollTop = div.scrollHeight; // Always scroll to latest
+                });
+            },
+
+            closeComments: () => {
+                document.getElementById('comment-overlay').classList.add('hidden');
+                if(state.unsubComments) { state.unsubComments(); state.unsubComments = null; }
+                state.activeCommentId = null;
+                state.activeCommentType = null;
+            },
+
+            submitComment: async () => {
+                const txt = document.getElementById('new-comment-input').value.trim();
+                if(!txt || !state.activeCommentId) return;
+                const col = state.activeCommentType === 'post' ? 'posts' : 'polls';
+                // Disable button briefly to prevent double-post
+                const btn = document.querySelector('#comment-overlay button:last-child');
+                if(btn) btn.disabled = true;
+                await addDoc(collection(db, col, state.activeCommentId, "comments"), {
+                    u: state.user,
+                    txt: txt,
+                    ts: serverTimestamp()
+                });
+                document.getElementById('new-comment-input').value = "";
+                // The onSnapshot listener will automatically refresh the list
+                if(btn) btn.disabled = false;
+            },
+
             createPost: async () => { const txt = document.getElementById('post-content').value; const vid = document.getElementById('post-video').value; if(!txt) return; await addDoc(collection(db, "posts"), { u: state.user, txt: txt, video: vid || null, ts: serverTimestamp(), likes: [], dislikes: [] }); document.getElementById('post-content').value = ""; document.getElementById('post-video').value = ""; social.loadPosts(); },
-            loadPosts: async () => { const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED..."; const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; 
-                let vidHtml = ""; if(p.video) { const embed = app.getEmbedUrl(p.video); if(embed) vidHtml = `<iframe class="vid-embed" src="${embed}" allowfullscreen></iframe>`; }
-                div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div>${vidHtml}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`; }); },
+            loadPosts: async () => { const div = document.getElementById('feed-posts'); div.innerHTML = "LOADING FEED..."; const q = query(collection(db, "posts"), orderBy("ts", "desc"), limit(20)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let vidHtml = ""; if(p.video) { const embed = app.getEmbedUrl(p.video); if(embed) vidHtml = `<iframe class="vid-embed" src="${embed}" allowfullscreen></iframe>`; } div.innerHTML += `<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer; color:var(--main-color);">@${p.u}</span> <span>${p.ts ? new Date(p.ts.toDate()).toLocaleTimeString() : 'NOW'}</span></div><div>${p.txt}</div>${vidHtml}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'post')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'post')">COMMENTS</button></div></div>`; }); },
             createPoll: async () => { const q = document.getElementById('poll-q').value; const o1 = document.getElementById('poll-o1').value; const o2 = document.getElementById('poll-o2').value; const vid = document.getElementById('poll-video').value; if(!q || !o1 || !o2) return; await addDoc(collection(db, "polls"), { u: state.user, q: q, video: vid || null, opts: [{t: o1, v:0}, {t: o2, v:0}], voters: [], likes: [], dislikes: [], ts: serverTimestamp() }); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
-            loadPolls: async () => { const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS..."; const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let optsHTML = ""; p.opts.forEach((opt, idx) => { const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100); optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`; }); 
-                let vidHtml = ""; if(p.video) { const embed = app.getEmbedUrl(p.video); if(embed) vidHtml = `<iframe class="vid-embed" src="${embed}" allowfullscreen></iframe>`; }
-                div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${vidHtml}${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`; }); },
+            loadPolls: async () => { const div = document.getElementById('feed-polls'); div.innerHTML = "LOADING POLLS..."; const q = query(collection(db, "polls"), orderBy("ts", "desc"), limit(10)); const snap = await getDocs(q); div.innerHTML = ""; snap.forEach(d => { const p = d.data(); const likes = (p.likes || []).length; const dislikes = (p.dislikes || []).length; const userLiked = (p.likes || []).includes(state.user) ? "active-action" : ""; const userDisliked = (p.dislikes || []).includes(state.user) ? "active-action" : ""; let optsHTML = ""; p.opts.forEach((opt, idx) => { const total = p.opts.reduce((a,b)=>a+b.v,0) || 1; const pct = Math.round((opt.v / total) * 100); optsHTML += `<div style="margin-top:5px; cursor:pointer;" onclick="social.vote('${d.id}', ${idx})"><div style="display:flex; justify-content:space-between;"><span>${opt.t}</span> <span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`; }); let vidHtml = ""; if(p.video) { const embed = app.getEmbedUrl(p.video); if(embed) vidHtml = `<iframe class="vid-embed" src="${embed}" allowfullscreen></iframe>`; } div.innerHTML += `<div class="card"><div class="post-header"><span>POLL BY @${p.u}</span></div><strong>${p.q}</strong>${vidHtml}${optsHTML}<div class="social-actions"><button class="social-btn ${userLiked}" onclick="social.like('${d.id}', 'poll')">LIKE (${likes})</button><button class="social-btn ${userDisliked}" onclick="social.dislike('${d.id}', 'poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${d.id}', 'poll')">COMMENTS</button></div></div>`; }); },
             vote: async (id, optIdx) => { const ref = doc(db, "polls", id); const snap = await getDoc(ref); const d = snap.data(); if(d.voters.includes(state.user)) return alert("ALREADY VOTED"); d.opts[optIdx].v++; d.voters.push(state.user); await updateDoc(ref, { opts: d.opts, voters: d.voters }); social.loadPolls(); }
         };
 
-        // NEW: NEWS MODULE
         window.news = {
-            init: async () => {
-                 news.loadInternal();
-            },
+            init: async () => { news.loadInternal(); },
             post: async () => {
                 const h = document.getElementById('news-headline').value;
                 const l = document.getElementById('news-link-input').value;
@@ -1303,182 +1115,92 @@
                 d.innerHTML = "";
                 snap.forEach(doc => {
                     const n = doc.data();
-                    d.innerHTML += `<div style="border-bottom:1px solid #222; margin-bottom:5px; padding-bottom:5px;">
-                        <strong style="color:cyan;">${n.title}</strong>
-                        ${n.link ? `<br><a href="${n.link}" target="_blank" style="font-size:10px; color:#666;">[SOURCE LINK]</a>` : ''}
-                        <br><small style="color:#444;">REPORT: @${n.u}</small>
-                    </div>`;
+                    d.innerHTML += `<div style="border-bottom:1px solid #222; margin-bottom:5px; padding-bottom:5px;"><strong style="color:cyan;">${n.title}</strong>${n.link ? `<br><a href="${n.link}" target="_blank" style="font-size:10px; color:#666;">[SOURCE LINK]</a>` : ''}<br><small style="color:#444;">REPORT: @${n.u}</small></div>`;
                 });
+                if(snap.empty) d.innerHTML = "<div style='color:#555;'>No broadcasts yet.</div>";
             }
         };
 
-        // NEW: RADIO MODULE
         window.radio = {
-            interval: null,
-            noiseNode: null,
+            interval: null, noiseNode: null,
             init: () => {
-                const viz = document.getElementById('freq-viz');
-                viz.innerHTML = "";
-                for(let i=0; i<20; i++) {
-                    viz.innerHTML += `<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*50}px"></div>`;
-                }
+                const viz = document.getElementById('freq-viz'); viz.innerHTML = "";
+                for(let i=0; i<20; i++) viz.innerHTML += `<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*50}px"></div>`;
                 if(radio.interval) clearInterval(radio.interval);
                 radio.interval = setInterval(radio.anim, 100);
             },
-            anim: () => {
-                for(let i=0; i<20; i++) {
-                    document.getElementById(`fb-${i}`).style.height = (Math.random()*40 + 5) + "px";
-                }
-            },
-            scan: () => {
-                audioSys.playTone(800, 'sawtooth', 0.1);
-                let f = (400 + Math.random()*100).toFixed(4);
-                document.getElementById('radio-freq').innerText = f;
-            },
+            anim: () => { for(let i=0; i<20; i++) { const el = document.getElementById(`fb-${i}`); if(el) el.style.height = (Math.random()*40 + 5) + "px"; } },
+            scan: () => { audioSys.playTone(800, 'sawtooth', 0.1); document.getElementById('radio-freq').innerText = (400 + Math.random()*100).toFixed(4); },
             toggleNoise: () => {
-                if(radio.noiseNode) {
-                    radio.noiseNode.disconnect();
-                    radio.noiseNode = null;
-                    document.getElementById('btn-noise').style.background = "transparent";
-                    document.getElementById('btn-noise').style.color = "yellow";
-                } else {
-                    const ctx = audioSys.ctx;
-                    if(ctx.state==='suspended') ctx.resume();
-                    const bufferSize = 4096;
-                    const whiteNoise = ctx.createScriptProcessor(bufferSize, 1, 1);
-                    whiteNoise.onaudioprocess = function(e) {
-                        const output = e.outputBuffer.getChannelData(0);
-                        for (let i = 0; i < bufferSize; i++) {
-                            output[i] = Math.random() * 0.1 - 0.05; // Low volume static
-                        }
-                    };
-                    whiteNoise.connect(ctx.destination);
-                    radio.noiseNode = whiteNoise;
-                    document.getElementById('btn-noise').style.background = "yellow";
-                    document.getElementById('btn-noise').style.color = "black";
+                if(radio.noiseNode) { radio.noiseNode.disconnect(); radio.noiseNode = null; document.getElementById('btn-noise').style.cssText = "color:yellow;"; }
+                else {
+                    const ctx = audioSys.ctx; if(ctx.state==='suspended') ctx.resume();
+                    const bufferSize = 4096; const whiteNoise = ctx.createScriptProcessor(bufferSize, 1, 1);
+                    whiteNoise.onaudioprocess = (e) => { const out = e.outputBuffer.getChannelData(0); for(let i=0;i<bufferSize;i++) out[i] = Math.random()*0.1-0.05; };
+                    whiteNoise.connect(ctx.destination); radio.noiseNode = whiteNoise;
+                    document.getElementById('btn-noise').style.cssText = "background:yellow; color:black;";
                 }
             }
         };
 
         window.cockpit = {
-            running: false,
-            ctx: null,
-            canvas: null,
-            gain: 50,
-            rate: 30,
-            currentDevices: [],
-            currentRemote: null,
-            init: () => {
-                cockpit.canvas = document.getElementById('cockpit-canvas');
-                cockpit.ctx = cockpit.canvas.getContext('2d');
-                cockpit.running = true;
-                cockpit.animate();
-                cockpit.detectLocalIP(); 
-            },
-            toggle: (el) => {
-                el.classList.toggle('toggle-active');
-                audioSys.playTone(600, 'square', 0.05);
-            },
+            running: false, ctx: null, canvas: null, gain: 50, rate: 30, currentDevices: [], currentRemote: null,
+            init: () => { cockpit.canvas = document.getElementById('cockpit-canvas'); cockpit.ctx = cockpit.canvas.getContext('2d'); cockpit.running = true; cockpit.animate(); cockpit.detectLocalIP(); },
+            toggle: (el) => { el.classList.toggle('toggle-active'); audioSys.playTone(600, 'square', 0.05); },
             updateGain: (v) => cockpit.gain = v,
             updateRate: (v) => cockpit.rate = v,
-            log: (txt) => {
-                const l = document.getElementById('cockpit-log');
-                l.innerHTML += `<div class="term-line" style="color:#${Math.floor(Math.random()*999)}">${txt}</div>`;
-                l.scrollTop = l.scrollHeight;
-            },
+            log: (txt) => { const l = document.getElementById('cockpit-log'); l.innerHTML += `<div class="term-line">${txt}</div>`; l.scrollTop = l.scrollHeight; },
             runAction: (action) => {
                 audioSys.playTone(200, 'sawtooth', 0.1);
                 const t = document.getElementById('cockpit-target').value;
                 const p = document.getElementById('cockpit-proto').value;
                 const led = event.currentTarget.querySelector('.led');
                 led.classList.add('on');
-                
                 cockpit.log(`>> EXEC: ${action} ON ${t} (${p})...`);
-                
                 setTimeout(() => {
                     if(action === 'PING_SWEEP') cockpit.log(`>> REPLY FROM ${t}: BYTES=32 TIME=${Math.floor(Math.random()*50)}ms TTL=54`);
                     else if(action === 'PORT_SCAN') cockpit.log(`>> PORT ${Math.floor(Math.random()*65535)} [OPEN] SERVICE: UNKNOWN`);
                     else if(action === 'BRUTE_FORCE') cockpit.log(`>> TRYING CREDENTIALS... [FAIL]`);
-                    else if(action === 'EXECUTE_PAYLOAD') {
-                          cockpit.log(`>> UPLOADING BINARY... [||||||||||] 100%`);
-                          cockpit.log(`>> <span style="background:var(--warn-color); color:black">ROOT ACCESS GRANTED</span>`);
-                          audioSys.playTone(1000, 'square', 0.5);
-                    }
+                    else if(action === 'EXECUTE_PAYLOAD') { cockpit.log(`>> UPLOADING BINARY... [||||||||||] 100%`); cockpit.log(`>> <span style="background:var(--warn-color); color:black">ROOT ACCESS GRANTED</span>`); audioSys.playTone(1000, 'square', 0.5); }
                     else cockpit.log(`>> PROCESS COMPLETE. DATA LOGGED.`);
-                    
                     setTimeout(() => led.classList.remove('on'), 200);
                 }, 1000 + Math.random() * 2000);
             },
             detectLocalIP: () => {
                 const rtc = new RTCPeerConnection({ iceServers: [] });
-                rtc.createDataChannel('');
-                rtc.createOffer().then(offer => rtc.setLocalDescription(offer));
-                rtc.onicecandidate = (e) => {
-                    if (e.candidate) {
-                        const ip = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate)?.[1];
-                        if (ip && !ip.startsWith('192.168') && !ip.startsWith('10.') && !ip.startsWith('172.')) return;
-                        cockpit.log(`>> LOCAL IP DETECTED: ${ip || 'UNABLE'} (BROWSER LIMIT)`);
-                    }
-                };
+                rtc.createDataChannel(''); rtc.createOffer().then(offer => rtc.setLocalDescription(offer));
+                rtc.onicecandidate = (e) => { if(e.candidate) { const ip = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate)?.[1]; if(ip) cockpit.log(`>> LOCAL IP DETECTED: ${ip}`); } };
                 setTimeout(() => rtc.close(), 1000);
             },
             scanNetwork: () => {
-                cockpit.log(`>> INITIATING LAN DISCOVERY... (SIM + WEBRTC EDU MODE)`);
+                cockpit.log(`>> INITIATING LAN DISCOVERY...`);
                 audioSys.playTone(400, 'sawtooth', 0.2);
-                const progress = document.getElementById('scan-progress-fill');
-                let prog = 0;
-                const interval = setInterval(() => {
-                    prog += Math.random() * 10;
-                    if (prog > 100) prog = 100;
-                    progress.style.width = prog + '%';
-                }, 100);
-
+                const progress = document.getElementById('scan-progress-fill'); let prog = 0;
+                const interval = setInterval(() => { prog += Math.random()*10; if(prog>100) prog=100; progress.style.width = prog+'%'; }, 100);
                 setTimeout(() => {
-                    clearInterval(interval);
-                    progress.style.width = '100%';
+                    clearInterval(interval); progress.style.width = '100%';
                     cockpit.currentDevices = [
                         { ip: '192.168.1.1', mac: '00:11:22:33:44:55', os: 'Router (Firmware v2.1)', ports: '80(open), 443(open), 22(closed)', vuln: 'Low', type: 'Router' },
                         { ip: '192.168.1.10', mac: 'AA:BB:CC:DD:EE:FF', os: 'Windows 10', ports: '3389(open), 445(open)', vuln: 'Medium', type: 'PC' },
                         { ip: '192.168.1.15', mac: '11:22:33:44:55:66', os: 'iOS 17 (iPhone)', ports: '5353(open)', vuln: 'Low', type: 'Mobile' },
                         { ip: '192.168.1.20', mac: 'FF:EE:DD:CC:BB:AA', os: 'Linux Ubuntu 22.04', ports: '22(open), 80(closed)', vuln: 'High', type: 'Server' },
-                        { ip: '192.168.1.50', mac: '77:88:99:00:11:22', os: 'Nintendo Wii (v4.3)', ports: '80(open)', vuln: 'High', type: 'Console' }, 
+                        { ip: '192.168.1.50', mac: '77:88:99:00:11:22', os: 'Nintendo Wii (v4.3)', ports: '80(open)', vuln: 'High', type: 'Console' },
                         { ip: '192.168.1.100', mac: '33:44:55:66:77:88', os: 'Smart TV (Android)', ports: '8080(open)', vuln: 'Medium', type: 'IoT' }
                     ];
                     const resultsDiv = document.getElementById('scan-results');
-                    resultsDiv.innerHTML = '<div style="color: cyan; font-weight: bold;">DISCOVERED DEVICES (SIMULATED - 6 FOUND):</div>';
+                    resultsDiv.innerHTML = '<div style="color: cyan; font-weight: bold; margin-bottom:5px;">DISCOVERED DEVICES (SIM - 6 FOUND):</div>';
                     cockpit.currentDevices.forEach(device => {
-                        resultsDiv.innerHTML += `
-                            <div class="device-card" onclick="cockpit.showDeviceDetails('${device.ip}')">
-                                <div class="device-info">
-                                    <span>IP: ${device.ip} | Type: ${device.type}</span>
-                                    <span>MAC: ${device.mac} | OS: ${device.os}</span>
-                                    <span>Ports: ${device.ports}</span>
-                                    <span>Vuln: <span style="color: ${device.vuln === 'High' ? 'red' : device.vuln === 'Medium' ? 'orange' : 'green'}">${device.vuln}</span></span>
-                                </div>
-                            </div>
-                        `;
+                        resultsDiv.innerHTML += `<div class="device-card" onclick="cockpit.showDeviceDetails('${device.ip}')"><div class="device-info"><span>IP: ${device.ip} | Type: ${device.type}</span><span>MAC: ${device.mac} | OS: ${device.os}</span><span>Ports: ${device.ports}</span><span>Vuln: <span style="color: ${device.vuln==='High'?'red':device.vuln==='Medium'?'orange':'green'}">${device.vuln}</span></span></div></div>`;
                     });
                     document.getElementById('network-scan-panel').classList.remove('hidden');
-                    cockpit.log(`>> SCAN COMPLETE: ${cockpit.currentDevices.length} DEVICES. CLICK FOR DETAILS. REAL: nmap -sn 192.168.1.0/24`);
+                    cockpit.log(`>> SCAN COMPLETE: ${cockpit.currentDevices.length} DEVICES FOUND`);
                 }, 3000);
             },
             showDeviceDetails: (ip) => {
                 const device = cockpit.currentDevices.find(d => d.ip === ip);
-                if (!device) return;
+                if(!device) return;
                 document.getElementById('remote-title').innerText = `DETAILS: ${device.ip} (${device.type})`;
-                let content = `<div style="font-size: 11px;">`;
-                content += `<strong>OS:</strong> ${device.os}<br>`;
-                content += `<strong>Open Ports:</strong> ${device.ports}<br>`;
-                content += `<strong>Vulnerability:</strong> ${device.vuln} - ${device.vuln === 'High' ? 'Patch now! (e.g., Update firmware)' : 'Monitor.'}<br><br>`;
-                if (device.type === 'Console' && device.os.includes('Wii')) {
-                    content += `<strong>EDU TIP (Wii Hack):</strong> For homebrew, use LetterBomb exploit. <a href="https://wii.hacks.guide/" target="_blank" style="color: cyan;">Full Guide</a><br>`;
-                }
-                content += `<div style="margin-top: 10px;">`;
-                content += `<button onclick="cockpit.remoteInto('${ip}')" style="font-size: 10px; padding: 5px; margin: 2px;">REMOTE ACCESS (SIM)</button>`;
-                content += `<button onclick="cockpit.showStats('${ip}')" style="font-size: 10px; padding: 5px; margin: 2px;">STATS</button>`;
-                content += `<button class="hack-btn" onclick="cockpit.hackDevice('${ip}', '${device.vuln}')" style="font-size: 10px; padding: 5px; margin: 2px;">HACK/DEFEND (SIM)</button>`;
-                content += `</div>`;
-                content += `</div>`;
+                let content = `<div style="font-size: 11px;"><strong>OS:</strong> ${device.os}<br><strong>Open Ports:</strong> ${device.ports}<br><strong>Vulnerability:</strong> ${device.vuln}<br><br><button onclick="cockpit.remoteInto('${ip}')" style="font-size:10px;padding:5px;margin:2px;">REMOTE ACCESS (SIM)</button><button onclick="cockpit.hackDevice('${ip}','${device.vuln}')" style="font-size:10px;padding:5px;margin:2px;background:red;color:white;">HACK/DEFEND (SIM)</button></div>`;
                 document.getElementById('remote-content').innerHTML = content;
                 document.getElementById('remote-access-overlay').classList.remove('hidden');
                 audioSys.playTone(500, 'square', 0.1);
@@ -1486,112 +1208,50 @@
             remoteInto: (ip) => {
                 const device = cockpit.currentDevices.find(d => d.ip === ip);
                 cockpit.currentRemote = ip;
-                let gui = `<h4 style="color: var(--warn-color);">REMOTE GUI: ${device.os} (${ip}) - SIM VIEW</h4>`;
-                if (device.type === 'PC') gui += `<iframe class="remote-iframe" src="https://www.remotelysave.com/demoviewer.php" title="RDP Sim"></iframe><p style="font-size: 9px;">(Sim RDP - Real: Use RDP/VNC with VPN)</p>`;
-                else if (device.type === 'Console') gui += `<div style="background: #111; padding: 20px; text-align: center; color: #ff6b35;"><h5>Wii Dashboard Sim</h5><p>Menu > Settings > Exploit LetterBomb for Homebrew</p><button onclick="alert('SIM: Homebrew Installed! Real: Follow wii.hacks.guide')" style="background: #ff6b35; color: black; padding: 5px;">INSTALL HOMEBREW</button></div>`;
-                else gui += `<div style="height: 300px; background: #000; color: #888; display: flex; align-items: center; justify-content: center;">Device GUI Sim - ${device.type} Dashboard<br><small>(Real: SSH/Telnet if enabled)</small></div>`;
+                let gui = `<h4 style="color: var(--warn-color);">REMOTE GUI: ${device.os} (${ip}) - SIM</h4>`;
+                if(device.type === 'PC') gui += `<p style="color:#888;">(Sim RDP - Real: Use RDP/VNC with VPN)</p>`;
+                else if(device.type === 'Console') gui += `<div style="background:#111;padding:20px;text-align:center;color:#ff6b35;"><h5>Wii Dashboard Sim</h5><button onclick="alert('SIM: Homebrew Installed!')" style="background:#ff6b35;color:black;padding:5px;">INSTALL HOMEBREW (SIM)</button></div>`;
+                else gui += `<div style="height:200px;background:#000;color:#888;display:flex;align-items:center;justify-content:center;">Device GUI Sim - ${device.type}</div>`;
                 document.getElementById('remote-content').innerHTML = gui;
                 audioSys.playTone(800, 'sine', 0.3);
             },
-            closeRemote: () => {
-                document.getElementById('remote-access-overlay').classList.add('hidden');
-                cockpit.currentRemote = null;
-            },
-            showStats: (ip) => {
-                const device = cockpit.currentDevices.find(d => d.ip === ip);
-                cockpit.log(`>> STATS ${ip}: ${device.os} | VULN: ${device.vuln} | TIP: ${device.vuln === 'High' ? 'Close ports/ update - e.g., Wii: Use official exploits only' : 'Secure'}`);
-                if (device.vuln === 'High') setTimeout(() => alert(`EDU: Fix ${ip} - Search 'secure ${device.type.toLowerCase()}'`), 500);
-            },
+            closeRemote: () => { document.getElementById('remote-access-overlay').classList.add('hidden'); cockpit.currentRemote = null; },
             hackDevice: (ip, vuln) => {
                 cockpit.log(`>> SIM HACK/DEFEND ${ip} (${vuln}):`);
                 setTimeout(() => {
-                    if (vuln === 'Low') cockpit.log(`>> DEFEND: Patched. No breach.`);
-                    else if (vuln === 'Medium') cockpit.log(`>> PARTIAL: Fixed port. Run updates.`);
-                    else cockpit.log(`>> BREACH SIM: Access granted. DEFEND: Change defaults. Wii? Use ethical homebrew.`);
-                    cockpit.log(`>> ETHICAL END: Learn via guides.`);
+                    if(vuln==='Low') cockpit.log(`>> DEFEND: Patched. No breach.`);
+                    else if(vuln==='Medium') cockpit.log(`>> PARTIAL: Fixed port. Run updates.`);
+                    else cockpit.log(`>> BREACH SIM: DEFEND: Change defaults, update firmware.`);
                 }, 1000);
                 audioSys.playTone(300, 'sawtooth', 0.2);
             },
             animate: () => {
                 if(!cockpit.running || document.getElementById('screen-cockpit').classList.contains('hidden')) return;
-                
-                const w = cockpit.canvas.width;
-                const h = cockpit.canvas.height;
-                const ctx = cockpit.ctx;
-                
-                ctx.fillStyle = 'rgba(0,0,0,0.1)';
-                ctx.fillRect(0, 0, w, h);
-                
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = `rgba(255, 170, 0, ${cockpit.gain / 100})`;
-                ctx.beginPath();
-                
-                for(let i=0; i<w; i+=5) {
-                    const y = h/2 + Math.sin(i * 0.05 + Date.now() * (cockpit.rate * 0.001)) * (h/3);
-                    ctx.lineTo(i, y);
-                }
+                const w = cockpit.canvas.width; const h = cockpit.canvas.height; const ctx = cockpit.ctx;
+                ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fillRect(0,0,w,h);
+                ctx.lineWidth = 2; ctx.strokeStyle = `rgba(255,170,0,${cockpit.gain/100})`; ctx.beginPath();
+                for(let i=0;i<w;i+=5) { const y = h/2 + Math.sin(i*0.05 + Date.now()*(cockpit.rate*0.001))*(h/3); ctx.lineTo(i,y); }
                 ctx.stroke();
-                
-                if(Math.random() > 0.8) {
-                   document.getElementById('visual-text').innerText = "HEX_DUMP: " + Math.random().toString(16).substr(2, 8).toUpperCase(); 
-                }
-                
+                if(Math.random()>0.8) document.getElementById('visual-text').innerText = "HEX_DUMP: " + Math.random().toString(16).substr(2,8).toUpperCase();
                 requestAnimationFrame(cockpit.animate);
             }
         };
 
         window.drawing = { canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing: false, mode: 'create', init: () => { drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle='#00FF00'; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; }, clear: () => drawing.ctx.clearRect(0,0,300,300), cancel: () => nav.to('hub'), save: async () => { const char = drawing.letters[drawing.idx]; drawing.tempData.syms[char] = drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx < drawing.letters.length) { drawing.clear(); document.getElementById('draw-title').innerText = "DRAW: " + drawing.letters[drawing.idx]; } else { loading(true); if(drawing.mode === 'create') { await setDoc(doc(db, "clans", drawing.tempData.name), { pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: { [state.user]: 'leader' } }); await updateDoc(doc(db, "users", state.user), { clan: drawing.tempData.name }); } else if (drawing.mode === 'edit') { await updateDoc(doc(db, "clans", state.clan), { symbols: drawing.tempData.syms }); } loading(false); nav.to('hub'); } } }; drawing.init();
-        window.kali = { toggleMenu: () => document.getElementById('kali-menu').classList.toggle('hidden'), dragTarget: null, offsetX: 0, offsetY: 0, vars: {}, openApp: (app) => { const con = document.getElementById('py-console'); con.innerHTML += `\n<span class="term-info">root@kali:~# start ${app}</span>\n`; setTimeout(() => con.scrollTop = con.scrollHeight, 100); }, handleInput: (e) => { if(e.key === 'Enter') { const inp = document.getElementById('py-input'); const cmd = inp.value.trim(); const con = document.getElementById('py-console'); con.innerHTML += `\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value = ""; con.scrollTop = con.scrollHeight; audioSys.playTone(600, 'sine', 0.1); } else { audioSys.playTone(800, 'sine', 0.05); } }, startDrag: (e, id) => { kali.dragTarget = document.getElementById(id); const rect = kali.dragTarget.getBoundingClientRect(); kali.offsetX = e.clientX - rect.left; kali.offsetY = e.clientY - rect.top; }, drag: (e) => { if(kali.dragTarget) { kali.dragTarget.style.left = (e.clientX - kali.offsetX) + 'px'; kali.dragTarget.style.top = (e.clientY - kali.offsetY) + 'px'; } }, stopDrag: () => { kali.dragTarget = null; } };
+        window.kali = { dragTarget: null, offsetX: 0, offsetY: 0, openApp: (a) => { const con = document.getElementById('py-console'); con.innerHTML += `\n<span class="term-info">root@kali:~# start ${a}</span>\n`; setTimeout(() => con.scrollTop = con.scrollHeight, 100); }, handleInput: (e) => { if(e.key === 'Enter') { const inp = document.getElementById('py-input'); const cmd = inp.value.trim(); const con = document.getElementById('py-console'); con.innerHTML += `\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value = ""; con.scrollTop = con.scrollHeight; audioSys.playTone(600, 'sine', 0.1); } else { audioSys.playTone(800, 'sine', 0.05); } }, startDrag: (e, id) => { kali.dragTarget = document.getElementById(id); const rect = kali.dragTarget.getBoundingClientRect(); kali.offsetX = e.clientX - rect.left; kali.offsetY = e.clientY - rect.top; }, drag: (e) => { if(kali.dragTarget) { kali.dragTarget.style.left = (e.clientX - kali.offsetX) + 'px'; kali.dragTarget.style.top = (e.clientY - kali.offsetY) + 'px'; } }, stopDrag: () => { kali.dragTarget = null; } };
         
         window.settings = {
-            apply: () => {
-                const r = document.documentElement.style;
-                const getVal = (id) => document.getElementById(id).value;
-                r.setProperty('--bg-color', getVal('col-bg'));
-                r.setProperty('--main-color', getVal('col-main'));
-                r.setProperty('--dim-color', getVal('col-dim'));
-                r.setProperty('--warn-color', getVal('col-warn'));
-                r.setProperty('--rep-good', getVal('col-r-good'));
-                r.setProperty('--rep-watch', getVal('col-r-watch'));
-                r.setProperty('--rep-black', getVal('col-r-bad'));
-                const vals = { bg: getVal('col-bg'), main: getVal('col-main'), dim: getVal('col-dim'), warn: getVal('col-warn'), rGood: getVal('col-r-good'), rWatch: getVal('col-r-watch'), rBad: getVal('col-r-bad') };
-                localStorage.setItem('clanNetSettings', JSON.stringify(vals));
-            },
-            load: () => {
-                const s = localStorage.getItem('clanNetSettings');
-                if(s) {
-                    const v = JSON.parse(s);
-                    document.getElementById('col-bg').value = v.bg || "#000000";
-                    document.getElementById('col-main').value = v.main || "#00FF00";
-                    document.getElementById('col-dim').value = v.dim || "#004400";
-                    document.getElementById('col-warn').value = v.warn || "#FFAA00";
-                    document.getElementById('col-r-good').value = v.rGood || "#00FF00";
-                    document.getElementById('col-r-watch').value = v.rWatch || "#D000FF";
-                    document.getElementById('col-r-bad').value = v.rBad || "#FF0000";
-                    const r = document.documentElement.style;
-                    r.setProperty('--bg-color', v.bg); r.setProperty('--main-color', v.main);
-                    r.setProperty('--dim-color', v.dim); r.setProperty('--warn-color', v.warn);
-                    r.setProperty('--rep-good', v.rGood); r.setProperty('--rep-watch', v.rWatch);
-                    r.setProperty('--rep-black', v.rBad);
-                }
-            },
-            reset: () => {
-                if(!confirm("RESET?")) return;
-                localStorage.removeItem('clanNetSettings');
-                document.getElementById('col-bg').value = "#000000"; document.getElementById('col-main').value = "#00FF00";
-                document.getElementById('col-dim').value = "#004400"; document.getElementById('col-warn').value = "#FFAA00";
-                document.getElementById('col-r-good').value = "#00FF00"; document.getElementById('col-r-watch').value = "#D000FF";
-                document.getElementById('col-r-bad').value = "#FF0000";
-                settings.apply();
-            }
+            apply: () => { const r = document.documentElement.style; const getVal = (id) => document.getElementById(id).value; r.setProperty('--bg-color', getVal('col-bg')); r.setProperty('--main-color', getVal('col-main')); r.setProperty('--dim-color', getVal('col-dim')); r.setProperty('--warn-color', getVal('col-warn')); r.setProperty('--rep-good', getVal('col-r-good')); r.setProperty('--rep-watch', getVal('col-r-watch')); r.setProperty('--rep-black', getVal('col-r-bad')); const vals = { bg: getVal('col-bg'), main: getVal('col-main'), dim: getVal('col-dim'), warn: getVal('col-warn'), rGood: getVal('col-r-good'), rWatch: getVal('col-r-watch'), rBad: getVal('col-r-bad') }; localStorage.setItem('clanNetSettings', JSON.stringify(vals)); },
+            load: () => { const s = localStorage.getItem('clanNetSettings'); if(s) { const v = JSON.parse(s); document.getElementById('col-bg').value = v.bg||"#000000"; document.getElementById('col-main').value = v.main||"#00FF00"; document.getElementById('col-dim').value = v.dim||"#004400"; document.getElementById('col-warn').value = v.warn||"#FFAA00"; document.getElementById('col-r-good').value = v.rGood||"#00FF00"; document.getElementById('col-r-watch').value = v.rWatch||"#D000FF"; document.getElementById('col-r-bad').value = v.rBad||"#FF0000"; const r = document.documentElement.style; r.setProperty('--bg-color', v.bg); r.setProperty('--main-color', v.main); r.setProperty('--dim-color', v.dim); r.setProperty('--warn-color', v.warn); r.setProperty('--rep-good', v.rGood); r.setProperty('--rep-watch', v.rWatch); r.setProperty('--rep-black', v.rBad); } },
+            reset: () => { if(!confirm("RESET?")) return; localStorage.removeItem('clanNetSettings'); document.getElementById('col-bg').value="#000000"; document.getElementById('col-main').value="#00FF00"; document.getElementById('col-dim').value="#004400"; document.getElementById('col-warn').value="#FFAA00"; document.getElementById('col-r-good').value="#00FF00"; document.getElementById('col-r-watch').value="#D000FF"; document.getElementById('col-r-bad').value="#FF0000"; settings.apply(); }
         };
 
         document.addEventListener('keydown', (e) => {
-             if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 if(e.key === 'Enter') audioSys.playTone(400, 'square', 0.1);
                 else if(e.key === 'Backspace') audioSys.playTone(300, 'sawtooth', 0.1);
                 else audioSys.playTone(800, 'sine', 0.05);
-             }
+            }
         });
         
         settings.load();
