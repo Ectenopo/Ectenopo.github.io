@@ -409,6 +409,8 @@
             position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.97); z-index: 9000;
             display: flex; justify-content: center; align-items: center;
+            z-index: 30000 !important; /* Higher than the Kali and Clan alerts */
+            pointer-events: all; 
         }
 
         /* ============================================================
@@ -1455,21 +1457,41 @@ listenToVoiceUsers: ()=>{
         like: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const ref=doc(db,col,id); const snap=await getDoc(ref); const d=snap.data(); const likes=d.likes||[]; const dislikes=d.dislikes||[]; if(likes.includes(state.user))await updateDoc(ref,{likes:arrayRemove(state.user)});else{await updateDoc(ref,{likes:arrayUnion(state.user)});if(dislikes.includes(state.user))await updateDoc(ref,{dislikes:arrayRemove(state.user)});} type==='post'?social.loadPosts():social.loadPolls(); },
         dislike: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const ref=doc(db,col,id); const snap=await getDoc(ref); const d=snap.data(); const likes=d.likes||[]; const dislikes=d.dislikes||[]; if(dislikes.includes(state.user))await updateDoc(ref,{dislikes:arrayRemove(state.user)});else{await updateDoc(ref,{dislikes:arrayUnion(state.user)});if(likes.includes(state.user))await updateDoc(ref,{likes:arrayRemove(state.user)});} type==='post'?social.loadPosts():social.loadPolls(); },
 
-        openComments: (id, type)=>{
-            state.activeCommentId=id; state.activeCommentType=type;
-            const col=type==='post'?'posts':'polls';
-            document.getElementById('comment-overlay').classList.remove('hidden');
-            document.getElementById('active-comment-list').innerHTML="<div style='opacity:0.4;'>Loading...</div>";
-            if(state.unsubComments){state.unsubComments();state.unsubComments=null;}
-            const q=query(collection(db,col,id,"comments"),orderBy("ts","asc"));
-            state.unsubComments=onSnapshot(q,(snap)=>{
-                const div=document.getElementById('active-comment-list'); div.innerHTML="";
-                if(snap.empty){div.innerHTML="<div style='opacity:0.4;padding:10px;'>No comments yet. Be first!</div>";return;}
-                snap.forEach(d=>{ const c=d.data(); div.innerHTML+=`<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`; });
-                div.scrollTop=div.scrollHeight;
+        openComments: (id, type) => {
+            state.activeCommentId = id;
+            state.activeCommentType = type;
+            const col = type === 'post' ? 'posts' : 'polls';
+            
+            // 1. Force show the overlay
+            const overlay = document.getElementById('comment-overlay');
+            overlay.classList.remove('hidden'); 
+            
+            // 2. Clear previous list and show loading
+            const div = document.getElementById('active-comment-list');
+            div.innerHTML = "<div style='opacity:0.4;'>>> ACCESSING ENCRYPTED THREAD...</div>";
+        
+            // 3. Setup the real-time listener
+            if (state.unsubComments) { state.unsubComments(); }
+            const q = query(collection(db, col, id, "comments"), orderBy("ts", "asc"));
+            state.unsubComments = onSnapshot(q, (snap) => {
+                div.innerHTML = "";
+                if (snap.empty) {
+                    div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>";
+                    return;
+                }
+                snap.forEach(d => {
+                    const c = d.data();
+                    div.innerHTML += `<div class="comment-item"><strong>${c.u}:</strong> ${c.txt}</div>`;
+                });
+                div.scrollTop = div.scrollHeight;
             });
         },
-        closeComments: ()=>{ document.getElementById('comment-overlay').classList.add('hidden'); if(state.unsubComments){state.unsubComments();state.unsubComments=null;} state.activeCommentId=null; state.activeCommentType=null; },
+        closeComments: () => {
+            document.getElementById('comment-overlay').classList.add('hidden');
+            if (state.unsubComments) { state.unsubComments(); state.unsubComments = null; }
+            state.activeCommentId = null;
+            state.activeCommentType = null;
+        },
         submitComment: async()=>{
             const txt=document.getElementById('new-comment-input').value.trim(); if(!txt||!state.activeCommentId)return;
             const col=state.activeCommentType==='post'?'posts':'polls';
@@ -1747,4 +1769,5 @@ listenToVoiceUsers: ()=>{
 </script>
 </body>
 </html>
+
 
