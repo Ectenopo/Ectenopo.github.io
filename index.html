@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLAN_NET // SYSTEM_V3.1</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4002392683798426" crossorigin="anonymous"></script>
     <style>
         /* ============================================================
            THE CONSTRUCT DESIGN SYSTEM
@@ -481,6 +482,9 @@
     <input type="password" id="auth-pass" placeholder="PASSWORD">
     <button onclick="app.login()">AUTHENTICATE</button>
     <button onclick="app.register()" style="border-style:dashed;opacity:0.65;">REGISTER IDENTITY</button>
+    <div class="ad-wrapper" style="margin-top:20px; border:1px dashed currentColor; padding:5px;">
+        <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
+    </div>
 </div>
 
 <div id="screen-emergency" class="screen hidden" style="border-color:var(--err-color);box-shadow:0 0 28px var(--err-color);color:var(--err-color);">
@@ -1104,6 +1108,13 @@
             document.getElementById('screen-kali').classList.add('hidden');
             if(id==='kali') document.getElementById('screen-kali').classList.remove('hidden');
             else document.getElementById('screen-'+id).classList.remove('hidden');
+            if(id === 'auth' || id === 'social') {
+                try {
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                } catch (e) {
+                    console.log("AdSense update pending...");
+                }
+            }
             if(id==='hub')      app.initHub();
             if(id==='jobs')     app.loadJobs();
             if(id==='social')   social.loadPosts();
@@ -1921,4 +1932,5 @@
 </script>
 </body>
 </html>
+
 
