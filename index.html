@@ -1133,20 +1133,64 @@
         globalHeartbeat: null, globalChatUnsub: null, userUnsub: null,
 
         login: async () => {
-            const u=document.getElementById('auth-user').value.trim(); const p=document.getElementById('auth-pass').value.trim();
-            if(!u||!p) return; loading(true);
-            const { data } = await supabase.from('users').select('*').eq('id', u).maybeSingle();
+            const u=document.getElementById('auth-user').value.trim(); 
+            const p=document.getElementById('auth-pass').value.trim();
+            if(!u||!p) return; 
+            loading(true);
+            
+            // Grab the user data and check for database errors
+            const { data, error } = await supabase.from('users').select('*').eq('id', u).maybeSingle();
             loading(false);
-            if(data && data.pass===p){ state.user=u; app.startHeartbeat(); nav.to('hub'); } else alert("INVALID");
+            
+            if (error) {
+                alert("DATABASE ERROR: " + error.message);
+                return;
+            }
+            
+            if(data && data.pass===p){ 
+                state.user=u; 
+                app.startHeartbeat(); // Start the heartbeat ONLY after successful login
+                nav.to('hub'); 
+            } else {
+                alert("INVALID CREDENTIALS");
+            }
         },
 
         register: async () => {
-            const u=document.getElementById('auth-user').value.trim(); const p=document.getElementById('auth-pass').value.trim();
-            if(!u||!p) return; loading(true);
-            const { data } = await supabase.from('users').select('*').eq('id', u).maybeSingle();
-            if(data){loading(false);return alert("TAKEN");}
-            await supabase.from('users').insert({id: u, pass: p, clan: null, rep: 0, displayName: u, verified: false, pfp: "", private: false, lastSeen: dbHelper.serverTimestamp()});
-            loading(false); alert("REGISTERED. YOU MAY NOW AUTHENTICATE.");
+            const u=document.getElementById('auth-user').value.trim(); 
+            const p=document.getElementById('auth-pass').value.trim();
+            if(!u||!p) return; 
+            loading(true);
+            
+            // Check if user exists
+            const { data: existingUser } = await supabase.from('users').select('*').eq('id', u).maybeSingle();
+            
+            if(existingUser){
+                loading(false);
+                return alert("USERNAME ALREADY TAKEN");
+            }
+            
+            // Attempt to insert the new user
+            const { error } = await supabase.from('users').insert({
+                id: u, 
+                pass: p, 
+                clan: null, 
+                rep: 0, 
+                displayName: u, 
+                verified: false, 
+                pfp: "", 
+                private: false, 
+                lastSeen: dbHelper.serverTimestamp()
+            });
+            
+            loading(false); 
+            
+            if (error) {
+                // If this pops up, we will know exactly why Supabase rejected it!
+                alert("REGISTRATION FAILED: " + error.message);
+            } else {
+                alert("REGISTERED. YOU MAY NOW AUTHENTICATE.");
+            }
         },
 
         getBadge: (username) => {
@@ -1877,3 +1921,4 @@
 </script>
 </body>
 </html>
+
