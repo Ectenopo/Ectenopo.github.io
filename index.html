@@ -706,7 +706,7 @@
      COMMENT OVERLAY
      ================================================================ -->
 <div id="comment-overlay" class="hidden">
-    <div class="screen" style="width:90%;height:82%;display:flex;flex-direction:column;margin:0;">
+    <div class="screen shown" style="width:90%;height:82%;display:flex;flex-direction:column;margin:0;">
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid currentColor;padding-bottom:10px;margin-bottom:10px;">
             <h3 style="margin:0;border:none;padding:0;">// COMMENTS_THREAD</h3>
             <button onclick="social.closeComments()" class="warn" style="width:auto;padding:4px 12px;margin:0;">CLOSE [X]</button>
@@ -1458,6 +1458,7 @@ listenToVoiceUsers: ()=>{
         dislike: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const ref=doc(db,col,id); const snap=await getDoc(ref); const d=snap.data(); const likes=d.likes||[]; const dislikes=d.dislikes||[]; if(dislikes.includes(state.user))await updateDoc(ref,{dislikes:arrayRemove(state.user)});else{await updateDoc(ref,{dislikes:arrayUnion(state.user)});if(likes.includes(state.user))await updateDoc(ref,{likes:arrayRemove(state.user)});} type==='post'?social.loadPosts():social.loadPolls(); },
 
         openComments: (id, type) => {
+            document.querySelector('#comment-overlay .screen').classList.remove('hidden');
             state.activeCommentId = id;
             state.activeCommentType = type;
             const col = type === 'post' ? 'posts' : 'polls';
@@ -1769,5 +1770,6 @@ listenToVoiceUsers: ()=>{
 </script>
 </body>
 </html>
+
 
 
