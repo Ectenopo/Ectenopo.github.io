@@ -1725,35 +1725,32 @@ listenToVoiceUsers: ()=>{
         fetchFeed: async () => {
             const feedDiv = document.getElementById('emergency-feed');
             try {
-                // Using an open proxy to bypass CORS restrictions for the XML feed
-                const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://www.gdacs.org/xml/rss.xml");
-                const response = await fetch(proxy);
+                // Using a reliable RSS-to-JSON API converter instead of a raw proxy
+                const apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.gdacs.org%2Fxml%2Frss.xml";
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) throw new Error("Network response was not OK");
                 const data = await response.json();
                 
-                // Parse the XML data into readable HTML
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(data.contents, "text/xml");
-                const items = xmlDoc.querySelectorAll("item");
-                
                 let html = "";
-                items.forEach(item => {
-                    const title = item.querySelector("title")?.textContent || "UNKNOWN ALERT";
-                    const desc = item.querySelector("description")?.textContent || "No description provided.";
-                    const link = item.querySelector("link")?.textContent || "#";
-                    
+                
+                // The API already parses the XML into a nice 'items' array for us!
+                data.items.forEach(item => {
                     html += `
                         <div class="card" style="border-color:var(--err-color); margin-bottom:10px;">
-                            <strong style="font-size:1.1em;">[!] ${title}</strong>
-                            <p style="font-size:0.85em; margin:6px 0; color:inherit; opacity:0.8;">${desc}</p>
-                            <a href="${link}" target="_blank" class="news-link" style="color:var(--err-color);border-color:var(--err-color);display:inline-block;width:auto;">>> VIEW SATELLITE DATA</a>
+                            <strong style="font-size:1.1em;">[!] ${item.title}</strong>
+                            <p style="font-size:0.85em; margin:6px 0; color:inherit; opacity:0.8;">${item.description}</p>
+                            <a href="${item.link}" target="_blank" class="news-link" style="color:var(--err-color);border-color:var(--err-color);display:inline-block;width:auto;">>> VIEW SATELLITE DATA</a>
                         </div>
                     `;
                 });
                 
                 feedDiv.innerHTML = html || "<div style='opacity:0.5;'>NO ACTIVE ALERTS DETECTED.</div>";
                 audioSys.playTone(400,'square',0.1); // Subtle system blip on successful refresh
+                
             } catch (e) {
-                feedDiv.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: ${e.message} ]</div>`;
+                console.error(e);
+                feedDiv.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: CONNECTION BLOCKED ]<br><small style="opacity:0.6;">Check your adblocker or try again later.</small></div>`;
             }
         }
     };
@@ -1836,6 +1833,7 @@ listenToVoiceUsers: ()=>{
 </script>
 </body>
 </html>
+
 
 
 
