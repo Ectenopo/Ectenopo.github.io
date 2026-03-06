@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLAN_NET // SYSTEM_V3.1</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         /* ============================================================
            THE CONSTRUCT DESIGN SYSTEM
@@ -1259,7 +1260,7 @@
         },
         ackAlert: ()=>{ document.getElementById('clan-alert-overlay').classList.add('hidden'); if(app.alertInterval)clearInterval(app.alertInterval); },
 
-        listenToVoiceUsers: ()=>{
+listenToVoiceUsers: ()=>{
             if(!state.clan)return;
             if(app.voiceUnsubscribe)app.voiceUnsubscribe();
             const q=query(collection(db,"clans",state.clan,"voice_users"),orderBy("joinedAt","desc"));
@@ -1271,17 +1272,53 @@
             });
         },
 
+        // --- NEW PEERJS VARIABLES ---
+        peer: null,
+        calls: [],
+        audioElements: [],
+        localStream: null,
+
+        // --- HELPER FUNCTION FOR INCOMING/OUTGOING STREAMS ---
+        handleCall: (call) => {
+            app.calls.push(call);
+            call.on('stream', (remoteStream) => {
+                // Create an invisible audio element to play the other person's voice
+                const audio = new Audio();
+                audio.srcObject = remoteStream;
+                audio.autoplay = true;
+                app.audioElements.push(audio);
+                audio.play().catch(e => console.error("Audio playback blocked by browser", e));
+            });
+        },
+
         toggleVoice: async()=>{
             const btn=document.getElementById('btn-voice-conn'); const status=document.getElementById('voice-status'); const viz=document.getElementById('voice-viz'); const muteBtn=document.getElementById('btn-voice-mute');
+            
             if(app.voiceActive){
+                // --- DISCONNECT LOGIC ---
+                // Stop the local microphone
+                if(app.localStream) { app.localStream.getTracks().forEach(t => t.stop()); app.localStream = null; }
                 if(app.voiceSource){app.voiceSource.disconnect();app.voiceSource=null;}
                 if(app.voiceAnim){cancelAnimationFrame(app.voiceAnim);app.voiceAnim=null;}
+                
+                // Disconnect PeerJS and clean up audio
+                if(app.peer) { app.peer.destroy(); app.peer = null; }
+                app.calls.forEach(c => c.close()); app.calls = [];
+                app.audioElements.forEach(a => { a.pause(); a.srcObject = null; }); app.audioElements = [];
+
+                // Remove from Firebase
                 if(state.clan&&state.user){try{await deleteDoc(doc(db,"clans",state.clan,"voice_users",state.user));}catch(e){}}
                 if(app.voiceHeartbeat){clearInterval(app.voiceHeartbeat);app.voiceHeartbeat=null;}
+                
                 btn.innerText="CONNECT MIC"; status.style.background="#330000"; viz.innerHTML=""; muteBtn.disabled=true; app.voiceActive=false;
             } else {
+                // --- CONNECT LOGIC ---
                 try {
-                    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+                    // 1. Get Microphone Access
+                    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+                    app.localStream = stream;
+
+                    // 2. Setup Audio Visualizer (Your original cool matrix bars)
                     app.voiceContext=new(window.AudioContext||window.webkitAudioContext)();
                     app.voiceAnalyser=app.voiceContext.createAnalyser(); app.voiceAnalyser.fftSize=64;
                     app.voiceSource=app.voiceContext.createMediaStreamSource(stream);
@@ -1289,20 +1326,72 @@
                     const bufLen=app.voiceAnalyser.frequencyBinCount; const dataArr=new Uint8Array(bufLen);
                     viz.innerHTML="";
                     for(let i=0;i<bufLen;i++){const b=document.createElement('div');b.className='voice-bar';b.id='vbar-'+i;viz.appendChild(b);}
-                    if(state.clan&&state.user){
-                        await setDoc(doc(db,"clans",state.clan,"voice_users",state.user),{joinedAt:serverTimestamp(),lastSeen:serverTimestamp(),speaking:false,device:deviceDetect.getInfo()});
-                        app.voiceHeartbeat=setInterval(async()=>{ if(state.clan&&state.user&&app.voiceActive){app.voiceAnalyser.getByteFrequencyData(dataArr);const avg=dataArr.reduce((a,b)=>a+b,0)/dataArr.length;await updateDoc(doc(db,"clans",state.clan,"voice_users",state.user),{lastSeen:serverTimestamp(),speaking:avg>30});} },2000);
-                    }
+
+                    // 3. Setup PeerJS
+                    // Create a unique ID for this user based on their clan and username
+                    const myPeerId = `clannet_${state.clan}_${state.user}_${Math.floor(Math.random()*1000)}`;
+                    app.peer = new Peer(myPeerId);
+
+                    app.peer.on('open', async (id) => {
+                        // 4. Publish presence to Firebase WITH the Peer ID
+                        if(state.clan&&state.user){
+                            await setDoc(doc(db,"clans",state.clan,"voice_users",state.user),{
+                                peerId: id, // So others can find us!
+                                joinedAt:serverTimestamp(),
+                                lastSeen:serverTimestamp(),
+                                speaking:false,
+                                device:deviceDetect.getInfo()
+                            });
+                            
+                            app.voiceHeartbeat=setInterval(async()=>{ if(state.clan&&state.user&&app.voiceActive){app.voiceAnalyser.getByteFrequencyData(dataArr);const avg=dataArr.reduce((a,b)=>a+b,0)/dataArr.length;await updateDoc(doc(db,"clans",state.clan,"voice_users",state.user),{lastSeen:serverTimestamp(),speaking:avg>30});} },2000);
+
+                            // 5. Call everyone currently in the room
+                            const q = query(collection(db,"clans",state.clan,"voice_users"));
+                            const snap = await getDocs(q);
+                            snap.forEach(docSnap => {
+                                const userData = docSnap.data();
+                                // Don't call ourselves, and make sure they have a Peer ID
+                                if(docSnap.id !== state.user && userData.peerId) {
+                                    const call = app.peer.call(userData.peerId, stream);
+                                    app.handleCall(call);
+                                }
+                            });
+                        }
+                    });
+
+                    // 6. Answer incoming calls from new people joining
+                    app.peer.on('call', (call) => {
+                        call.answer(stream);
+                        app.handleCall(call);
+                    });
+
+                    // Visualizer Animation Loop
                     const draw=()=>{ if(!app.voiceActive)return; app.voiceAnim=requestAnimationFrame(draw); app.voiceAnalyser.getByteFrequencyData(dataArr); for(let i=0;i<bufLen;i++){const b=document.getElementById('vbar-'+i);if(b)b.style.height=(dataArr[i]/5)+"px";} };
                     app.voiceActive=true; draw();
-                    btn.innerText="DISCONNECT"; status.style.background="currentColor"; muteBtn.disabled=false;
-                } catch(e){alert("MIC ACCESS DENIED OR NOT FOUND");}
+                    
+                    btn.innerText="DISCONNECT"; status.style.background="currentColor"; muteBtn.disabled=false; muteBtn.innerText="MUTE";
+                } catch(e){
+                    console.error("Mic error:", e);
+                    alert("MIC ACCESS DENIED OR NOT FOUND");
+                }
             }
         },
+        
         muteVoice: ()=>{
             const btn=document.getElementById('btn-voice-mute');
-            if(btn.innerText==="MUTE"){if(app.voiceSource)app.voiceSource.disconnect(app.voiceAnalyser);btn.innerText="UNMUTE";}
-            else{if(app.voiceSource)app.voiceSource.connect(app.voiceAnalyser);btn.innerText="MUTE";}
+            if(app.localStream) {
+                // This physically disables the audio track being sent through WebRTC
+                const audioTrack = app.localStream.getAudioTracks()[0];
+                if(audioTrack) {
+                    if(btn.innerText==="MUTE"){
+                        audioTrack.enabled = false;
+                        btn.innerText="UNMUTE";
+                    } else {
+                        audioTrack.enabled = true;
+                        btn.innerText="MUTE";
+                    }
+                }
+            }
         },
 
         loadRoster: ()=>{
@@ -1658,3 +1747,4 @@
 </script>
 </body>
 </html>
+
