@@ -548,6 +548,8 @@
         <button onclick="nav.to('cockpit')" id="btn-payload" class="hidden warn" style="grid-column:span 2;border-style:dashed;">[ CYBER_DECK COMMAND ]</button>
         <button onclick="nav.to('radio')" style="color:var(--warn-color);border-color:var(--warn-color);">[ SIGNAL_INTERCEPT ]</button>
         <button onclick="nav.to('emergency')" style="color:var(--err-color);border-color:var(--err-color);">[ LIVE_EMERGENCY_FEED ]</button>
+        <button onclick="nav.tab('global')">GLOBAL COMMS</button>
+        <button onclick="app.loadNetworkDirectory()" style="color:#0f0; border-color:#0f0;">[ NETWORK_DIRECTORY ]</button>
     </div>
 
     <!-- CLAN TAB -->
@@ -622,6 +624,16 @@
     <button onclick="location.reload()" style="margin-top:20px;border:none;opacity:0.35;font-size:11px;">LOGOUT</button>
 </div>
 
+<!-- ================================================================
+     CACHE SCREEN
+     ================================================================ -->
+<div id="screen-directory" class="screen hidden" style="border-color:#0f0; box-shadow:0 0 28px #0f0; color:#0f0;">
+    <h2>// GLOBAL_NETWORK_DIRECTORY</h2>
+    <div id="dir-content" style="min-height:200px;">
+        <div style="opacity:0.5; animation:blinkAnim 1s infinite;">>> COMPILING NODE STATISTICS...</div>
+    </div>
+    <button onclick="nav.to('hub')" style="margin-top:10px; color:#0f0; border-color:#0f0;">BACK</button>
+</div>
 <!-- ================================================================
      VERIFIED ELITE SCREEN
      ================================================================ -->
@@ -1029,7 +1041,7 @@
      ================================================================ -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, limit, serverTimestamp, getDocs, deleteField, deleteDoc, arrayUnion, arrayRemove }
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, query, orderBy, limit, serverTimestamp, getDocs, deleteField, deleteDoc, arrayUnion, arrayRemove, getCountFromServer, where }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyDxb5GEGx9LZYD4Ijo-N6K849rsneYlgqk", authDomain: "ectenopo.firebaseapp.com", projectId: "ectenopo", storageBucket: "ectenopo.firebasestorage.app", messagingSenderId: "283760497520", appId: "1:283760497520:web:c9fdda2d704ca95c0bf5b5" };
@@ -1124,7 +1136,7 @@
     // ================================================================
     // STATE
     // ================================================================
-    window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null };
+    window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[] };
 
     // ================================================================
     // NAV
@@ -1178,6 +1190,7 @@
         },
         initHub: async () => {
             loading(true);
+            app.startHeartbeat();
             document.getElementById('device-info').innerText="DEVICE: "+deviceDetect.getInfo();
             const snap=await getDoc(doc(db,"users",state.user)); const ud=snap.data();
             let vHTML=ud.verified?`<span class="verified-badge">♦✓</span>`:'';
@@ -1197,6 +1210,69 @@
             loading(false);
             const gq=query(collection(db,"global_chat"),orderBy("ts","desc"),limit(50));
             onSnapshot(gq,(snap)=>{ const d=document.getElementById('global-chat'); d.innerHTML=""; const msgs=[]; snap.forEach(dc=>msgs.push(dc.data())); msgs.reverse().forEach(m=>d.innerHTML+=`<div class="chat-msg"><strong>${m.u}:</strong> ${m.txt}</div>`); d.scrollTop=d.scrollHeight; });
+        },
+        // 1. Helper to get the verified badge HTML
+        getBadge: (username) => {
+            return state.verifiedUsers.includes(username) ? `<span class="verified-badge" style="font-size:1.1em; margin-left:2px; color:#00FFFF; text-shadow:0 0 5px #00FFFF;" title="Verified Identity">♦✓</span>` : '';
+        },
+
+        // 2. The Heartbeat (keeps you marked as "Online")
+        startHeartbeat: async () => {
+            // Fetch verified users into cache once on login
+            const vSnap = await getDocs(query(collection(db, "users"), where("verified", "==", true)));
+            state.verifiedUsers = [];
+            vSnap.forEach(d => state.verifiedUsers.push(d.id));
+
+            // Start pinging the server every 60 seconds to say "I am online"
+            if(!app.globalHeartbeat) {
+                const beat = async () => { await updateDoc(doc(db,"users",state.user), {lastSeen: serverTimestamp()}); };
+                beat();
+                app.globalHeartbeat = setInterval(beat, 60000);
+            }
+        },
+        // 3. The Directory Loader
+        loadNetworkDirectory: async () => {
+            nav.to('directory');
+            const dir = document.getElementById('dir-content');
+            dir.innerHTML = "<div style='opacity:0.5;'>>> COMPILING NODE STATISTICS...</div>";
+
+            try {
+                // Total Users
+                const totalSnap = await getCountFromServer(collection(db, "users"));
+                const total = totalSnap.data().count;
+
+                // Online Users (Seen in the last 5 minutes)
+                const fiveMinsAgo = new Date(Date.now() - 300000);
+                const onlineQuery = query(collection(db, "users"), where("lastSeen", ">=", fiveMinsAgo));
+                const onlineSnap = await getDocs(onlineQuery);
+                
+                let onlineTotal = 0;
+                let onlineVerified = 0;
+                onlineSnap.forEach(doc => {
+                    onlineTotal++;
+                    if (doc.data().verified) onlineVerified++;
+                });
+
+                // Render the Verified List from our cache
+                let vListHTML = "";
+                state.verifiedUsers.forEach(vUser => {
+                    vListHTML += `<div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">@${vUser} ${app.getBadge(vUser)}</div>`;
+                });
+
+                dir.innerHTML = `
+                    <div class="grid-3" style="margin-bottom:15px; text-align:center;">
+                        <div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${total}</b></div>
+                        <div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div>
+                        <div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div>
+                    </div>
+                    <h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3>
+                    <div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">
+                        ${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS YET</span>"}
+                    </div>
+                `;
+            } catch (e) {
+                dir.innerHTML = `[ ERROR: ${e.message} ]`;
+            }
         },
         sendGlobalMsg: async()=>{ const t=document.getElementById('global-input').value; if(t){await addDoc(collection(db,"global_chat"),{u:state.user,txt:t,ts:serverTimestamp()});document.getElementById('global-input').value="";} },
 
@@ -1911,6 +1987,7 @@ listenToVoiceUsers: ()=>{
 </script>
 </body>
 </html>
+
 
 
 
