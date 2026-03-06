@@ -492,9 +492,18 @@
 
 <div id="screen-emergency" class="screen hidden" style="border-color:var(--err-color);box-shadow:0 0 28px var(--err-color);color:var(--err-color);">
     <h2>// GLOBAL_EMERGENCY_INTERCEPT</h2>
-    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">SOURCE: UN GDACS (Global Disaster Alert and Coordination System)</p>
     
-    <div id="emergency-feed" style="height:400px;overflow-y:scroll;border:1px solid var(--err-color);padding:10px;background:rgba(255,0,0,0.05);">
+    <div class="card" style="border-color:var(--warn-color); margin-bottom:15px;">
+        <h3 style="color:var(--warn-color); border-bottom:1px solid var(--warn-color); margin-bottom:8px;">>> LOCAL_AREA_SCAN</h3>
+        <button onclick="emergency.scanLocal()" style="color:var(--warn-color); border-color:var(--warn-color); font-weight:bold;">INITIATE LOCAL THREAT SCAN</button>
+        <div id="local-alert-feed" style="margin-top:10px; font-size:11px; min-height:20px;">
+            <span style="opacity:0.5;">WAITING FOR SCAN COMMAND...</span>
+        </div>
+    </div>
+
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">SOURCE: UN GDACS (Global Alerts)</p>
+    
+    <div id="emergency-feed" style="height:280px;overflow-y:scroll;border:1px solid var(--err-color);padding:10px;background:rgba(255,0,0,0.05);">
         <div style="opacity:0.5;animation:blinkAnim 1s infinite;">>> ESTABLISHING SATELLITE UPLINK...</div>
     </div>
     
@@ -1712,20 +1721,95 @@ listenToVoiceUsers: ()=>{
     };
 
     // ================================================================
-    // EMERGENCY FEED (GDACS API)
+    // EMERGENCY FEED (GDACS API & NWS LOCAL SCAN)
     // ================================================================
     window.emergency = {
         interval: null,
         init: () => {
             emergency.fetchFeed();
-            // Refresh feed every 5 minutes automatically while on this screen
             if(emergency.interval) clearInterval(emergency.interval);
             emergency.interval = setInterval(emergency.fetchFeed, 300000); 
         },
+
+        // --- NEW: LOCAL SCAN LOGIC ---
+        triggerAlarm: () => {
+            let beeps = 0;
+            // Fire off a loud beep every 600 milliseconds, stop after 3
+            const alarm = setInterval(() => {
+                audioSys.playTone(900, 'sawtooth', 0.4); 
+                beeps++;
+                if (beeps >= 3) clearInterval(alarm);
+            }, 600);
+        },
+
+        scanLocal: () => {
+            const localFeed = document.getElementById('local-alert-feed');
+            localFeed.innerHTML = "<div style='opacity:0.5; animation:blinkAnim 1s infinite;'>>> INITIATING GEOLOCATION TRACE...</div>";
+            audioSys.playTone(300, 'sine', 0.1);
+
+            if (!navigator.geolocation) {
+                localFeed.innerHTML = "<div style='color:var(--err-color);'>[ ERROR: HARDWARE DOES NOT SUPPORT GEOLOCATION ]</div>";
+                return;
+            }
+
+            // Ask the browser for coordinates
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                localFeed.innerHTML = `<div style='opacity:0.5;'>>> COORDS ACQUIRED: ${lat.toFixed(2)}, ${lon.toFixed(2)}. SCANNING LOCAL FREQUENCIES...</div>`;
+                
+                try {
+                    // Fetch alerts for these coordinates using the US National Weather Service
+                    const response = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`);
+                    if (!response.ok) throw new Error("NWS Uplink Failed");
+                    const data = await response.json();
+                    
+                    if (data.features && data.features.length > 0) {
+                        let html = "";
+                        let hasSevereThreat = false;
+                        
+                        data.features.forEach(alert => {
+                            const props = alert.properties;
+                            // Check if it's super dangerous
+                            if (props.severity === "Severe" || props.severity === "Extreme") {
+                                hasSevereThreat = true;
+                            }
+                            
+                            html += `
+                                <div style="border-left:2px solid var(--err-color); padding-left:8px; margin-top:8px; background:rgba(255,0,0,0.1);">
+                                    <strong style="color:var(--err-color);">${props.event}</strong>
+                                    <div style="opacity:0.8; font-size:0.9em;">Severity: ${props.severity}</div>
+                                    <div style="opacity:0.6; font-size:0.8em; margin-top:4px;">${props.headline}</div>
+                                </div>
+                            `;
+                        });
+                        
+                        localFeed.innerHTML = html;
+
+                        // Trigger the 3 beeps if it's dangerous!
+                        if (hasSevereThreat) {
+                            emergency.triggerAlarm();
+                        } else {
+                            audioSys.playTone(500, 'square', 0.2); // Just a normal beep for minor alerts
+                        }
+                        
+                    } else {
+                        localFeed.innerHTML = "<div style='color:#00FF00; margin-top:8px; font-weight:bold;'>[ AREA SECURE: NO ACTIVE LOCAL WARNINGS DETECTED ]</div>";
+                        audioSys.playTone(600, 'sine', 0.2);
+                    }
+                } catch (e) {
+                    localFeed.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: ${e.message} ]</div>`;
+                }
+            }, (error) => {
+                // If the user clicks "Block" on the location prompt
+                localFeed.innerHTML = `<div style="color:var(--err-color);">[ TRACE FAILED: ACCESS DENIED BY USER ]</div>`;
+            });
+        },
+
+        // --- GLOBAL FEED LOGIC (Unchanged) ---
         fetchFeed: async () => {
             const feedDiv = document.getElementById('emergency-feed');
             try {
-                // Using a reliable RSS-to-JSON API converter instead of a raw proxy
                 const apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.gdacs.org%2Fxml%2Frss.xml";
                 const response = await fetch(apiUrl);
                 
@@ -1733,8 +1817,6 @@ listenToVoiceUsers: ()=>{
                 const data = await response.json();
                 
                 let html = "";
-                
-                // The API already parses the XML into a nice 'items' array for us!
                 data.items.forEach(item => {
                     html += `
                         <div class="card" style="border-color:var(--err-color); margin-bottom:10px;">
@@ -1746,15 +1828,11 @@ listenToVoiceUsers: ()=>{
                 });
                 
                 feedDiv.innerHTML = html || "<div style='opacity:0.5;'>NO ACTIVE ALERTS DETECTED.</div>";
-                audioSys.playTone(400,'square',0.1); // Subtle system blip on successful refresh
-                
             } catch (e) {
-                console.error(e);
-                feedDiv.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: CONNECTION BLOCKED ]<br><small style="opacity:0.6;">Check your adblocker or try again later.</small></div>`;
+                feedDiv.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: CONNECTION BLOCKED ]</div>`;
             }
         }
     };
-
     // ================================================================
     // SETTINGS — theme preset system (The Construct style)
     // ================================================================
@@ -1833,6 +1911,7 @@ listenToVoiceUsers: ()=>{
 </script>
 </body>
 </html>
+
 
 
 
