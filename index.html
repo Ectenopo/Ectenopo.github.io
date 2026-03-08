@@ -1664,7 +1664,7 @@
         ctx: document.getElementById('game-canvas').getContext('2d'),
         player: {y: 10, v: 0}, obs: [], score: 0, frame: null, frameCount: 0, highScore: 0,
         init: () => { 
-            document.getElementById('game-canvas').onclick = () => { if(game.frame) game.player.v = -4.5; }; 
+            document.getElementById('game-canvas').onclick = () => { if(game.frame) game.player.v = -1; }; 
             game.highScore = parseInt(localStorage.getItem('terminalJumpHS') || 0);
             document.getElementById('game-highscore').innerText = game.highScore;
             game.loadLeaderboard();
@@ -1840,6 +1840,7 @@
 </script>
 </body>
 </html>
+
 
 
 
