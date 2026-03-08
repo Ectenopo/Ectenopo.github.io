@@ -402,10 +402,21 @@
     <h2>// TERMINAL_JUMP.EXE</h2>
     <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">CLICK OR PRESS SPACE TO JUMP</div>
     <canvas id="game-canvas" width="400" height="200"></canvas>
-    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+    
+    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px; margin-bottom:10px;">
         <span>SCORE: <span id="game-score">0</span></span>
-        <button onclick="game.start()" style="width:auto; padding:2px 10px; margin:0;">RESTART</button>
+        <span style="color:#00FFFF;">PERSONAL BEST: <span id="game-highscore">0</span></span>
     </div>
+    
+    <button onclick="game.start()" style="margin-bottom:15px;">START / RESTART LINK</button>
+
+    <div class="card" style="border-color:#00FFFF;">
+        <h3 style="color:#00FFFF; font-size:11px; border-bottom:1px solid #00FFFF; padding-bottom:5px;">// GLOBAL LEADERBOARD</h3>
+        <div id="game-leaderboard" style="font-size:11px; height:120px; overflow-y:auto;">
+            <div style="opacity:0.5;">Loading records...</div>
+        </div>
+    </div>
+    
     <button onclick="nav.to('hub')" style="margin-top:15px;">EXIT</button>
 </div>
 
@@ -1285,8 +1296,13 @@
         deleteClan: async()=>{ const cN=state.clan; if(!confirm("WARNING: DELETE CLAN?"))return; loading(true); const { data: cD } = await supabase.from('clans').select('ranks').eq('id', cN).single(); for(const m of Object.keys(cD?.ranks||{})) await supabase.from('users').update({clan:null}).eq('id', m); await supabase.from('clans').delete().eq('id', cN); loading(false); alert("DELETED"); nav.to('hub'); },
         joinClan: async()=>{ const n=document.getElementById('join-name').value.trim(); const p=document.getElementById('join-pass').value.trim(); const { data: s } = await supabase.from('clans').select('*').eq('id', n).maybeSingle(); if(s&&s.pass===p){await supabase.from('users').update({clan:n}).eq('id', state.user); let ranks = s.ranks||{}; ranks[state.user]='member'; await supabase.from('clans').update({ranks}).eq('id', n);}else alert("INVALID"); },
         leaveClan: async()=>{ if(!confirm("LEAVE?"))return; await supabase.from('users').update({clan:null}).eq('id', state.user); let ranks = state.clanData.ranks||{}; delete ranks[state.user]; await supabase.from('clans').update({ranks}).eq('id', state.clan); },
-        sendClanMsg: async()=>{ const t=document.getElementById('clan-input').value; if(t){await supabase.from('clan_msgs').insert({clan_id:state.clan, u:state.user, txt:t, thread_parent:state.replyTarget, ts:dbHelper.serverTimestamp()});document.getElementById('clan-input').value=""; app.cancelReply('clan');} },
-
+        sendClanMsg: async()=>{ 
+            const t=document.getElementById('clan-input').value; 
+            if(!t) return;
+            const { error } = await supabase.from('clan_msgs').insert({clan_id:state.clan, u:state.user, txt:t, thread_parent:state.replyTarget, ts:dbHelper.serverTimestamp()});
+            if (error) alert("CLAN COMMS ERROR: " + error.message);
+            else { document.getElementById('clan-input').value=""; app.cancelReply('clan'); }
+        },
         toggleEnc: ()=>{ app.encMode=!app.encMode; document.getElementById('btn-enc').style.opacity=app.encMode?'1':'0.5'; }, toggleDict: ()=>{ app.dictMode=!app.dictMode; document.getElementById('btn-dict').style.opacity=app.dictMode?'1':'0.5'; },
         translate: (txt)=>{ if(!app.encMode&&!app.dictMode)return txt; let out=""; const words=state.clanData.words||{}; const syms=state.clanData.symbols||{}; txt.split(" ").forEach(w=>{ const c=w.toLowerCase().replace(/[^a-z]/g,''); let fw=w; if(app.dictMode&&words[c])fw=words[c]; else if(app.encMode&&words[c])fw=words[c]; if(app.encMode){const cl=fw.toLowerCase().replace(/[^a-z]/g,'');out+=app.strToSym(cl,syms)+" ";}else{out+=fw+" ";} }); return out; },
         strToSym: (str,syms)=>{ let html=""; for(let c of str){if(syms[c.toUpperCase()])html+=`<img src="${syms[c.toUpperCase()]}" class="chat-img">`;else html+=c;} return html; },
@@ -1464,8 +1480,10 @@
             if(!txt && fInp.files.length===0) return;
             let fileB64 = null;
             if(fInp.files.length > 0) { const reader = new FileReader(); reader.readAsDataURL(fInp.files[0]); await new Promise(r => reader.onload = () => { fileB64 = reader.result; r(); }); }
-            await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: txt, file: fileB64, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
-            inp.value = ""; fInp.value = ""; app.cancelReply('dm'); msgSys.updateTyping('dm');
+            
+            const { error } = await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: txt, file: fileB64, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
+            if (error) alert("DM ERROR: " + error.message);
+            else { inp.value = ""; fInp.value = ""; app.cancelReply('dm'); msgSys.updateTyping('dm'); }
         },
 
         startVoiceRec: async () => {
@@ -1527,8 +1545,9 @@
         },
         sendGroupMsg: async () => {
             const inp = document.getElementById('group-input'); const txt = inp.value.trim(); if(!txt) return;
-            await supabase.from('group_msgs').insert({group_id: msgSys.activeGroup.id, u: state.user, txt: txt, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
-            inp.value = ""; app.cancelReply('group');
+            const { error } = await supabase.from('group_msgs').insert({group_id: msgSys.activeGroup.id, u: state.user, txt: txt, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
+            if (error) alert("GROUP COMMS ERROR: " + error.message);
+            else { inp.value = ""; app.cancelReply('group'); }
         },
 
         react: async (table, id, emoji) => { const { data } = await supabase.from(table).select('reactions').eq('id', id).single(); let rx = data.reactions || {}; if(!rx[emoji]) rx[emoji] = []; if(rx[emoji].includes(state.user)) rx[emoji] = rx[emoji].filter(u=>u!==state.user); else rx[emoji].push(state.user); await supabase.from(table).update({reactions: rx}).eq('id', id); },
@@ -1638,32 +1657,85 @@
     // ================================================================
     // GAME (Terminal Jump)
     // ================================================================
+    // ================================================================
+    // GAME (Terminal Jump)
+    // ================================================================
     window.game = {
         ctx: document.getElementById('game-canvas').getContext('2d'),
-        player: {y: 100, v: 0}, obs: [], score: 0, frame: null,
-        init: () => { document.getElementById('game-canvas').onclick = () => game.player.v = -6; },
+        player: {y: 100, v: 0}, obs: [], score: 0, frame: null, frameCount: 0, highScore: 0,
+        init: () => { 
+            document.getElementById('game-canvas').onclick = () => { if(game.frame) game.player.v = -4.5; }; 
+            game.highScore = parseInt(localStorage.getItem('terminalJumpHS') || 0);
+            document.getElementById('game-highscore').innerText = game.highScore;
+            game.loadLeaderboard();
+        },
+        loadLeaderboard: async () => {
+            const lb = document.getElementById('game-leaderboard');
+            const { data } = await supabase.from('game_scores').select('*').order('score', {ascending: false}).limit(10);
+            lb.innerHTML = "";
+            if(!data || data.length === 0) { lb.innerHTML = "<div style='opacity:0.5;'>NO SCORES YET</div>"; return; }
+            data.forEach((entry, i) => {
+                lb.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(0,255,255,0.2); padding:4px 0;"><span>${i+1}. @${entry.u}</span><span style="color:#00FFFF;">${entry.score}</span></div>`;
+            });
+        },
+        submitScore: async () => {
+            if(game.score > 0) {
+                await supabase.from('game_scores').insert({u: state.user, score: game.score, ts: dbHelper.serverTimestamp()});
+                game.loadLeaderboard();
+            }
+        },
         start: () => {
             if(game.frame) cancelAnimationFrame(game.frame);
-            game.player = {y: 100, v: 0}; game.obs = []; game.score = 0;
+            game.player = {y: 100, v: 0}; game.obs = []; game.score = 0; game.frameCount = 0;
+            document.getElementById('game-score').innerText = game.score;
+            
             const loop = () => {
                 game.ctx.clearRect(0,0,400,200);
-                game.player.v += 0.3; game.player.y += game.player.v;
+                game.player.v += 0.2; // Softer gravity
+                game.player.y += game.player.v;
                 game.ctx.fillStyle = getComputedStyle(document.body).color;
                 game.ctx.fillRect(50, game.player.y, 10, 10);
                 
-                if(Math.random() < 0.02) game.obs.push({x: 400, w: 20, h: Math.random()*100+20, t: Math.random()>0.5});
+                game.frameCount++;
                 
-                for(let i=game.obs.length-1; i>=0; i--) {
-                    let o = game.obs[i]; o.x -= 3;
-                    if(o.t) game.ctx.fillRect(o.x, 0, o.w, o.h); else game.ctx.fillRect(o.x, 200-o.h, o.w, o.h);
-                    if(o.x < -20) { game.obs.splice(i, 1); game.score++; document.getElementById('game-score').innerText = game.score; }
+                // Spawn structured Flappy Bird style pipes (Top and Bottom with a guaranteed gap)
+                if(game.frameCount % 110 === 0) {
+                    const gapSize = 75; // Generous gap so it's not impossible
+                    const gapY = Math.random() * (200 - gapSize - 40) + 20; 
                     
-                    // Collision
-                    let pRect = {x:50, y:game.player.y, w:10, h:10};
-                    let oRect = {x:o.x, y:o.t?0:200-o.h, w:o.w, h:o.h};
-                    if (pRect.x < oRect.x + oRect.w && pRect.x + pRect.w > oRect.x && pRect.y < oRect.y + oRect.h && pRect.y + pRect.h > oRect.y) return alert("GAME OVER! Score: " + game.score);
+                    game.obs.push({x: 400, y: 0, w: 20, h: gapY, passed: false, isTop: true}); // Top pipe
+                    game.obs.push({x: 400, y: gapY + gapSize, w: 20, h: 200 - (gapY + gapSize), passed: false, isTop: false}); // Bottom pipe
                 }
-                if(game.player.y > 200 || game.player.y < 0) return alert("GAME OVER! Score: " + game.score);
+                
+                let collision = false;
+                for(let i=game.obs.length-1; i>=0; i--) {
+                    let o = game.obs[i]; 
+                    o.x -= 2.5; // Slower, more readable speed
+                    game.ctx.fillRect(o.x, o.y, o.w, o.h);
+                    
+                    // Score tracking (only trigger when passing a Top pipe to avoid double points)
+                    if(o.isTop && o.x + o.w < 50 && !o.passed) {
+                        o.passed = true; game.score++; document.getElementById('game-score').innerText = game.score;
+                        if(game.score > game.highScore) {
+                            game.highScore = game.score;
+                            localStorage.setItem('terminalJumpHS', game.highScore);
+                            document.getElementById('game-highscore').innerText = game.highScore;
+                        }
+                    }
+                    
+                    if(o.x < -20) { game.obs.splice(i, 1); }
+                    
+                    // Collision logic mapped to structured objects
+                    if (50 < o.x + o.w && 50 + 10 > o.x && game.player.y < o.y + o.h && game.player.y + 10 > o.y) collision = true;
+                }
+                
+                if(game.player.y > 200 || game.player.y < 0 || collision) {
+                    audioSys.playTone(300, 'sawtooth', 0.5);
+                    alert("SYSTEM FAILURE! Final Score: " + game.score);
+                    game.frame = null; // Stop game
+                    game.submitScore(); // Upload to leaderboard
+                    return;
+                }
                 game.frame = requestAnimationFrame(loop);
             };
             loop();
@@ -1758,7 +1830,9 @@
 
     settings.load();
     document.addEventListener('keydown', (e)=>{
-        if(e.key === ' ' && !document.getElementById('screen-minigame').classList.contains('hidden')) { e.preventDefault(); game.player.v = -6; }
+        // Jump velocity updated to match the new balanced physics
+        if(e.key === ' ' && !document.getElementById('screen-minigame').classList.contains('hidden')) { e.preventDefault(); if(game.frame) game.player.v = -4.5; }
+        
         if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
             if(e.key==='Enter')audioSys.playTone(400,'square',0.1); else if(e.key==='Backspace')audioSys.playTone(300,'sawtooth',0.1); else audioSys.playTone(800,'sine',0.05);
         }
@@ -1766,3 +1840,4 @@
 </script>
 </body>
 </html>
+
