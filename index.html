@@ -1662,7 +1662,7 @@
     // ================================================================
     window.game = {
         ctx: document.getElementById('game-canvas').getContext('2d'),
-        player: {y: 100, v: 0}, obs: [], score: 0, frame: null, frameCount: 0, highScore: 0,
+        player: {y: 40, v: 0}, obs: [], score: 0, frame: null, frameCount: 0, highScore: 0,
         init: () => { 
             document.getElementById('game-canvas').onclick = () => { if(game.frame) game.player.v = -4.5; }; 
             game.highScore = parseInt(localStorage.getItem('terminalJumpHS') || 0);
@@ -1840,4 +1840,5 @@
 </script>
 </body>
 </html>
+
 
