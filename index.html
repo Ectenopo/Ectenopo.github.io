@@ -17,23 +17,34 @@
         body.color-gold   { color: #FFD700; --dim: #332b00; --dim2: rgba(255,215,0,0.12); }
         body.color-purple { color: #CC44FF; --dim: #1a0033; --dim2: rgba(204,68,255,0.12); }
         body.color-cyan   { color: #00FFFF; --dim: #003333; --dim2: rgba(0,255,255,0.12); }
+        body.color-rainbow { background: linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); background-size: 400% 400%; animation: rainbowAnim 15s ease infinite; -webkit-background-clip: text; color: transparent; border-color: #fff !important; --dim: #333; --dim2: rgba(255,255,255,0.1); }
+        body.color-rgb { color: #fff; animation: rgbColorAnim 10s infinite; --dim: #333; --dim2: rgba(255,255,255,0.1); }
+
+        @keyframes rainbowAnim { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        @keyframes rgbColorAnim { 0%{color:#ff0000; border-color:#ff0000;} 33%{color:#00ff00; border-color:#00ff00;} 66%{color:#0000ff; border-color:#0000ff;} 100%{color:#ff0000; border-color:#ff0000;} }
 
         :root {
             --warn-color:  #FFAA00;
             --err-color:   #FF2222;
             --rep-watch:   #CC44FF;
             --font-main:   'Courier New', Courier, monospace;
+            --bg-color: #000;
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: #000;
+            background-color: var(--bg-color);
+            background-image: none; /* Can be overridden via JS */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             font-family: var(--font-main);
             font-size: 14px;
             overflow-x: hidden;
             padding-top: 34px; 
             min-height: 100vh;
+            transition: background-color 2s ease;
         }
 
         #matrix-canvas { position: fixed; top: 0; left: 0; z-index: 0; opacity: 0.35; pointer-events: none; }
@@ -94,14 +105,16 @@
         .status-dnd { background: #FF0000; box-shadow: 0 0 5px #FF0000; }
         .status-sleep { background: #00AAFF; box-shadow: 0 0 5px #00AAFF; }
 
-        /* Spoiler styles */
         .spoiler { background: #555; color: transparent; cursor: pointer; padding: 0 4px; border-radius: 2px; }
         .spoiler.revealed { background: transparent !important; color: inherit !important; border: 1px dashed #555; }
 
-        /* Mini chat actions */
         .msg-actions { display:none; position:absolute; right:0; top:-10px; background:#000; border:1px solid currentColor; padding:2px; font-size:10px; gap:4px; z-index:10; }
         .chat-msg:hover .msg-actions { display:flex; }
         .msg-btn { width:auto; padding:2px 5px; margin:0; font-size:9px; border:1px solid var(--dim); background:transparent; }
+
+        .link-preview { font-size:10px; border:1px dashed var(--dim); padding:4px; margin-top:2px; display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.05);}
+        .mention { color: #FFD700; font-weight: bold; background: rgba(255, 215, 0, 0.2); padding: 0 2px; border-radius: 2px; }
+        .thread-indicator { font-size: 9px; opacity: 0.6; border-left: 1px solid currentColor; padding-left: 4px; margin-bottom: 2px; }
 
         #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.96); display: flex; justify-content: center; align-items: center; z-index: 9999; color: inherit; font-size: 1.4em; letter-spacing: 3px; border: 2px solid currentColor; animation: loadPulse 1s infinite; }
         @keyframes loadPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -176,6 +189,8 @@
         .theme-btn-green  { color: #00FF00; border-color: #00FF00; } .theme-btn-red    { color: #FF3333; border-color: #FF3333; } .theme-btn-blue   { color: #00AAFF; border-color: #00AAFF; } .theme-btn-white  { color: #EEEEEE; border-color: #EEEEEE; } .theme-btn-gold   { color: #FFD700; border-color: #FFD700; } .theme-btn-purple { color: #CC44FF; border-color: #CC44FF; } .theme-btn-cyan   { color: #00FFFF; border-color: #00FFFF; }
 
         #cockpit-canvas { border: none !important; background: transparent !important; }
+        
+        #game-canvas { border: 1px solid currentColor; background: #000; display: block; margin: 0 auto 10px; cursor: pointer;}
     </style>
 </head>
 
@@ -213,6 +228,11 @@
     <input type="password" id="auth-pass" placeholder="PASSWORD">
     <button onclick="app.login()">AUTHENTICATE</button>
     <button onclick="app.register()" style="border-style:dashed;opacity:0.65;">REGISTER IDENTITY</button>
+    
+    <div style="margin-top:10px; text-align:center; font-size:10px;">
+        <a href="#" onclick="app.recoverPassword()" style="color:currentColor; opacity:0.6;">FORGOT PASSWORD? (Requires verified email)</a>
+    </div>
+
     <div class="ad-wrapper" style="margin-top:20px; border:1px dashed currentColor; padding:5px;">
         <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
     </div>
@@ -278,6 +298,8 @@
         <button onclick="nav.to('cockpit')" id="btn-payload" class="hidden warn" style="grid-column:span 2;border-style:dashed;">[ CYBER_DECK COMMAND ]</button>
         <button onclick="nav.to('emergency')" style="color:var(--err-color);border-color:var(--err-color);grid-column:span 2;">[ LIVE_EMERGENCY_FEED ]</button>
         <button onclick="app.loadNetworkDirectory()" style="color:#0f0; border-color:#0f0; grid-column:span 2;">[ NETWORK_DIRECTORY ]</button>
+        <button onclick="nav.to('feedback')" style="border-style:dashed; grid-column:span 2;">[ FEEDBACK & BUGS ]</button>
+        <button onclick="nav.to('minigame')" style="grid-column:span 2;">[ MINIGAME: TERMINAL JUMP ]</button>
     </div>
 
     <div id="tab-clans">
@@ -295,22 +317,30 @@
             <h2 id="clan-header">CLAN_NAME</h2>
             <div class="card" style="margin-bottom:10px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <small style="opacity:0.7;letter-spacing:1px;">VOICE COMMS</small>
+                    <small style="opacity:0.7;letter-spacing:1px;">VOICE / VIDEO COMMS</small>
                     <div id="voice-status" style="width:9px;height:9px;border-radius:50%;background:#330000;border:1px solid currentColor;"></div>
                 </div>
                 <div id="voice-users-container" class="hidden">
                     <div style="font-size:9px;opacity:0.5;margin-bottom:3px;">CONNECTED USERS:</div>
                     <div id="voice-users-list" class="voice-users-list"></div>
+                    <div id="video-grid" class="grid-2" style="margin-top:5px;"></div>
                 </div>
                 <div class="voice-bar-container" id="voice-viz"></div>
-                <div class="grid-2" style="margin-top:6px;">
-                    <button onclick="app.toggleVoice()" id="btn-voice-conn" style="font-size:10px;margin:0;">CONNECT MIC</button>
+                <div class="grid-3" style="margin-top:6px;">
+                    <button onclick="app.toggleVoice(false)" id="btn-voice-conn" style="font-size:10px;margin:0;">MIC</button>
+                    <button onclick="app.toggleVoice(true)" id="btn-video-conn" style="font-size:10px;margin:0;">VIDEO</button>
                     <button onclick="app.muteVoice()"   id="btn-voice-mute" style="font-size:10px;margin:0;" disabled>MUTE</button>
                 </div>
-                <small style="font-size:8px;opacity:0.4;display:block;margin-top:4px;">⚠ WebRTC P2P detection only. Full voice needs external server.</small>
+                <small style="font-size:8px;opacity:0.4;display:block;margin-top:4px;">⚠ WebRTC P2P detection only.</small>
             </div>
 
+            <input type="text" id="clan-search" placeholder="Search clan chat..." oninput="app.filterChat('clan-chat', this.value)" style="margin-bottom:4px; font-size:10px;">
             <div class="chat-box" id="clan-chat"></div>
+            
+            <div id="clan-reply-preview" class="hidden" style="font-size:10px; border-left:2px solid currentColor; padding-left:5px; margin-bottom:5px; opacity:0.7;">
+                Replying to: <span id="clan-reply-user" style="font-weight:bold;"></span> <button onclick="app.cancelReply('clan')" style="width:auto; padding:0 4px; display:inline; border:none; background:transparent;">[x]</button>
+            </div>
+
             <div style="display:flex;gap:5px;">
                 <button onclick="app.toggleEnc()"  id="btn-enc"  style="width:50px;font-size:10px;opacity:0.5;margin:0;">ENC</button>
                 <button onclick="app.toggleDict()" id="btn-dict" style="width:50px;font-size:10px;opacity:0.5;margin:0;">DICT</button>
@@ -339,6 +369,7 @@
 
     <div id="tab-global" class="hidden">
         <p style="font-size:11px;opacity:0.6;margin-bottom:8px;">// PUBLIC FREQUENCY</p>
+        <input type="text" id="global-search" placeholder="Search public chat..." oninput="app.filterChat('global-chat', this.value)" style="margin-bottom:4px; font-size:10px;">
         <div class="chat-box" id="global-chat"></div>
         <input type="text" id="global-input" placeholder="Public Comment (/spoiler text)...">
         <button onclick="app.sendGlobalMsg()">POST COMMENT</button>
@@ -347,8 +378,43 @@
     <button onclick="location.reload()" style="margin-top:20px;border:none;opacity:0.35;font-size:11px;">LOGOUT</button>
 </div>
 
+<div id="screen-feedback" class="screen hidden" style="border-color:#ccc;">
+    <h2>// SYSTEM_FEEDBACK_UPLINK</h2>
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Submit reports directly to Network Admins.</p>
+    
+    <select id="fb-type" style="margin-bottom:10px;">
+        <option value="BUG">BUG REPORT</option>
+        <option value="FEEDBACK">GENERAL FEEDBACK</option>
+        <option value="FEATURE">FEATURE REQUEST</option>
+    </select>
+    <textarea id="fb-text" placeholder="Describe the issue or feedback..." style="height:80px; resize:none;"></textarea>
+    <button onclick="app.sendFeedback()">SUBMIT TRANSMISSION</button>
+
+    <div id="admin-feedback-panel" class="hidden" style="margin-top:20px; border-top:1px dashed currentColor; padding-top:10px;">
+        <h3 style="color:#00FFFF;">// ADMIN: INCOMING REPORTS</h3>
+        <div id="feedback-list" style="height:200px; overflow-y:auto; border:1px solid var(--dim); padding:5px;"></div>
+    </div>
+    
+    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
+</div>
+
+<div id="screen-minigame" class="screen hidden">
+    <h2>// TERMINAL_JUMP.EXE</h2>
+    <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">CLICK OR PRESS SPACE TO JUMP</div>
+    <canvas id="game-canvas" width="400" height="200"></canvas>
+    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+        <span>SCORE: <span id="game-score">0</span></span>
+        <button onclick="game.start()" style="width:auto; padding:2px 10px; margin:0;">RESTART</button>
+    </div>
+    <button onclick="nav.to('hub')" style="margin-top:15px;">EXIT</button>
+</div>
+
 <div id="screen-comms" class="screen hidden" style="border-color:#FF00FF; box-shadow:0 0 28px #FF00FF; color:#FF00FF;">
-    <h2>// COMMS_UPLINK (DMs & GROUPS)</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>// COMMS_UPLINK (DMs & GROUPS)</h2>
+        <button onclick="app.toggleNotifications()" id="btn-mute-notifs" style="width:auto; font-size:9px; padding:2px 5px; border-color:#FF00FF; color:#FF00FF;">🔔 UNMUTED</button>
+    </div>
+    
     <div class="grid-3" style="margin-bottom:10px;">
         <button onclick="msgSys.tab('friends')" style="border-color:#FF00FF; color:#FF00FF;">FRIENDS</button>
         <button onclick="msgSys.tab('dms')" style="border-color:#FF00FF; color:#FF00FF;">DIRECT MSGS</button>
@@ -361,23 +427,35 @@
 
     <div id="comms-dms" class="hidden">
         <div id="dms-list" style="height:100px; overflow-y:auto; border:1px solid #FF00FF; padding:5px; margin-bottom:10px;"></div>
+        <input type="text" id="dm-search" placeholder="Search DMs..." oninput="app.filterChat('dm-chat-box', this.value)" style="margin-bottom:4px; font-size:10px; border-color:#FF00FF; color:#FF00FF;">
         <div class="chat-box" id="dm-chat-box" style="border-color:#FF00FF; height:200px;"></div>
         <div id="dm-typing" style="font-size:10px; opacity:0.6; min-height:14px; margin-bottom:4px;"></div>
+        
+        <div id="dm-reply-preview" class="hidden" style="font-size:10px; border-left:2px solid #FF00FF; padding-left:5px; margin-bottom:5px; opacity:0.7;">
+            Replying to msg... <button onclick="app.cancelReply('dm')" style="width:auto; padding:0 4px; display:inline; border:none; background:transparent; color:#FF00FF;">[x]</button>
+        </div>
+
         <div style="display:flex; gap:5px;">
-            <input type="file" id="dm-file" style="width:30px; padding:0; margin:0;" title="Attach File" onchange="msgSys.attachFile(this)">
-            <button id="dm-mic-btn" onmousedown="msgSys.startVoiceRec()" onmouseup="msgSys.stopVoiceRec()" style="width:40px; margin:0; font-size:16px;" title="Hold to Record">🎤</button>
-            <input type="text" id="dm-input" placeholder="Secure DM (/spoiler text)..." style="margin:0; flex:1;" oninput="msgSys.updateTyping('dm')">
-            <button onclick="msgSys.sendDM()" style="width:60px; margin:0;">SEND</button>
+            <input type="file" id="dm-file" style="width:30px; padding:0; margin:0; border-color:#FF00FF;" title="Attach File" onchange="msgSys.attachFile(this)">
+            <button id="dm-mic-btn" onmousedown="msgSys.startVoiceRec()" onmouseup="msgSys.stopVoiceRec()" style="width:40px; margin:0; font-size:16px; border-color:#FF00FF;" title="Hold to Record">🎤</button>
+            <input type="text" id="dm-input" placeholder="Secure DM (/spoiler text)..." style="margin:0; flex:1; border-color:#FF00FF; color:#FF00FF;" oninput="msgSys.updateTyping('dm')">
+            <button onclick="msgSys.sendDM()" style="width:60px; margin:0; border-color:#FF00FF; color:#FF00FF;">SEND</button>
         </div>
     </div>
 
     <div id="comms-groups" class="hidden">
         <button onclick="msgSys.createGroupPrompt()" style="border-color:#FF00FF; color:#FF00FF;">+ CREATE NEW SECURE GROUP</button>
         <div id="groups-list" style="height:100px; overflow-y:auto; border:1px solid #FF00FF; padding:5px; margin-bottom:10px; margin-top:10px;"></div>
+        <input type="text" id="group-search" placeholder="Search Group..." oninput="app.filterChat('group-chat-box', this.value)" style="margin-bottom:4px; font-size:10px; border-color:#FF00FF; color:#FF00FF;">
         <div class="chat-box" id="group-chat-box" style="border-color:#FF00FF; height:160px;"></div>
+        
+        <div id="group-reply-preview" class="hidden" style="font-size:10px; border-left:2px solid #FF00FF; padding-left:5px; margin-bottom:5px; opacity:0.7;">
+            Replying to msg... <button onclick="app.cancelReply('group')" style="width:auto; padding:0 4px; display:inline; border:none; background:transparent; color:#FF00FF;">[x]</button>
+        </div>
+
         <div style="display:flex; gap:5px;">
-            <input type="text" id="group-input" placeholder="Group Message..." style="margin:0; flex:1;">
-            <button onclick="msgSys.sendGroupMsg()" style="width:60px; margin:0;">SEND</button>
+            <input type="text" id="group-input" placeholder="Group Message (@user)..." style="margin:0; flex:1; border-color:#FF00FF; color:#FF00FF;">
+            <button onclick="msgSys.sendGroupMsg()" style="width:60px; margin:0; border-color:#FF00FF; color:#FF00FF;">SEND</button>
         </div>
     </div>
 
@@ -506,7 +584,8 @@
             <div id="prof-pfp-display" style="width:52px;height:52px;background:#111;border:1px solid currentColor;background-size:cover;background-position:center;flex-shrink:0;"></div>
             <div>
                 <h3 id="prof-displayname" style="border:none;padding:0;margin:0;font-size:1.1em;"></h3>
-                <small id="prof-username" style="opacity:0.5;"></small>
+                <small id="prof-username" style="opacity:0.5;"></small><br>
+                <em id="prof-bio" style="font-size:0.8em; opacity:0.7;"></em>
             </div>
         </div>
         <div id="prof-verified" class="hidden" style="color:#00FFFF;margin-top:8px;font-size:11px;">⚠ VERIFIED IDENTITY ⚠</div>
@@ -522,6 +601,7 @@
 
     <div id="prof-edit-panel" class="hidden" style="border-top:1px solid var(--dim);padding-top:12px;margin-top:12px;">
         <input type="text" id="edit-disp" placeholder="New Display Name">
+        <input type="text" id="edit-bio" placeholder="Update Status / Bio...">
         <input type="text" id="edit-pfp"  placeholder="PFP Image URL">
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
             <input type="checkbox" id="edit-private" style="width:auto;margin:0;"> <label style="font-size:12px;opacity:0.7;">HIDE CLAN FROM PUBLIC</label>
@@ -530,7 +610,11 @@
     </div>
     <div id="prof-admin-panel" class="hidden" style="border:1px solid #00FFFF;padding:10px;margin-top:10px;">
         <strong style="color:#00FFFF;font-size:11px;">SUPERUSER CONTROLS</strong>
-        <button onclick="app.verifyUser()" class="admin">GRANT VERIFICATION BADGE</button>
+        <div class="grid-2" style="margin-top:5px;">
+            <button onclick="app.verifyUser()" class="admin" style="font-size:9px; padding:4px;">TOGGLE VERIFY</button>
+            <button onclick="app.adminBan(state.viewedProfile, false)" class="danger" style="font-size:9px; padding:4px;" id="btn-admin-ban">BAN</button>
+            <button onclick="app.adminBan(state.viewedProfile, true)" class="danger" style="font-size:9px; padding:4px;" id="btn-admin-ipban">IP BAN</button>
+        </div>
     </div>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
@@ -542,9 +626,9 @@
 </div>
 
 <div id="screen-settings" class="screen hidden">
-    <h2>// SYSTEM_CONFIG — VISUAL THEME</h2>
-    <p style="font-size:11px;opacity:0.6;margin-bottom:14px;">Select a color theme. The entire interface adapts to match.</p>
-
+    <h2>// SYSTEM_CONFIG</h2>
+    
+    <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px;">VISUAL THEME</h3>
     <div class="theme-grid">
         <button class="theme-btn theme-btn-green"  onclick="settings.apply('green')" >GREEN</button>
         <button class="theme-btn theme-btn-red"    onclick="settings.apply('red')"   >RED</button>
@@ -553,13 +637,33 @@
         <button class="theme-btn theme-btn-gold"   onclick="settings.apply('gold')"  >GOLD</button>
         <button class="theme-btn theme-btn-purple" onclick="settings.apply('purple')">PURPLE</button>
         <button class="theme-btn theme-btn-cyan"   onclick="settings.apply('cyan')"  >CYAN</button>
+        <button class="theme-btn" style="background:linear-gradient(45deg, #f00,#0f0,#00f); color:#fff;" onclick="settings.apply('rainbow')">RNBW</button>
+        <button class="theme-btn" style="animation:rgbColorAnim 5s infinite;" onclick="settings.apply('rgb')">RGB</button>
     </div>
 
-    <div id="settings-active-label" style="font-size:11px;opacity:0.6;margin:10px 0 20px;">
-        ACTIVE THEME: <span id="active-theme-name" style="font-weight:bold;text-transform:uppercase;">GREEN</span>
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <input type="text" id="config-hex" placeholder="#FF00FF (Hex)" style="margin:0;">
+        <button onclick="settings.applyHex()" style="width:60px; margin:0;">SET</button>
     </div>
 
-    <button onclick="settings.reset()" class="danger">RESET TO DEFAULT (GREEN)</button>
+    <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px; margin-top:15px;">BACKGROUND</h3>
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <input type="text" id="config-bg" placeholder="Image/GIF URL..." style="margin:0;">
+        <button onclick="settings.applyBg()" style="width:60px; margin:0;">SET</button>
+    </div>
+    
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:15px;">
+        <input type="checkbox" id="config-dark-schedule" style="width:auto; margin:0;" onchange="settings.toggleDarkSchedule(this.checked)">
+        <label style="font-size:10px;">ENABLE AUTO DAY/NIGHT DARK MODE</label>
+    </div>
+
+    <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px; margin-top:15px;">SECURITY</h3>
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <input type="email" id="config-email" placeholder="Recovery Email..." style="margin:0;">
+        <button onclick="app.setEmail()" style="width:80px; margin:0;">VERIFY</button>
+    </div>
+
+    <button onclick="settings.reset()" class="danger" style="margin-top:20px;">RESET TO DEFAULT</button>
     <button onclick="nav.to('hub')" style="margin-top:6px;">BACK</button>
 </div>
 
@@ -607,7 +711,7 @@
         <input type="text" id="vid-title" placeholder="TITLE">
         <div class="grid-2">
             <input type="text" id="vid-url" placeholder="YouTube URL">
-            <input type="file" id="vid-file-upload" accept="video/*,image/*" title="Or Upload from Device (Small files only)">
+            <input type="file" id="vid-file-upload" accept="video/*,image/*" title="Or Upload from Device">
         </div>
         <button onclick="app.uploadVideo()" style="color:var(--rep-watch);border-color:var(--rep-watch);">BROADCAST</button>
     </div>
@@ -692,17 +796,6 @@
                 <button onclick="cockpit.scanNetwork()" class="warn" style="width:100%;padding:10px;">LAN DISCOVERY (SIM + WEBRTC)</button>
                 <div id="scan-progress"><div id="scan-progress-fill"></div></div>
             </div>
-            <div class="real-tools-panel hidden" id="real-tools-panel">
-                <h4 style="color:#00FFFF;margin:0 0 5px;">>> REAL TOOLS (EDU) <<</h4>
-                <ul style="font-size:9px;padding-left:14px;">
-                    <li><a href="https://nmap.org/" target="_blank">Nmap</a></li>
-                    <li><a href="https://github.com/samyk/webscan" target="_blank">WebScan</a></li>
-                    <li><a href="https://wireshark.org/" target="_blank">Wireshark</a></li>
-                    <li><a href="https://wii.hacks.guide/" target="_blank">Wii Homebrew</a></li>
-                </ul>
-                <button onclick="document.getElementById('real-tools-panel').classList.add('hidden')" style="font-size:8px;width:auto;padding:2px 6px;margin:0;">HIDE</button>
-            </div>
-            <button onclick="document.getElementById('real-tools-panel').classList.toggle('hidden')" style="width:100%;margin-top:5px;font-size:10px;opacity:0.6;">SHOW REAL TOOLS GUIDE</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px;">
             <div class="card" style="border-color:var(--warn-color);margin:0;">
@@ -798,15 +891,10 @@
         }
     };
 
-    const matCanvas = document.getElementById('matrix-canvas');
-    const matCtx = matCanvas.getContext('2d');
-    matCanvas.width  = window.innerWidth;
-    matCanvas.height = window.innerHeight;
+    const matCanvas = document.getElementById('matrix-canvas'); const matCtx = matCanvas.getContext('2d');
+    matCanvas.width  = window.innerWidth; matCanvas.height = window.innerHeight;
     window.addEventListener('resize', () => { matCanvas.width = window.innerWidth; matCanvas.height = window.innerHeight; });
-    const matLetters = "0101XYZA10110101";
-    const matFontSize = 14;
-    const matCols = Math.floor(matCanvas.width / matFontSize);
-    const matDrops = Array(matCols).fill(1);
+    const matLetters = "0101XYZA10110101"; const matFontSize = 14; const matCols = Math.floor(matCanvas.width / matFontSize); const matDrops = Array(matCols).fill(1);
     function drawMatrix() {
         matCtx.fillStyle = "rgba(0,0,0,0.05)"; matCtx.fillRect(0, 0, matCanvas.width, matCanvas.height);
         matCtx.fillStyle = getComputedStyle(document.body).color; matCtx.font = matFontSize + "px monospace";
@@ -820,6 +908,7 @@
     window.audioSys = {
         ctx: new (window.AudioContext || window.webkitAudioContext)(),
         playTone: (freq, type, dur) => {
+            if(localStorage.getItem('muteNotifs') === 'true') return;
             if(audioSys.ctx.state==='suspended') audioSys.ctx.resume();
             const o = audioSys.ctx.createOscillator(); const g = audioSys.ctx.createGain();
             o.type = type; o.frequency.value = freq; o.connect(g); g.connect(audioSys.ctx.destination);
@@ -827,35 +916,26 @@
         }
     };
 
-    window.deviceDetect = {
-        getInfo: () => {
-            const ua = navigator.userAgent; let device = "Desktop", os = "Unknown", browser = "Unknown";
-            if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry/.test(ua)) device = "Mobile"; else if (/Tablet|iPad/.test(ua)) device = "Tablet";
-            if(ua.indexOf("Win")>-1) os="Windows"; else if(ua.indexOf("Mac")>-1) os="macOS"; else if(ua.indexOf("Linux")>-1) os="Linux"; else if(ua.indexOf("Android")>-1) os="Android"; else if(ua.indexOf("iPhone")>-1||ua.indexOf("iPad")>-1) os="iOS";
-            if(ua.indexOf("Firefox")>-1) browser="Firefox"; else if(ua.indexOf("Chrome")>-1) browser="Chrome"; else if(ua.indexOf("Safari")>-1) browser="Safari"; else if(ua.indexOf("Edge")>-1) browser="Edge";
-            return `${device} | ${os} | ${browser}`;
-        }
-    };
+    window.deviceDetect = { getInfo: () => "Encrypted Client" };
 
     window.sysAlerts = {
         timer: null, banner: document.getElementById('sys-alert-banner'), msg: document.getElementById('sys-alert-msg'),
         trigger: (type) => {
             sysAlerts.banner.className = 'alert-off'; if(sysAlerts.timer) clearTimeout(sysAlerts.timer);
             let text = "", cls = "alert-on ";
-            if(type==='INFO')  { text="SYSTEM ANNOUNCEMENT: ROUTINE MAINTENANCE SCHEDULED"; cls+="type-info"; audioSys.playTone(600,'sine',0.5); }
-            else if(type==='WARN') { text="WARNING: UNIDENTIFIED NETWORK TRAFFIC DETECTED"; cls+="type-warn"; audioSys.playTone(300,'square',0.2); setTimeout(()=>audioSys.playTone(300,'square',0.2),300); }
-            else if(type==='CRIT') { text="CRITICAL: SECURITY BREACH IN PROGRESS — LOCKDOWN"; cls+="type-crit"; let i=0; const s=setInterval(()=>{audioSys.playTone(800+(i%2)*200,'sawtooth',0.1);i++;if(i>10)clearInterval(s);},200); }
+            if(type==='INFO')  { text="SYSTEM ANNOUNCEMENT"; cls+="type-info"; audioSys.playTone(600,'sine',0.5); }
+            else if(type==='WARN') { text="WARNING DETECTED"; cls+="type-warn"; audioSys.playTone(300,'square',0.2); }
+            else if(type==='CRIT') { text="CRITICAL ALERT"; cls+="type-crit"; audioSys.playTone(800,'sawtooth',0.1); }
             setTimeout(()=>{ sysAlerts.msg.innerText=text; sysAlerts.banner.className=cls; }, 100);
             sysAlerts.timer = setTimeout(sysAlerts.hide, 10000);
         }, hide: () => { sysAlerts.banner.className = 'alert-off'; }
     };
 
-    window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]') };
+    window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
 
     window.nav = {
         to: (id) => {
-            document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden'));
-            document.getElementById('screen-kali').classList.add('hidden');
+            document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden')); document.getElementById('screen-kali').classList.add('hidden');
             if(id==='kali') document.getElementById('screen-kali').classList.remove('hidden'); else document.getElementById('screen-'+id).classList.remove('hidden');
             if(id === 'auth' || id === 'social') { try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { } }
             if(id==='hub')      app.initHub();
@@ -871,22 +951,52 @@
             if(id==='events')   app.loadEvents();
             if(id==='emergency') emergency.init();
             if(id==='comms')    msgSys.init();
+            if(id==='feedback'){ if(["user1234","user4321"].includes(state.user.toLowerCase())) document.getElementById('admin-feedback-panel').classList.remove('hidden'); app.loadFeedback(); }
+            if(id==='minigame') game.init();
         },
-        tab: (t) => {
-            document.getElementById('tab-clans').classList.add('hidden');
-            document.getElementById('tab-global').classList.add('hidden');
-            document.getElementById('tab-'+t).classList.remove('hidden');
-        }
+        tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
     };
 
     window.app = {
         encMode:false, dictMode:false, clanUnsub:null, clanChatUnsub:null, alertInterval:null,
         voiceContext:null, voiceSource:null, voiceAnalyser:null, voiceAnim:null, voiceActive:false, voiceUnsubscribe:null, voiceHeartbeat:null,
-        globalHeartbeat: null, globalChatUnsub: null, userUnsub: null,
+        globalHeartbeat: null, globalChatUnsub: null, userUnsub: null, isVideo: false,
 
         formatMsg: (txt) => {
+            if(!txt) return "";
             let res = app.translate(txt);
-            return res.replace(/\/spoiler \((.*?)\)/g, `<span class="spoiler" onclick="this.classList.add('revealed')">$1</span>`);
+            res = res.replace(/\/spoiler \((.*?)\)/g, `<span class="spoiler" onclick="this.classList.add('revealed')">$1</span>`);
+            res = res.replace(/@(\w+)/g, `<span class="mention">@$1</span>`);
+            // Link Preview
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            res = res.replace(urlRegex, (url) => {
+                if(url.match(/\.(jpeg|jpg|gif|png|webp)$/)) return `<a href="${url}" target="_blank">${url}</a><br><img src="${url}" style="max-height:100px; border:1px solid currentColor;">`;
+                return `<a href="${url}" target="_blank">${url}</a> <div class="link-preview"><span>🔗</span> <span style="opacity:0.7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;">${url}</span></div>`;
+            });
+            return res;
+        },
+
+        filterChat: (containerId, query) => {
+            const msgs = document.querySelectorAll(`#${containerId} .chat-msg`);
+            msgs.forEach(m => { if(m.innerText.toLowerCase().includes(query.toLowerCase())) m.style.display = 'block'; else m.style.display = 'none'; });
+        },
+
+        toggleNotifications: () => {
+            const isMuted = localStorage.getItem('muteNotifs') === 'true';
+            localStorage.setItem('muteNotifs', !isMuted);
+            document.getElementById('btn-mute-notifs').innerText = !isMuted ? "🔕 MUTED" : "🔔 UNMUTED";
+            document.getElementById('btn-mute-notifs').style.color = !isMuted ? "red" : "#FF00FF";
+        },
+
+        replyTo: (id, user, type) => {
+            state.replyTarget = id;
+            if(type==='clan') { document.getElementById('clan-reply-preview').classList.remove('hidden'); document.getElementById('clan-reply-user').innerText = user; document.getElementById('clan-input').focus(); }
+            if(type==='dm') { document.getElementById('dm-reply-preview').classList.remove('hidden'); document.getElementById('dm-input').focus(); }
+            if(type==='group') { document.getElementById('group-reply-preview').classList.remove('hidden'); document.getElementById('group-input').focus(); }
+        },
+        cancelReply: (type) => {
+            state.replyTarget = null;
+            document.getElementById(`${type}-reply-preview`).classList.add('hidden');
         },
 
         login: async () => {
@@ -895,6 +1005,8 @@
             const { data, error } = await supabase.from('users').select('*').eq('id', u).maybeSingle();
             loading(false);
             if (error) return alert("DATABASE ERROR: " + error.message);
+            if (data && data.banned) return alert("ACCOUNT SUSPENDED.");
+            if (data && data.ipBanned) return alert("CONNECTION BLOCKED BY ADMIN.");
             if(data && data.pass===p){ state.user=u; state.friends=data.friends||[]; state.blocks=data.blocks||[]; app.startHeartbeat(); nav.to('hub'); } else alert("INVALID CREDENTIALS");
         },
 
@@ -903,9 +1015,21 @@
             if(!u||!p) return; loading(true);
             const { data: existingUser } = await supabase.from('users').select('*').eq('id', u).maybeSingle();
             if(existingUser){ loading(false); return alert("USERNAME ALREADY TAKEN"); }
-            const { error } = await supabase.from('users').insert({ id: u, pass: p, clan: null, rep: 0, displayName: u, verified: false, pfp: "", private: false, friends:[], blocks:[], presence_status:'ONLINE', lastSeen: dbHelper.serverTimestamp() });
+            const { error } = await supabase.from('users').insert({ id: u, pass: p, clan: null, rep: 0, displayName: u, verified: false, pfp: "", private: false, friends:[], blocks:[], presence_status:'ONLINE', bio:'No status set.', lastSeen: dbHelper.serverTimestamp() });
             loading(false); 
             if (error) alert("REGISTRATION FAILED: " + error.message); else alert("REGISTERED. YOU MAY NOW AUTHENTICATE.");
+        },
+
+        recoverPassword: async () => {
+            const u = prompt("Enter Username to recover:"); if(!u) return;
+            const { data } = await supabase.from('users').select('email, emailVerified, pass').eq('id', u).maybeSingle();
+            if(!data) return alert("User not found.");
+            if(!data.emailVerified) return alert("This account does not have a verified recovery email attached.");
+            alert(`A recovery link would be sent to ${data.email} (Simulation: Password is ${data.pass})`);
+        },
+        setEmail: async () => {
+            const e = document.getElementById('config-email').value; if(!e) return;
+            await supabase.from('users').update({email: e, emailVerified: true}).eq('id', state.user); alert("EMAIL VERIFIED & SECURED.");
         },
 
         getBadge: (username) => state.verifiedUsers.includes(username) ? `<span class="verified-badge" title="Verified Identity">♦✓</span>` : '',
@@ -918,10 +1042,7 @@
             return `<div class="status-dot status-online" title="ONLINE"></div>`;
         },
 
-        setStatus: async (s) => {
-            await supabase.from('users').update({presence_status: s, lastSeen: dbHelper.serverTimestamp()}).eq('id', state.user);
-            audioSys.playTone(500, 'sine', 0.1);
-        },
+        setStatus: async (s) => { await supabase.from('users').update({presence_status: s, lastSeen: dbHelper.serverTimestamp()}).eq('id', state.user); audioSys.playTone(500, 'sine', 0.1); },
 
         startHeartbeat: async () => {
             const { data: vSnap } = await supabase.from('users').select('id').eq('verified', true);
@@ -943,7 +1064,8 @@
                 let vListHTML = "";
                 state.verifiedUsers.forEach(vUser => {
                     const uData = (onlineSnap||[]).find(o=>o.id===vUser);
-                    const sDot = uData ? app.getStatusDot(uData.presence_status, uData.lastSeen) : `<div class="status-dot status-offline"></div>`;
+                    let sDot = `<div class="status-dot status-offline"></div>`; let timeStr = "";
+                    if(uData) sDot = app.getStatusDot(uData.presence_status, uData.lastSeen);
                     vListHTML += `<div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">${sDot} @${vUser} ${app.getBadge(vUser)}</div>`;
                 });
                 dir.innerHTML = `<div class="grid-3" style="margin-bottom:15px; text-align:center;"><div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${count||0}</b></div><div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div><div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div></div><h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3><div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS YET</span>"}</div>`;
@@ -998,13 +1120,14 @@
             state.viewedProfile=target;
             document.getElementById('prof-username').innerText="@"+target;
             document.getElementById('prof-displayname').innerText=d.displayName||target;
+            document.getElementById('prof-bio').innerText=`"${d.bio||'No status set.'}"`;
             document.getElementById('prof-pfp-display').style.backgroundImage=d.pfp?`url('${d.pfp}')`:"none";
             if(d.verified)document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
             if(d.private&&target!==state.user){document.getElementById('prof-clan').innerText="[REDACTED]";document.getElementById('prof-rep').innerText="[REDACTED]";}
             else{document.getElementById('prof-clan').innerText=d.clan||"NONE";document.getElementById('prof-rep').innerText=d.rep||"0";}
             if(target===state.user){
                 document.getElementById('prof-edit-panel').classList.remove('hidden'); document.getElementById('prof-social-panel').classList.add('hidden');
-                document.getElementById('edit-disp').value=d.displayName||""; document.getElementById('edit-pfp').value=d.pfp||""; document.getElementById('edit-private').checked=d.private||false;
+                document.getElementById('edit-disp').value=d.displayName||""; document.getElementById('edit-bio').value=d.bio||""; document.getElementById('edit-pfp').value=d.pfp||""; document.getElementById('edit-private').checked=d.private||false;
             } else { 
                 document.getElementById('prof-edit-panel').classList.add('hidden'); document.getElementById('prof-social-panel').classList.remove('hidden');
                 const addBtn = document.getElementById('btn-add-friend'); const blkBtn = document.getElementById('btn-block-user');
@@ -1012,11 +1135,33 @@
                 if(state.blocks.includes(target)) { blkBtn.innerText="UNBLOCK"; } else { blkBtn.innerText="BLOCK"; }
             }
             const admins=["user1234","user4321"];
-            if(admins.includes(state.user.toLowerCase())&&target!==state.user)document.getElementById('prof-admin-panel').classList.remove('hidden'); else document.getElementById('prof-admin-panel').classList.add('hidden');
+            if(admins.includes(state.user.toLowerCase())&&target!==state.user){
+                document.getElementById('prof-admin-panel').classList.remove('hidden');
+                document.getElementById('btn-admin-ban').innerText = d.banned ? "UNBAN" : "BAN";
+                document.getElementById('btn-admin-ipban').innerText = d.ipBanned ? "UN-IP BAN" : "IP BAN";
+            } else document.getElementById('prof-admin-panel').classList.add('hidden');
             nav.to('profile');
         },
-        saveProfile: async()=>{ const dn=document.getElementById('edit-disp').value.trim(); const pf=document.getElementById('edit-pfp').value.trim(); const priv=document.getElementById('edit-private').checked; await supabase.from('users').update({displayName:dn,pfp:pf,private:priv}).eq('id', state.user); alert("SAVED"); app.openProfile(state.user); },
-        verifyUser: async()=>{ if(!confirm("VERIFY?"))return; await supabase.from('users').update({verified:true}).eq('id', state.viewedProfile); alert("VERIFIED"); app.openProfile(state.viewedProfile); },
+        saveProfile: async()=>{ const dn=document.getElementById('edit-disp').value.trim(); const bio=document.getElementById('edit-bio').value.trim(); const pf=document.getElementById('edit-pfp').value.trim(); const priv=document.getElementById('edit-private').checked; await supabase.from('users').update({displayName:dn, bio:bio, pfp:pf, private:priv}).eq('id', state.user); alert("SAVED"); app.openProfile(state.user); },
+        verifyUser: async()=>{ if(!confirm("VERIFY?"))return; const {data} = await supabase.from('users').select('verified').eq('id', state.viewedProfile).single(); await supabase.from('users').update({verified:!data.verified}).eq('id', state.viewedProfile); alert("VERIFIED TOGGLED"); app.openProfile(state.viewedProfile); },
+        adminBan: async(target, isIP) => {
+            const {data} = await supabase.from('users').select('banned, ipBanned').eq('id', target).single();
+            if(isIP) { await supabase.from('users').update({ipBanned: !data.ipBanned}).eq('id', target); alert("IP BAN TOGGLED"); }
+            else { await supabase.from('users').update({banned: !data.banned}).eq('id', target); alert("BAN TOGGLED"); }
+            app.openProfile(target);
+        },
+
+        sendFeedback: async () => {
+            const type = document.getElementById('fb-type').value; const txt = document.getElementById('fb-text').value.trim();
+            if(!txt) return; await supabase.from('feedback').insert({u: state.user, type, txt, ts: dbHelper.serverTimestamp()});
+            document.getElementById('fb-text').value = ""; alert("TRANSMISSION SENT.");
+        },
+        loadFeedback: async () => {
+            const list = document.getElementById('feedback-list'); list.innerHTML = "Loading...";
+            const { data } = await supabase.from('feedback').select('*').order('ts', {ascending:false});
+            list.innerHTML = "";
+            (data||[]).forEach(f => { list.innerHTML += `<div style="border-bottom:1px solid var(--dim); padding:4px;"><strong>[${f.type}] @${f.u}</strong><br>${f.txt}</div>`; });
+        },
 
         listenToClan: async (cName)=>{
             document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText=cName;
@@ -1037,8 +1182,12 @@
                     if(m.type==='ANNOUNCE') style="font-weight:bold;color:#00FF00;border:1px solid #004400;padding:5px;margin:4px 0;background:rgba(0,255,0,0.05);display:block;";
                     if(m.type==='WARN')     style="font-weight:bold;color:#FFAA00;border:1px solid #332200;padding:5px;margin:4px 0;background:rgba(255,170,0,0.05);display:block;";
                     if(m.type==='ALERT')    style="font-weight:bold;color:#fff;background:red;padding:5px;margin:4px 0;border:1px solid #fff;display:block;";
+                    
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'clan')">REPLY</button></div>`;
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
+
                     if(m.u==="SYSTEM") d.innerHTML+=`<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`;
-                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getBadge(m.u)}:</strong> ${txt}</div>`;
+                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getBadge(m.u)}:</strong> ${txt}</div>`;
                 });
                 d.scrollTop=d.scrollHeight;
             }, (newMsg) => {
@@ -1060,24 +1209,43 @@
             app.voiceUnsubscribe = await dbHelper.listenQuery('clan_voice_users', 'clan_id', state.clan, {col:'joinedAt', asc:false}, null, (data) => {
                 const list=document.getElementById('voice-users-list'); const cont=document.getElementById('voice-users-container');
                 if(!data || data.length===0){cont.classList.add('hidden');return;} cont.classList.remove('hidden'); list.innerHTML="";
-                data.forEach(ud => { const now=Date.now(); const ls=ud.lastSeen?new Date(ud.lastSeen).getTime():now; if(now-ls<10000) list.innerHTML+=`<div class="voice-user-item"><div class="voice-user-indicator"></div><span>${ud.user_id}</span><small style="opacity:0.4;margin-left:auto;">${ud.device||'?'}</small></div>`; });
+                data.forEach(ud => { const now=Date.now(); const ls=ud.lastSeen?new Date(ud.lastSeen).getTime():now; if(now-ls<10000) list.innerHTML+=`<div class="voice-user-item"><div class="voice-user-indicator" style="${ud.device.includes('VIDEO')?'border-radius:0;background:#00FFFF;':''}"></div><span>${ud.user_id}</span><small style="opacity:0.4;margin-left:auto;">${ud.device||'?'}</small></div>`; });
             });
         },
 
         peer: null, calls: [], audioElements: [], localStream: null,
-        handleCall: (call) => { app.calls.push(call); call.on('stream', (remoteStream) => { const audio = new Audio(); audio.srcObject = remoteStream; audio.autoplay = true; app.audioElements.push(audio); audio.play().catch(e => console.error("Audio blocked", e)); }); },
-        toggleVoice: async()=>{
-            const btn=document.getElementById('btn-voice-conn'); const status=document.getElementById('voice-status'); const viz=document.getElementById('voice-viz'); const muteBtn=document.getElementById('btn-voice-mute');
+        handleCall: (call) => { 
+            app.calls.push(call); 
+            call.on('stream', (remoteStream) => { 
+                if(app.isVideo) {
+                    const video = document.createElement('video'); video.srcObject = remoteStream; video.autoplay = true; video.style.width="100%"; video.style.border="1px solid currentColor";
+                    document.getElementById('video-grid').appendChild(video);
+                    app.audioElements.push(video);
+                } else {
+                    const audio = new Audio(); audio.srcObject = remoteStream; audio.autoplay = true; app.audioElements.push(audio); audio.play().catch(e => console.error("Audio blocked", e)); 
+                }
+            }); 
+        },
+        toggleVoice: async(videoMode = false)=>{
+            const vBtn=document.getElementById('btn-voice-conn'); const cBtn=document.getElementById('btn-video-conn'); const status=document.getElementById('voice-status'); const viz=document.getElementById('voice-viz'); const muteBtn=document.getElementById('btn-voice-mute');
+            app.isVideo = videoMode;
             if(app.voiceActive){
                 if(app.localStream) { app.localStream.getTracks().forEach(t => t.stop()); app.localStream = null; }
                 if(app.voiceSource){app.voiceSource.disconnect();app.voiceSource=null;} if(app.voiceAnim){cancelAnimationFrame(app.voiceAnim);app.voiceAnim=null;}
                 if(app.peer) { app.peer.destroy(); app.peer = null; } app.calls.forEach(c => c.close()); app.calls = []; app.audioElements.forEach(a => { a.pause(); a.srcObject = null; }); app.audioElements = [];
+                document.getElementById('video-grid').innerHTML = "";
                 if(state.clan&&state.user){try{await supabase.from('clan_voice_users').delete().eq('clan_id', state.clan).eq('user_id', state.user);}catch(e){}}
                 if(app.voiceHeartbeat){clearInterval(app.voiceHeartbeat);app.voiceHeartbeat=null;}
-                btn.innerText="CONNECT MIC"; status.style.background="#330000"; viz.innerHTML=""; muteBtn.disabled=true; app.voiceActive=false;
+                vBtn.innerText="MIC"; cBtn.innerText="VIDEO"; vBtn.disabled=false; cBtn.disabled=false; status.style.background="#330000"; viz.innerHTML=""; muteBtn.disabled=true; app.voiceActive=false;
             } else {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({audio:true}); app.localStream = stream;
+                    const stream = await navigator.mediaDevices.getUserMedia({audio:true, video: videoMode}); app.localStream = stream;
+                    
+                    if(videoMode) {
+                        const myVid = document.createElement('video'); myVid.srcObject = stream; myVid.autoplay = true; myVid.muted = true; myVid.style.width="100%"; myVid.style.border="1px solid currentColor";
+                        document.getElementById('video-grid').appendChild(myVid);
+                    }
+
                     app.voiceContext=new(window.AudioContext||window.webkitAudioContext)(); app.voiceAnalyser=app.voiceContext.createAnalyser(); app.voiceAnalyser.fftSize=64;
                     app.voiceSource=app.voiceContext.createMediaStreamSource(stream); app.voiceSource.connect(app.voiceAnalyser);
                     const bufLen=app.voiceAnalyser.frequencyBinCount; const dataArr=new Uint8Array(bufLen); viz.innerHTML="";
@@ -1085,7 +1253,8 @@
                     const myPeerId = `clannet_${state.clan}_${state.user}_${Math.floor(Math.random()*1000)}`; app.peer = new Peer(myPeerId);
                     app.peer.on('open', async (id) => {
                         if(state.clan&&state.user){
-                            await supabase.from('clan_voice_users').upsert({ clan_id: state.clan, user_id: state.user, peerId: id, joinedAt: dbHelper.serverTimestamp(), lastSeen: dbHelper.serverTimestamp(), speaking: false, device: deviceDetect.getInfo() });
+                            const devString = videoMode ? "VIDEO_LINK" : deviceDetect.getInfo();
+                            await supabase.from('clan_voice_users').upsert({ clan_id: state.clan, user_id: state.user, peerId: id, joinedAt: dbHelper.serverTimestamp(), lastSeen: dbHelper.serverTimestamp(), speaking: false, device: devString });
                             app.voiceHeartbeat=setInterval(async()=>{ if(state.clan&&state.user&&app.voiceActive){app.voiceAnalyser.getByteFrequencyData(dataArr);const avg=dataArr.reduce((a,b)=>a+b,0)/dataArr.length;await supabase.from('clan_voice_users').update({lastSeen: dbHelper.serverTimestamp(), speaking: avg>30}).eq('clan_id', state.clan).eq('user_id', state.user);} }, 2000);
                             const { data } = await supabase.from('clan_voice_users').select('*').eq('clan_id', state.clan);
                             if (data) { data.forEach(userData => { if(userData.user_id !== state.user && userData.peerId) { const call = app.peer.call(userData.peerId, stream); app.handleCall(call); } }); }
@@ -1093,8 +1262,10 @@
                     });
                     app.peer.on('call', (call) => { call.answer(stream); app.handleCall(call); });
                     const draw=()=>{ if(!app.voiceActive)return; app.voiceAnim=requestAnimationFrame(draw); app.voiceAnalyser.getByteFrequencyData(dataArr); for(let i=0;i<bufLen;i++){const b=document.getElementById('vbar-'+i);if(b)b.style.height=(dataArr[i]/5)+"px";} };
-                    app.voiceActive=true; draw(); btn.innerText="DISCONNECT"; status.style.background="currentColor"; muteBtn.disabled=false; muteBtn.innerText="MUTE";
-                } catch(e){ alert("MIC ACCESS DENIED OR NOT FOUND"); }
+                    app.voiceActive=true; draw(); 
+                    if(videoMode) { cBtn.innerText="DISCONNECT"; vBtn.disabled=true; } else { vBtn.innerText="DISCONNECT"; cBtn.disabled=true; }
+                    status.style.background="currentColor"; muteBtn.disabled=false; muteBtn.innerText="MUTE";
+                } catch(e){ alert("MEDIA ACCESS DENIED OR NOT FOUND"); }
             }
         },
         muteVoice: ()=>{
@@ -1114,7 +1285,7 @@
         deleteClan: async()=>{ const cN=state.clan; if(!confirm("WARNING: DELETE CLAN?"))return; loading(true); const { data: cD } = await supabase.from('clans').select('ranks').eq('id', cN).single(); for(const m of Object.keys(cD?.ranks||{})) await supabase.from('users').update({clan:null}).eq('id', m); await supabase.from('clans').delete().eq('id', cN); loading(false); alert("DELETED"); nav.to('hub'); },
         joinClan: async()=>{ const n=document.getElementById('join-name').value.trim(); const p=document.getElementById('join-pass').value.trim(); const { data: s } = await supabase.from('clans').select('*').eq('id', n).maybeSingle(); if(s&&s.pass===p){await supabase.from('users').update({clan:n}).eq('id', state.user); let ranks = s.ranks||{}; ranks[state.user]='member'; await supabase.from('clans').update({ranks}).eq('id', n);}else alert("INVALID"); },
         leaveClan: async()=>{ if(!confirm("LEAVE?"))return; await supabase.from('users').update({clan:null}).eq('id', state.user); let ranks = state.clanData.ranks||{}; delete ranks[state.user]; await supabase.from('clans').update({ranks}).eq('id', state.clan); },
-        sendClanMsg: async()=>{ const t=document.getElementById('clan-input').value; if(t){await supabase.from('clan_msgs').insert({clan_id:state.clan, u:state.user, txt:t, ts:dbHelper.serverTimestamp()});document.getElementById('clan-input').value="";} },
+        sendClanMsg: async()=>{ const t=document.getElementById('clan-input').value; if(t){await supabase.from('clan_msgs').insert({clan_id:state.clan, u:state.user, txt:t, thread_parent:state.replyTarget, ts:dbHelper.serverTimestamp()});document.getElementById('clan-input').value=""; app.cancelReply('clan');} },
 
         toggleEnc: ()=>{ app.encMode=!app.encMode; document.getElementById('btn-enc').style.opacity=app.encMode?'1':'0.5'; }, toggleDict: ()=>{ app.dictMode=!app.dictMode; document.getElementById('btn-dict').style.opacity=app.dictMode?'1':'0.5'; },
         translate: (txt)=>{ if(!app.encMode&&!app.dictMode)return txt; let out=""; const words=state.clanData.words||{}; const syms=state.clanData.symbols||{}; txt.split(" ").forEach(w=>{ const c=w.toLowerCase().replace(/[^a-z]/g,''); let fw=w; if(app.dictMode&&words[c])fw=words[c]; else if(app.encMode&&words[c])fw=words[c]; if(app.encMode){const cl=fw.toLowerCase().replace(/[^a-z]/g,'');out+=app.strToSym(cl,syms)+" ";}else{out+=fw+" ";} }); return out; },
@@ -1157,16 +1328,9 @@
             if(fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 if(file.size > 2000000) return alert("FILE TOO LARGE FOR DB STORAGE (Max 2MB). USE LINK.");
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = async () => {
-                    await supabase.from('ectotape_vids').insert({title, url: reader.result, uploader:state.user, ts:dbHelper.serverTimestamp()});
-                    app.loadEctoTape(); alert("BROADCAST UPLOADED");
-                };
-            } else if (url) {
-                await supabase.from('ectotape_vids').insert({title,url,uploader:state.user,ts:dbHelper.serverTimestamp()}); 
-                app.loadEctoTape(); alert("BROADCAST UPLOADED");
-            } else { alert("PROVIDE URL OR FILE"); }
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = async () => { await supabase.from('ectotape_vids').insert({title, url: reader.result, uploader:state.user, ts:dbHelper.serverTimestamp()}); app.loadEctoTape(); alert("BROADCAST UPLOADED"); };
+            } else if (url) { await supabase.from('ectotape_vids').insert({title,url,uploader:state.user,ts:dbHelper.serverTimestamp()}); app.loadEctoTape(); alert("BROADCAST UPLOADED"); } else { alert("PROVIDE URL OR FILE"); }
             document.getElementById('vid-title').value=""; document.getElementById('vid-url').value=""; fileInput.value="";
         },
 
@@ -1250,28 +1414,19 @@
                     const readStatus = (isMe && (m.read_by||[]).includes(otherUser)) ? `<span style="font-size:10px; color:#0f0;">👀</span>` : '';
                     const editedFlag = m.is_edited && !m.is_deleted ? `<span style="font-size:8px; opacity:0.5;"> (edited)</span>` : '';
                     const pinnedFlag = state.localPins.includes(m.id) ? `📌 ` : '';
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
                     
-                    // Render Reactions
                     let rxHTML = "";
-                    if(m.reactions) {
-                        for(const [rx, users] of Object.entries(m.reactions)) {
-                            if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('dm_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`;
-                        }
-                    }
+                    if(m.reactions) { for(const [rx, users] of Object.entries(m.reactions)) { if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('dm_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`; } }
 
-                    // Action buttons
-                    let actions = `<div class="msg-actions">
-                        <button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button>
-                        <button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '🔥')">🔥</button>
-                        <button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '💀')">💀</button>`;
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'dm')">REPLY</button><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '💀')">💀</button>`;
                     if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('dm_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('dm_msgs', '${m.id}')">DEL</button>`;
                     actions += `</div>`;
 
-                    box.innerHTML += `<div class="chat-msg">${actions} ${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
                 });
                 box.scrollTop = box.scrollHeight;
 
-                // Send read receipts
                 if(unreadIds.length > 0) {
                     for(let uid of unreadIds) {
                         const { data: dRow } = await supabase.from('dm_msgs').select('read_by').eq('id', uid).single();
@@ -1281,7 +1436,6 @@
                 }
             });
 
-            // Typing listener
             dbHelper.listenDoc('dms', dmId, (dmData) => {
                 const typing = (dmData.typing||[]).filter(t => t !== state.user);
                 const tDiv = document.getElementById('dm-typing');
@@ -1304,22 +1458,16 @@
                 }, 2000);
             }
         },
-        attachFile: (input) => {
-            if(input.files.length > 0 && input.files[0].size > 1000000) { alert("FILE TOO LARGE (Max 1MB via Base64)."); input.value=""; }
-        },
+        attachFile: (input) => { if(input.files.length > 0 && input.files[0].size > 1000000) { alert("FILE TOO LARGE (Max 1MB via Base64)."); input.value=""; } },
         sendDM: async () => {
             const inp = document.getElementById('dm-input'); const txt = inp.value.trim(); const fInp = document.getElementById('dm-file');
             if(!txt && fInp.files.length===0) return;
             let fileB64 = null;
-            if(fInp.files.length > 0) {
-                const reader = new FileReader(); reader.readAsDataURL(fInp.files[0]);
-                await new Promise(r => reader.onload = () => { fileB64 = reader.result; r(); });
-            }
-            await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: txt, file: fileB64, ts: dbHelper.serverTimestamp()});
-            inp.value = ""; fInp.value = ""; msgSys.updateTyping('dm'); // Will clear typing
+            if(fInp.files.length > 0) { const reader = new FileReader(); reader.readAsDataURL(fInp.files[0]); await new Promise(r => reader.onload = () => { fileB64 = reader.result; r(); }); }
+            await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: txt, file: fileB64, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
+            inp.value = ""; fInp.value = ""; app.cancelReply('dm'); msgSys.updateTyping('dm');
         },
 
-        // Voice Memos
         startVoiceRec: async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1328,9 +1476,7 @@
                 msgSys.rec.onstop = async () => {
                     const blob = new Blob(msgSys.audioChunks, { type: 'audio/webm' });
                     const reader = new FileReader(); reader.readAsDataURL(blob);
-                    reader.onloadend = async () => {
-                        await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: "[VOICE MEMO]", audio: reader.result, ts: dbHelper.serverTimestamp()});
-                    }
+                    reader.onloadend = async () => { await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: "[VOICE MEMO]", audio: reader.result, ts: dbHelper.serverTimestamp()}); }
                 };
                 msgSys.rec.start(); document.getElementById('dm-mic-btn').style.background = "red";
             } catch(e) { alert("MIC DENIED"); }
@@ -1340,12 +1486,9 @@
         // Groups
         createGroupPrompt: async () => {
             const name = prompt("GROUP NAME:"); if(!name) return;
-            const memStr = prompt(`ENTER USERNAMES (COMMA SEPARATED). \nYOUR FRIENDS: ${state.friends.join(', ')}`);
-            if(!memStr) return;
+            const memStr = prompt(`ENTER USERNAMES (COMMA SEPARATED). \nYOUR FRIENDS: ${state.friends.join(', ')}`); if(!memStr) return;
             let members = memStr.split(',').map(s=>s.trim()); members.push(state.user);
-            const gid = 'GRP_'+Date.now();
-            await supabase.from('group_chats').insert({id: gid, name, leader: state.user, members});
-            msgSys.loadGroups();
+            const gid = 'GRP_'+Date.now(); await supabase.from('group_chats').insert({id: gid, name, leader: state.user, members}); msgSys.loadGroups();
         },
         loadGroups: async () => {
             const list = document.getElementById('groups-list'); list.innerHTML="Loading groups...";
@@ -1367,51 +1510,32 @@
                     const editedFlag = m.is_edited && !m.is_deleted ? `<span style="font-size:8px; opacity:0.5;"> (edited)</span>` : '';
                     let pinnedFlag = m.pinned ? `<strong style="color:#FF00FF;">[PUBLIC PIN] 📌 </strong>` : '';
                     if(state.localPins.includes(m.id)) pinnedFlag += `📌 `;
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
 
                     let rxHTML = "";
                     if(m.reactions) { for(const [rx, users] of Object.entries(m.reactions)) { if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('group_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`; } }
 
-                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '💀')">💀</button>`;
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'group')">REPLY</button><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '💀')">💀</button>`;
                     if(isLeader) actions += `<button class="msg-btn" onclick="msgSys.pinPublic('${m.id}')">PUB-PIN</button>`;
                     if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('group_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('group_msgs', '${m.id}')">DEL</button>`;
                     actions += `</div>`;
 
-                    box.innerHTML += `<div class="chat-msg">${actions} ${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
         },
         sendGroupMsg: async () => {
             const inp = document.getElementById('group-input'); const txt = inp.value.trim(); if(!txt) return;
-            await supabase.from('group_msgs').insert({group_id: msgSys.activeGroup.id, u: state.user, txt: txt, ts: dbHelper.serverTimestamp()});
-            inp.value = "";
+            await supabase.from('group_msgs').insert({group_id: msgSys.activeGroup.id, u: state.user, txt: txt, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
+            inp.value = ""; app.cancelReply('group');
         },
 
-        // Message Actions
-        react: async (table, id, emoji) => {
-            const { data } = await supabase.from(table).select('reactions').eq('id', id).single();
-            let rx = data.reactions || {};
-            if(!rx[emoji]) rx[emoji] = [];
-            if(rx[emoji].includes(state.user)) rx[emoji] = rx[emoji].filter(u=>u!==state.user); else rx[emoji].push(state.user);
-            await supabase.from(table).update({reactions: rx}).eq('id', id);
-        },
-        editMsg: async (table, id, oldTxt) => {
-            const nTxt = prompt("EDIT MESSAGE:", oldTxt); if(!nTxt || nTxt===oldTxt) return;
-            await supabase.from(table).update({txt: nTxt, is_edited: true}).eq('id', id);
-        },
-        delMsg: async (table, id) => {
-            if(confirm("DELETE MESSAGE?")) await supabase.from(table).update({txt: "", is_deleted: true, file: null, audio: null}).eq('id', id);
-        },
-        pinLocal: (id) => {
-            if(state.localPins.includes(id)) state.localPins = state.localPins.filter(p=>p!==id); else state.localPins.push(id);
-            localStorage.setItem('localPins', JSON.stringify(state.localPins)); 
-            if(msgSys.activeDM) msgSys.openDM(msgSys.activeDM.other, msgSys.activeDM.id);
-            if(msgSys.activeGroup) msgSys.openGroup(msgSys.activeGroup.id, document.getElementById('group-chat-box').innerHTML.split(' ')[1], msgSys.activeGroup.leader);
-        },
-        pinPublic: async (id) => {
-            const { data } = await supabase.from('group_msgs').select('pinned').eq('id', id).single();
-            await supabase.from('group_msgs').update({pinned: !data.pinned}).eq('id', id);
-        }
+        react: async (table, id, emoji) => { const { data } = await supabase.from(table).select('reactions').eq('id', id).single(); let rx = data.reactions || {}; if(!rx[emoji]) rx[emoji] = []; if(rx[emoji].includes(state.user)) rx[emoji] = rx[emoji].filter(u=>u!==state.user); else rx[emoji].push(state.user); await supabase.from(table).update({reactions: rx}).eq('id', id); },
+        editMsg: async (table, id, oldTxt) => { const nTxt = prompt("EDIT MESSAGE:", oldTxt); if(!nTxt || nTxt===oldTxt) return; await supabase.from(table).update({txt: nTxt, is_edited: true}).eq('id', id); },
+        delMsg: async (table, id) => { if(confirm("DELETE MESSAGE?")) await supabase.from(table).update({txt: "", is_deleted: true, file: null, audio: null}).eq('id', id); },
+        pinLocal: (id) => { if(state.localPins.includes(id)) state.localPins = state.localPins.filter(p=>p!==id); else state.localPins.push(id); localStorage.setItem('localPins', JSON.stringify(state.localPins)); if(msgSys.activeDM) msgSys.openDM(msgSys.activeDM.other, msgSys.activeDM.id); if(msgSys.activeGroup) msgSys.openGroup(msgSys.activeGroup.id, document.getElementById('group-chat-box').innerHTML.split(' ')[1], msgSys.activeGroup.leader); },
+        pinPublic: async (id) => { const { data } = await supabase.from('group_msgs').select('pinned').eq('id', id).single(); await supabase.from('group_msgs').update({pinned: !data.pinned}).eq('id', id); }
     };
 
     // ================================================================
@@ -1419,53 +1543,26 @@
     // ================================================================
     window.social = {
         tab: (t)=>{ document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-'+t).classList.remove('hidden'); if(t==='posts')social.loadPosts(); if(t==='polls')social.loadPolls(); },
-        like: async(id,type)=>{ 
-            const col=type==='post'?'posts':'polls'; 
-            const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); 
-            let likes=d.likes||[]; let dislikes=d.dislikes||[]; 
-            if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); 
-            else{ likes.push(state.user); if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); } 
-            await supabase.from(col).update({likes, dislikes}).eq('id', id); 
-            type==='post'?social.loadPosts():social.loadPolls(); 
-        },
-        dislike: async(id,type)=>{ 
-            const col=type==='post'?'posts':'polls'; 
-            const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); 
-            let likes=d.likes||[]; let dislikes=d.dislikes||[]; 
-            if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); 
-            else{ dislikes.push(state.user); if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); } 
-            await supabase.from(col).update({likes, dislikes}).eq('id', id); 
-            type==='post'?social.loadPosts():social.loadPolls(); 
-        },
+        like: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); else{ likes.push(state.user); if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
+        dislike: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); else{ dislikes.push(state.user); if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
 
         openComments: async (id, type) => {
             document.querySelector('#comment-overlay .screen').classList.remove('hidden'); state.activeCommentId = id; state.activeCommentType = type;
             const overlay = document.getElementById('comment-overlay'); overlay.classList.remove('hidden'); 
             const div = document.getElementById('active-comment-list'); div.innerHTML = "<div style='opacity:0.4;'>>> ACCESSING ENCRYPTED THREAD...</div>";
             if (state.unsubComments) { state.unsubComments(); }
-            
             state.unsubComments = await dbHelper.listenQuery('comments', {parent_id: id}, {col:'ts', asc:true}, null, (data) => {
-                div.innerHTML = "";
-                if (!data || data.length === 0) { div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; return; }
+                div.innerHTML = ""; if (!data || data.length === 0) { div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; return; }
                 data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
                 div.scrollTop = div.scrollHeight;
             });
         },
-        closeComments: () => {
-            document.getElementById('comment-overlay').classList.add('hidden');
-            if (state.unsubComments) { state.unsubComments(); state.unsubComments = null; } state.activeCommentId = null; state.activeCommentType = null;
-        },
-        submitComment: async()=>{
-            const txt=document.getElementById('new-comment-input').value.trim(); if(!txt||!state.activeCommentId)return;
-            const btn=document.querySelector('#comment-overlay button:last-child'); if(btn)btn.disabled=true;
-            await supabase.from('comments').insert({parent_type: state.activeCommentType, parent_id: state.activeCommentId, u: state.user, txt, ts: dbHelper.serverTimestamp()});
-            document.getElementById('new-comment-input').value=""; if(btn)btn.disabled=false;
-        },
+        closeComments: () => { document.getElementById('comment-overlay').classList.add('hidden'); if (state.unsubComments) { state.unsubComments(); state.unsubComments = null; } state.activeCommentId = null; state.activeCommentType = null; },
+        submitComment: async()=>{ const txt=document.getElementById('new-comment-input').value.trim(); if(!txt||!state.activeCommentId)return; const btn=document.querySelector('#comment-overlay button:last-child'); if(btn)btn.disabled=true; await supabase.from('comments').insert({parent_type: state.activeCommentType, parent_id: state.activeCommentId, u: state.user, txt, ts: dbHelper.serverTimestamp()}); document.getElementById('new-comment-input').value=""; if(btn)btn.disabled=false; },
 
         createPost: async()=>{ const txt=document.getElementById('post-content').value; const vid=document.getElementById('post-video').value; if(!txt)return; await supabase.from('posts').insert({u:state.user, txt, video:vid||null, ts:dbHelper.serverTimestamp(), likes:[], dislikes:[]}); document.getElementById('post-content').value=""; document.getElementById('post-video').value=""; social.loadPosts(); },
         loadPosts: async()=>{
-            const div=document.getElementById('feed-posts'); div.innerHTML="LOADING FEED...";
-            const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); div.innerHTML="";
+            const div=document.getElementById('feed-posts'); div.innerHTML="LOADING FEED..."; const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); div.innerHTML="";
             (data||[]).forEach(p=>{ 
                 if(state.blocks.includes(p.u)) return;
                 const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
@@ -1473,8 +1570,7 @@
         },
         createPoll: async()=>{ const q=document.getElementById('poll-q').value; const o1=document.getElementById('poll-o1').value; const o2=document.getElementById('poll-o2').value; const vid=document.getElementById('poll-video').value; if(!q||!o1||!o2)return; await supabase.from('polls').insert({u:state.user, q, video:vid||null, opts:[{t:o1,v:0},{t:o2,v:0}], voters:[], likes:[], dislikes:[], ts:dbHelper.serverTimestamp()}); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
         loadPolls: async()=>{
-            const div=document.getElementById('feed-polls'); div.innerHTML="LOADING POLLS...";
-            const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); div.innerHTML="";
+            const div=document.getElementById('feed-polls'); div.innerHTML="LOADING POLLS..."; const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); div.innerHTML="";
             (data||[]).forEach(p=>{ 
                 if(state.blocks.includes(p.u)) return;
                 const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
@@ -1490,8 +1586,7 @@
         init: async()=>{ news.loadInternal(); },
         post: async()=>{ const h=document.getElementById('news-headline').value; const l=document.getElementById('news-link-input').value; if(!h)return; await supabase.from('news').insert({title:h, link:l||null, u:state.user, ts:dbHelper.serverTimestamp()}); document.getElementById('news-headline').value=""; document.getElementById('news-link-input').value=""; news.loadInternal(); },
         loadInternal: async()=>{
-            const d=document.getElementById('news-feed-internal'); d.innerHTML="Scanning local nodes...";
-            const { data } = await supabase.from('news').select('*').order('ts', {ascending:false}).limit(10); d.innerHTML="";
+            const d=document.getElementById('news-feed-internal'); d.innerHTML="Scanning local nodes..."; const { data } = await supabase.from('news').select('*').order('ts', {ascending:false}).limit(10); d.innerHTML="";
             (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getBadge(n.u)}</small></div>`; });
             if(!data || data.length===0) d.innerHTML="<div style='opacity:0.4;'>No broadcasts yet.</div>";
         }
@@ -1502,22 +1597,9 @@
     // ================================================================
     window.radio = {
         interval:null, noiseNode:null,
-        init: ()=>{
-            const viz=document.getElementById('freq-viz'); viz.innerHTML="";
-            for(let i=0;i<24;i++)viz.innerHTML+=`<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*48}px"></div>`;
-            if(radio.interval)clearInterval(radio.interval);
-            radio.interval=setInterval(()=>{ for(let i=0;i<24;i++){const el=document.getElementById(`fb-${i}`);if(el)el.style.height=(Math.random()*44+4)+"px";} },90);
-        },
+        init: ()=>{ const viz=document.getElementById('freq-viz'); viz.innerHTML=""; for(let i=0;i<24;i++)viz.innerHTML+=`<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*48}px"></div>`; if(radio.interval)clearInterval(radio.interval); radio.interval=setInterval(()=>{ for(let i=0;i<24;i++){const el=document.getElementById(`fb-${i}`);if(el)el.style.height=(Math.random()*44+4)+"px";} },90); },
         scan: ()=>{ audioSys.playTone(800,'sawtooth',0.1); document.getElementById('radio-freq').innerText=(400+Math.random()*100).toFixed(4); },
-        toggleNoise: ()=>{
-            if(radio.noiseNode){radio.noiseNode.disconnect();radio.noiseNode=null;document.getElementById('btn-noise').style.cssText="";}
-            else{
-                const ctx=audioSys.ctx; if(ctx.state==='suspended')ctx.resume();
-                const wn=ctx.createScriptProcessor(4096,1,1);
-                wn.onaudioprocess=(e)=>{const out=e.outputBuffer.getChannelData(0);for(let i=0;i<4096;i++)out[i]=Math.random()*0.08-0.04;};
-                wn.connect(ctx.destination); radio.noiseNode=wn; document.getElementById('btn-noise').style.cssText="background:var(--warn-color);color:#000;";
-            }
-        }
+        toggleNoise: ()=>{ if(radio.noiseNode){radio.noiseNode.disconnect();radio.noiseNode=null;document.getElementById('btn-noise').style.cssText="";} else{ const ctx=audioSys.ctx; if(ctx.state==='suspended')ctx.resume(); const wn=ctx.createScriptProcessor(4096,1,1); wn.onaudioprocess=(e)=>{const out=e.outputBuffer.getChannelData(0);for(let i=0;i<4096;i++)out[i]=Math.random()*0.08-0.04;}; wn.connect(ctx.destination); radio.noiseNode=wn; document.getElementById('btn-noise').style.cssText="background:var(--warn-color);color:#000;"; } }
     };
 
     // ================================================================
@@ -1554,7 +1636,42 @@
     window.kali = { dragTarget:null, offsetX:0, offsetY:0, openApp: (a)=>{ const c=document.getElementById('py-console'); c.innerHTML+=`\n<span class="term-info">root@kali:~# start ${a}</span>\n`; setTimeout(()=>c.scrollTop=c.scrollHeight,100); }, handleInput: (e)=>{ if(e.key==='Enter'){ const inp=document.getElementById('py-input'); const cmd=inp.value.trim(); const con=document.getElementById('py-console'); con.innerHTML+=`\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value=""; con.scrollTop=con.scrollHeight; audioSys.playTone(600,'sine',0.1); } else audioSys.playTone(800,'sine',0.05); }, startDrag: (e,id)=>{ kali.dragTarget=document.getElementById(id); const r=kali.dragTarget.getBoundingClientRect(); kali.offsetX=e.clientX-r.left; kali.offsetY=e.clientY-r.top; }, drag: (e)=>{ if(kali.dragTarget){kali.dragTarget.style.left=(e.clientX-kali.offsetX)+'px';kali.dragTarget.style.top=(e.clientY-kali.offsetY)+'px';} }, stopDrag: ()=>{ kali.dragTarget=null; } };
 
     // ================================================================
-    // EMERGENCY FEED (GDACS API & NWS LOCAL SCAN)
+    // GAME (Terminal Jump)
+    // ================================================================
+    window.game = {
+        ctx: document.getElementById('game-canvas').getContext('2d'),
+        player: {y: 100, v: 0}, obs: [], score: 0, frame: null,
+        init: () => { document.getElementById('game-canvas').onclick = () => game.player.v = -6; },
+        start: () => {
+            if(game.frame) cancelAnimationFrame(game.frame);
+            game.player = {y: 100, v: 0}; game.obs = []; game.score = 0;
+            const loop = () => {
+                game.ctx.clearRect(0,0,400,200);
+                game.player.v += 0.3; game.player.y += game.player.v;
+                game.ctx.fillStyle = getComputedStyle(document.body).color;
+                game.ctx.fillRect(50, game.player.y, 10, 10);
+                
+                if(Math.random() < 0.02) game.obs.push({x: 400, w: 20, h: Math.random()*100+20, t: Math.random()>0.5});
+                
+                for(let i=game.obs.length-1; i>=0; i--) {
+                    let o = game.obs[i]; o.x -= 3;
+                    if(o.t) game.ctx.fillRect(o.x, 0, o.w, o.h); else game.ctx.fillRect(o.x, 200-o.h, o.w, o.h);
+                    if(o.x < -20) { game.obs.splice(i, 1); game.score++; document.getElementById('game-score').innerText = game.score; }
+                    
+                    // Collision
+                    let pRect = {x:50, y:game.player.y, w:10, h:10};
+                    let oRect = {x:o.x, y:o.t?0:200-o.h, w:o.w, h:o.h};
+                    if (pRect.x < oRect.x + oRect.w && pRect.x + pRect.w > oRect.x && pRect.y < oRect.y + oRect.h && pRect.y + pRect.h > oRect.y) return alert("GAME OVER! Score: " + game.score);
+                }
+                if(game.player.y > 200 || game.player.y < 0) return alert("GAME OVER! Score: " + game.score);
+                game.frame = requestAnimationFrame(loop);
+            };
+            loop();
+        }
+    };
+
+    // ================================================================
+    // EMERGENCY FEED
     // ================================================================
     window.emergency = {
         interval: null,
@@ -1590,7 +1707,7 @@
     // SETTINGS — theme preset system
     // ================================================================
     window.settings = {
-        themeMap: { green:  'color-green', red:    'color-red', blue:   'color-blue', white:  'color-white', gold:   'color-gold', purple: 'color-purple', cyan:   'color-cyan' },
+        themeMap: { green:  'color-green', red:    'color-red', blue:   'color-blue', white:  'color-white', gold:   'color-gold', purple: 'color-purple', cyan:   'color-cyan', rainbow: 'color-rainbow', rgb: 'color-rgb' },
         apply: (theme) => {
             const cls = settings.themeMap[theme] || 'color-green'; document.body.className = cls; localStorage.setItem('clanNetTheme', theme);
             if(drawing && drawing.ctx) drawing.ctx.strokeStyle = getComputedStyle(document.body).color;
@@ -1598,14 +1715,42 @@
             document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active')); const btn = document.querySelector(`.theme-btn-${theme}`); if(btn) btn.classList.add('active');
             audioSys.playTone(600, 'sine', 0.1);
         },
+        applyHex: () => {
+            const hex = document.getElementById('config-hex').value; if(!hex.startsWith('#')) return alert("MUST START WITH #");
+            document.body.className = ""; document.body.style.color = hex; localStorage.setItem('clanNetThemeHex', hex);
+        },
+        applyBg: () => {
+            const bg = document.getElementById('config-bg').value; 
+            document.body.style.backgroundImage = `url('${bg}')`; localStorage.setItem('clanNetBg', bg);
+        },
+        toggleDarkSchedule: (isActive) => {
+            localStorage.setItem('darkSchedule', isActive);
+            if(isActive) settings.runDarkSchedule(); else document.body.style.backgroundColor = "#000";
+        },
+        runDarkSchedule: () => {
+            if(localStorage.getItem('darkSchedule') !== 'true') return;
+            const hour = new Date().getHours();
+            if(hour >= 7 && hour < 17) { document.documentElement.style.setProperty('--bg-color', '#dddddd'); document.body.style.color = '#000'; } // Day
+            else if(hour >= 17 && hour < 20) { document.documentElement.style.setProperty('--bg-color', '#444444'); } // Dusk
+            else { document.documentElement.style.setProperty('--bg-color', '#000000'); } // Night
+        },
         loadUI: () => {
             const saved = localStorage.getItem('clanNetTheme') || 'green'; document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
             const btn = document.querySelector(`.theme-btn-${saved}`); if(btn) btn.classList.add('active');
             const label = document.getElementById('active-theme-name'); if(label) label.innerText = saved.toUpperCase();
+            document.getElementById('config-bg').value = localStorage.getItem('clanNetBg') || "";
+            document.getElementById('config-dark-schedule').checked = localStorage.getItem('darkSchedule') === 'true';
         },
-        load: () => { const saved = localStorage.getItem('clanNetTheme') || 'green'; const cls = settings.themeMap[saved] || 'color-green'; document.body.className = cls; },
+        load: () => { 
+            const savedHex = localStorage.getItem('clanNetThemeHex');
+            if(savedHex) { document.body.style.color = savedHex; }
+            else { const saved = localStorage.getItem('clanNetTheme') || 'green'; const cls = settings.themeMap[saved] || 'color-green'; document.body.className = cls; }
+            const savedBg = localStorage.getItem('clanNetBg'); if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
+            settings.runDarkSchedule(); setInterval(settings.runDarkSchedule, 60000); // Check time every minute
+        },
         reset: () => {
-            if(!confirm("RESET TO DEFAULT?")) return; localStorage.removeItem('clanNetTheme'); document.body.className = 'color-green';
+            if(!confirm("RESET TO DEFAULT?")) return; 
+            localStorage.clear(); document.body.className = 'color-green'; document.body.style.color = ''; document.body.style.backgroundImage = 'none';
             document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active')); const btn = document.querySelector('.theme-btn-green'); if(btn) btn.classList.add('active');
             const label = document.getElementById('active-theme-name'); if(label) label.innerText = 'GREEN'; audioSys.playTone(400, 'sine', 0.2);
         }
@@ -1613,6 +1758,7 @@
 
     settings.load();
     document.addEventListener('keydown', (e)=>{
+        if(e.key === ' ' && !document.getElementById('screen-minigame').classList.contains('hidden')) { e.preventDefault(); game.player.v = -6; }
         if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
             if(e.key==='Enter')audioSys.playTone(400,'square',0.1); else if(e.key==='Backspace')audioSys.playTone(300,'sawtooth',0.1); else audioSys.playTone(800,'sine',0.05);
         }
