@@ -1215,632 +1215,628 @@
         triggerClanRedAlert: (msg)=>{ document.getElementById('clan-alert-msg').innerText=msg; document.getElementById('clan-alert-overlay').classList.remove('hidden'); if(app.alertInterval)clearInterval(app.alertInterval); const ctx=audioSys.ctx; app.alertInterval=setInterval(()=>{ if(ctx.state==='suspended')ctx.resume(); const osc=ctx.createOscillator(); const g=ctx.createGain(); osc.connect(g); g.connect(ctx.destination); osc.type='sawtooth'; const now=ctx.currentTime; osc.frequency.setValueAtTime(600,now); osc.frequency.linearRampToValueAtTime(1200,now+0.5); osc.frequency.linearRampToValueAtTime(600,now+1.0); g.gain.setValueAtTime(0.2,now); osc.start(now); osc.stop(now+1.0); },1000); },
         ackAlert: ()=>{ document.getElementById('clan-alert-overlay').classList.add('hidden'); if(app.alertInterval)clearInterval(app.alertInterval); },
 
-        listenToVoiceUsers: async ()=>{
-            if(!state.clan)return; if(app.voiceUnsubscribe)app.voiceUnsubscribe();
-            app.voiceUnsubscribe = await dbHelper.listenQuery('clan_voice_users', 'clan_id', state.clan, {col:'joinedAt', asc:false}, null, (data) => {
-                const list=document.getElementById('voice-users-list'); const cont=document.getElementById('voice-users-container');
-                if(!data || data.length===0){cont.classList.add('hidden');return;} cont.classList.remove('hidden'); list.innerHTML="";
-                data.forEach(ud => { const now=Date.now(); const ls=ud.lastSeen?new Date(ud.lastSeen).getTime():now; if(now-ls<10000) list.innerHTML+=`<div class="voice-user-item"><div class="voice-user-indicator" style="${ud.device.includes('VIDEO')?'border-radius:0;background:#00FFFF;':''}"></div><span>${ud.user_id}</span><small style="opacity:0.4;margin-left:auto;">${ud.device||'?'}</small></div>`; });
-            });
-        },
 
-        peer: null, calls: [], audioElements: [], localStream: null,
-        handleCall: (call) => { 
-            app.calls.push(call); 
-            call.on('stream', (remoteStream) => { 
-                if(app.isVideo) {
-                    const video = document.createElement('video'); video.srcObject = remoteStream; video.autoplay = true; video.style.width="100%"; video.style.border="1px solid currentColor";
-                    document.getElementById('video-grid').appendChild(video);
-                    app.audioElements.push(video);
-                } else {
-                    const audio = new Audio(); audio.srcObject = remoteStream; audio.autoplay = true; app.audioElements.push(audio); audio.play().catch(e => console.error("Audio blocked", e)); 
-                }
-            }); 
-        },
-        toggleVoice: async(videoMode = false)=>{
-            const vBtn=document.getElementById('btn-voice-conn'); const cBtn=document.getElementById('btn-video-conn'); const status=document.getElementById('voice-status'); const viz=document.getElementById('voice-viz'); const muteBtn=document.getElementById('btn-voice-mute');
-            app.isVideo = videoMode;
-            if(app.voiceActive){
-                if(app.localStream) { app.localStream.getTracks().forEach(t => t.stop()); app.localStream = null; }
-                if(app.voiceSource){app.voiceSource.disconnect();app.voiceSource=null;} if(app.voiceAnim){cancelAnimationFrame(app.voiceAnim);app.voiceAnim=null;}
-                if(app.peer) { app.peer.destroy(); app.peer = null; } app.calls.forEach(c => c.close()); app.calls = []; app.audioElements.forEach(a => { a.pause(); a.srcObject = null; }); app.audioElements = [];
-                document.getElementById('video-grid').innerHTML = "";
-                if(state.clan&&state.user){try{await supabase.from('clan_voice_users').delete().eq('clan_id', state.clan).eq('user_id', state.user);}catch(e){}}
-                if(app.voiceHeartbeat){clearInterval(app.voiceHeartbeat);app.voiceHeartbeat=null;}
-                vBtn.innerText="MIC"; cBtn.innerText="VIDEO"; vBtn.disabled=false; cBtn.disabled=false; status.style.background="#330000"; viz.innerHTML=""; muteBtn.disabled=true; app.voiceActive=false;
-            } else {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({audio:true, video: videoMode}); app.localStream = stream;
-                    
-                    if(videoMode) {
-                        const myVid = document.createElement('video'); myVid.srcObject = stream; myVid.autoplay = true; myVid.muted = true; myVid.style.width="100%"; myVid.style.border="1px solid currentColor";
-                        document.getElementById('video-grid').appendChild(myVid);
-                    }
+        listenToVoiceUsers: async ()=>{
+            if(!state.clan)return; if(app.voiceUnsubscribe)app.voiceUnsubscribe();
+            app.voiceUnsubscribe = await dbHelper.listenQuery('clan_voice_users', 'clan_id', state.clan, {col:'joinedAt', asc:false}, null, (data) => {
+                const list=document.getElementById('voice-users-list'); const cont=document.getElementById('voice-users-container');
+                if(!data || data.length===0){cont.classList.add('hidden');return;} cont.classList.remove('hidden'); list.innerHTML="";
+                data.forEach(ud => { const now=Date.now(); const ls=ud.lastSeen?new Date(ud.lastSeen).getTime():now; if(now-ls<10000) list.innerHTML+=`<div class="voice-user-item"><div class="voice-user-indicator" style="${ud.device.includes('VIDEO')?'border-radius:0;background:#00FFFF;':''}"></div><span>${ud.user_id}</span><small style="opacity:0.4;margin-left:auto;">${ud.device||'?'}</small></div>`; });
+            });
+        },
 
-                    app.voiceContext=new(window.AudioContext||window.webkitAudioContext)(); app.voiceAnalyser=app.voiceContext.createAnalyser(); app.voiceAnalyser.fftSize=64;
-                    app.voiceSource=app.voiceContext.createMediaStreamSource(stream); app.voiceSource.connect(app.voiceAnalyser);
-                    const bufLen=app.voiceAnalyser.frequencyBinCount; const dataArr=new Uint8Array(bufLen); viz.innerHTML="";
-                    for(let i=0;i<bufLen;i++){const b=document.createElement('div');b.className='voice-bar';b.id='vbar-'+i;viz.appendChild(b);}
-                    const myPeerId = `clannet_${state.clan}_${state.user}_${Math.floor(Math.random()*1000)}`; app.peer = new Peer(myPeerId);
-                    app.peer.on('open', async (id) => {
-                        if(state.clan&&state.user){
-                            const devString = videoMode ? "VIDEO_LINK" : deviceDetect.getInfo();
-                            await supabase.from('clan_voice_users').upsert({ clan_id: state.clan, user_id: state.user, peerId: id, joinedAt: dbHelper.serverTimestamp(), lastSeen: dbHelper.serverTimestamp(), speaking: false, device: devString });
-                            app.voiceHeartbeat=setInterval(async()=>{ if(state.clan&&state.user&&app.voiceActive){app.voiceAnalyser.getByteFrequencyData(dataArr);const avg=dataArr.reduce((a,b)=>a+b,0)/dataArr.length;await supabase.from('clan_voice_users').update({lastSeen: dbHelper.serverTimestamp(), speaking: avg>30}).eq('clan_id', state.clan).eq('user_id', state.user);} }, 2000);
-                            const { data } = await supabase.from('clan_voice_users').select('*').eq('clan_id', state.clan);
-                            if (data) { data.forEach(userData => { if(userData.user_id !== state.user && userData.peerId) { const call = app.peer.call(userData.peerId, stream); app.handleCall(call); } }); }
-                        }
-                    });
-                    app.peer.on('call', (call) => { call.answer(stream); app.handleCall(call); });
-                    const draw=()=>{ if(!app.voiceActive)return; app.voiceAnim=requestAnimationFrame(draw); app.voiceAnalyser.getByteFrequencyData(dataArr); for(let i=0;i<bufLen;i++){const b=document.getElementById('vbar-'+i);if(b)b.style.height=(dataArr[i]/5)+"px";} };
-                    app.voiceActive=true; draw(); 
-                    if(videoMode) { cBtn.innerText="DISCONNECT"; vBtn.disabled=true; } else { vBtn.innerText="DISCONNECT"; cBtn.disabled=true; }
-                    status.style.background="currentColor"; muteBtn.disabled=false; muteBtn.innerText="MUTE";
-                } catch(e){ alert("MEDIA ACCESS DENIED OR NOT FOUND"); }
-            }
-        },
-        muteVoice: ()=>{
-            const btn=document.getElementById('btn-voice-mute'); if(app.localStream) { const audioTrack = app.localStream.getAudioTracks()[0]; if(audioTrack) { if(btn.innerText==="MUTE"){ audioTrack.enabled = false; btn.innerText="UNMUTE"; } else { audioTrack.enabled = true; btn.innerText="MUTE"; } } }
-        },
+        peer: null, calls: [], audioElements: [], localStream: null,
+        handleCall: (call) => { 
+            app.calls.push(call); 
+            call.on('stream', (remoteStream) => { 
+                if(app.isVideo) {
+                    const video = document.createElement('video'); video.srcObject = remoteStream; video.autoplay = true; video.style.width="100%"; video.style.border="1px solid currentColor";
+                    document.getElementById('video-grid').appendChild(video);
+                    app.audioElements.push(video);
+                } else {
+                    const audio = new Audio(); audio.srcObject = remoteStream; audio.autoplay = true; app.audioElements.push(audio); audio.play().catch(e => console.error("Audio blocked", e)); 
+                }
+            }); 
+        },
+        toggleVoice: async(videoMode = false)=>{
+            const vBtn=document.getElementById('btn-voice-conn'); const cBtn=document.getElementById('btn-video-conn'); const status=document.getElementById('voice-status'); const viz=document.getElementById('voice-viz'); const muteBtn=document.getElementById('btn-voice-mute');
+            app.isVideo = videoMode;
+            if(app.voiceActive){
+                if(app.localStream) { app.localStream.getTracks().forEach(t => t.stop()); app.localStream = null; }
+                if(app.voiceSource){app.voiceSource.disconnect();app.voiceSource=null;} if(app.voiceAnim){cancelAnimationFrame(app.voiceAnim);app.voiceAnim=null;}
+                if(app.peer) { app.peer.destroy(); app.peer = null; } app.calls.forEach(c => c.close()); app.calls = []; app.audioElements.forEach(a => { a.pause(); a.srcObject = null; }); app.audioElements = [];
+                document.getElementById('video-grid').innerHTML = "";
+                if(state.clan&&state.user){try{await supabase.from('clan_voice_users').delete().eq('clan_id', state.clan).eq('user_id', state.user);}catch(e){}}
+                if(app.voiceHeartbeat){clearInterval(app.voiceHeartbeat);app.voiceHeartbeat=null;}
+                vBtn.innerText="MIC"; cBtn.innerText="VIDEO"; vBtn.disabled=false; cBtn.disabled=false; status.style.background="#330000"; viz.innerHTML=""; muteBtn.disabled=true; app.voiceActive=false;
+            } else {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({audio:true, video: videoMode}); app.localStream = stream;
+                    
+                    if(videoMode) {
+                        const myVid = document.createElement('video'); myVid.srcObject = stream; myVid.autoplay = true; myVid.muted = true; myVid.style.width="100%"; myVid.style.border="1px solid currentColor";
+                        document.getElementById('video-grid').appendChild(myVid);
+                    }
 
-        loadRoster: ()=>{
-            nav.to('ranks'); const list=document.getElementById('roster-list'); list.innerHTML="";
-            const ranks=state.clanData.ranks||{}; const isLeader=state.clanData.leader===state.user;
-            for(const [member,rank] of Object.entries(ranks)){
-                let ctrl=""; if(isLeader&&member!==state.user) ctrl=`<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0;" class="danger">KICK</button><button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0 0 0 5px;">SET RANK</button>`;
-                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
-            }
-        },
-        setCustomRank: async(member)=>{ const r=prompt("ENTER CUSTOM RANK TITLE:"); if(r){ let ranks = state.clanData.ranks||{}; ranks[member]=r.toUpperCase(); await supabase.from('clans').update({ranks}).eq('id', state.clan); app.loadRoster();} },
-        clanKick: async(target)=>{ if(!confirm(`KICK ${target}?`))return; let ranks = state.clanData.ranks||{}; delete ranks[target]; await supabase.from('clans').update({ranks}).eq('id', state.clan); await supabase.from('users').update({clan:null}).eq('id', target); app.loadRoster(); },
-        deleteClan: async()=>{ const cN=state.clan; if(!confirm("WARNING: DELETE CLAN?"))return; loading(true); const { data: cD } = await supabase.from('clans').select('ranks').eq('id', cN).single(); for(const m of Object.keys(cD?.ranks||{})) await supabase.from('users').update({clan:null}).eq('id', m); await supabase.from('clans').delete().eq('id', cN); loading(false); alert("DELETED"); nav.to('hub'); },
-        joinClan: async()=>{ const n=document.getElementById('join-name').value.trim(); const p=document.getElementById('join-pass').value.trim(); const { data: s } = await supabase.from('clans').select('*').eq('id', n).maybeSingle(); if(s&&s.pass===p){await supabase.from('users').update({clan:n}).eq('id', state.user); let ranks = s.ranks||{}; ranks[state.user]='member'; await supabase.from('clans').update({ranks}).eq('id', n);}else alert("INVALID"); },
-        leaveClan: async()=>{ if(!confirm("LEAVE?"))return; await supabase.from('users').update({clan:null}).eq('id', state.user); let ranks = state.clanData.ranks||{}; delete ranks[state.user]; await supabase.from('clans').update({ranks}).eq('id', state.clan); },
-        sendClanMsg: async()=>{ 
-            const t=document.getElementById('clan-input').value; 
-            if(!t) return;
-            const { error } = await supabase.from('clan_msgs').insert({clan_id:state.clan, u:state.user, txt:t, thread_parent:state.replyTarget, ts:dbHelper.serverTimestamp()});
-            if (error) alert("CLAN COMMS ERROR: " + error.message);
-            else { document.getElementById('clan-input').value=""; app.cancelReply('clan'); }
-        },
-        toggleEnc: ()=>{ app.encMode=!app.encMode; document.getElementById('btn-enc').style.opacity=app.encMode?'1':'0.5'; }, toggleDict: ()=>{ app.dictMode=!app.dictMode; document.getElementById('btn-dict').style.opacity=app.dictMode?'1':'0.5'; },
-        translate: (txt)=>{ if(!app.encMode&&!app.dictMode)return txt; let out=""; const words=state.clanData.words||{}; const syms=state.clanData.symbols||{}; txt.split(" ").forEach(w=>{ const c=w.toLowerCase().replace(/[^a-z]/g,''); let fw=w; if(app.dictMode&&words[c])fw=words[c]; else if(app.encMode&&words[c])fw=words[c]; if(app.encMode){const cl=fw.toLowerCase().replace(/[^a-z]/g,'');out+=app.strToSym(cl,syms)+" ";}else{out+=fw+" ";} }); return out; },
-        strToSym: (str,syms)=>{ let html=""; for(let c of str){if(syms[c.toUpperCase()])html+=`<img src="${syms[c.toUpperCase()]}" class="chat-img">`;else html+=c;} return html; },
+                    app.voiceContext=new(window.AudioContext||window.webkitAudioContext)(); app.voiceAnalyser=app.voiceContext.createAnalyser(); app.voiceAnalyser.fftSize=64;
+                    app.voiceSource=app.voiceContext.createMediaStreamSource(stream); app.voiceSource.connect(app.voiceAnalyser);
+                    const bufLen=app.voiceAnalyser.frequencyBinCount; const dataArr=new Uint8Array(bufLen); viz.innerHTML="";
+                    for(let i=0;i<bufLen;i++){const b=document.createElement('div');b.className='voice-bar';b.id='vbar-'+i;viz.appendChild(b);}
+                    const myPeerId = `clannet_${state.clan}_${state.user}_${Math.floor(Math.random()*1000)}`; app.peer = new Peer(myPeerId);
+                    app.peer.on('open', async (id) => {
+                        if(state.clan&&state.user){
+                            const devString = videoMode ? "VIDEO_LINK" : deviceDetect.getInfo();
+                            await supabase.from('clan_voice_users').upsert({ clan_id: state.clan, user_id: state.user, peerId: id, joinedAt: dbHelper.serverTimestamp(), lastSeen: dbHelper.serverTimestamp(), speaking: false, device: devString });
+                            app.voiceHeartbeat=setInterval(async()=>{ if(state.clan&&state.user&&app.voiceActive){app.voiceAnalyser.getByteFrequencyData(dataArr);const avg=dataArr.reduce((a,b)=>a+b,0)/dataArr.length;await supabase.from('clan_voice_users').update({lastSeen: dbHelper.serverTimestamp(), speaking: avg>30}).eq('clan_id', state.clan).eq('user_id', state.user);} }, 2000);
+                            const { data } = await supabase.from('clan_voice_users').select('*').eq('clan_id', state.clan);
+                            if (data) { data.forEach(userData => { if(userData.user_id !== state.user && userData.peerId) { const call = app.peer.call(userData.peerId, stream); app.handleCall(call); } }); }
+                        }
+                    });
+                    app.peer.on('call', (call) => { call.answer(stream); app.handleCall(call); });
+                    const draw=()=>{ if(!app.voiceActive)return; app.voiceAnim=requestAnimationFrame(draw); app.voiceAnalyser.getByteFrequencyData(dataArr); for(let i=0;i<bufLen;i++){const b=document.getElementById('vbar-'+i);if(b)b.style.height=(dataArr[i]/5)+"px";} };
+                    app.voiceActive=true; draw(); 
+                    if(videoMode) { cBtn.innerText="DISCONNECT"; vBtn.disabled=true; } else { vBtn.innerText="DISCONNECT"; cBtn.disabled=true; }
+                    status.style.background="currentColor"; muteBtn.disabled=false; muteBtn.innerText="MUTE";
+                } catch(e){ alert("MEDIA ACCESS DENIED OR NOT FOUND"); }
+            }
+        },
+        muteVoice: ()=>{
+            const btn=document.getElementById('btn-voice-mute'); if(app.localStream) { const audioTrack = app.localStream.getAudioTracks()[0]; if(audioTrack) { if(btn.innerText==="MUTE"){ audioTrack.enabled = false; btn.innerText="UNMUTE"; } else { audioTrack.enabled = true; btn.innerText="MUTE"; } } }
+        },
 
-        renderDict: ()=>{ const list=document.getElementById('dict-list'); list.innerHTML=""; const words=state.clanData.words||{}; if(!Object.keys(words).length){list.innerHTML="<div style='opacity:0.4;padding:8px;'>DICTIONARY EMPTY</div>";return;} for(const[k,v]of Object.entries(words)){list.innerHTML+=`<div style="border-bottom:1px solid var(--dim);padding:5px;display:flex;justify-content:space-between;"><span>${k} <span style="opacity:0.5;">→</span> ${v}</span><button onclick="app.delWord('${k}')" style="width:auto;padding:2px 6px;margin:0;font-size:10px;" class="danger">X</button></div>`;} },
-        addWord: async()=>{ const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan){ let words = state.clanData.words||{}; words[k]=v; await supabase.from('clans').update({words}).eq('id', state.clan); app.renderDict(); } },
-        delWord: async(k)=>{ if(!confirm("DELETE?"))return; let words = state.clanData.words||{}; delete words[k]; await supabase.from('clans').update({words}).eq('id', state.clan); app.renderDict(); },
+        loadRoster: ()=>{
+            nav.to('ranks'); const list=document.getElementById('roster-list'); list.innerHTML="";
+            const ranks=state.clanData.ranks||{}; const isLeader=state.clanData.leader===state.user;
+            for(const [member,rank] of Object.entries(ranks)){
+                let ctrl=""; if(isLeader&&member!==state.user) ctrl=`<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0;" class="danger">KICK</button><button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0 0 0 5px;">SET RANK</button>`;
+                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
+            }
+        },
+        setCustomRank: async(member)=>{ const r=prompt("ENTER CUSTOM RANK TITLE:"); if(r){ let ranks = state.clanData.ranks||{}; ranks[member]=r.toUpperCase(); await supabase.from('clans').update({ranks}).eq('id', state.clan); app.loadRoster();} },
+        clanKick: async(target)=>{ if(!confirm(`KICK ${target}?`))return; let ranks = state.clanData.ranks||{}; delete ranks[target]; await supabase.from('clans').update({ranks}).eq('id', state.clan); await supabase.from('users').update({clan:null}).eq('id', target); app.loadRoster(); },
+        deleteClan: async()=>{ const cN=state.clan; if(!confirm("WARNING: DELETE CLAN?"))return; loading(true); const { data: cD } = await supabase.from('clans').select('ranks').eq('id', cN).single(); for(const m of Object.keys(cD?.ranks||{})) await supabase.from('users').update({clan:null}).eq('id', m); await supabase.from('clans').delete().eq('id', cN); loading(false); alert("DELETED"); nav.to('hub'); },
+        joinClan: async()=>{ const n=document.getElementById('join-name').value.trim(); const p=document.getElementById('join-pass').value.trim(); const { data: s } = await supabase.from('clans').select('*').eq('id', n).maybeSingle(); if(s&&s.pass===p){await supabase.from('users').update({clan:n}).eq('id', state.user); let ranks = s.ranks||{}; ranks[state.user]='member'; await supabase.from('clans').update({ranks}).eq('id', n);}else alert("INVALID"); },
+        leaveClan: async()=>{ if(!confirm("LEAVE?"))return; await supabase.from('users').update({clan:null}).eq('id', state.user); let ranks = state.clanData.ranks||{}; delete ranks[state.user]; await supabase.from('clans').update({ranks}).eq('id', state.clan); },
+        sendClanMsg: async()=>{ 
+            const t=document.getElementById('clan-input').value; 
+            if(!t) return;
+            const { error } = await supabase.from('clan_msgs').insert({clan_id:state.clan, u:state.user, txt:t, thread_parent:state.replyTarget, ts:dbHelper.serverTimestamp()});
+            if (error) alert("CLAN COMMS ERROR: " + error.message);
+            else { document.getElementById('clan-input').value=""; app.cancelReply('clan'); }
+        },
+        toggleEnc: ()=>{ app.encMode=!app.encMode; document.getElementById('btn-enc').style.opacity=app.encMode?'1':'0.5'; }, toggleDict: ()=>{ app.dictMode=!app.dictMode; document.getElementById('btn-dict').style.opacity=app.dictMode?'1':'0.5'; },
+        translate: (txt)=>{ if(!app.encMode&&!app.dictMode)return txt; let out=""; const words=state.clanData.words||{}; const syms=state.clanData.symbols||{}; txt.split(" ").forEach(w=>{ const c=w.toLowerCase().replace(/[^a-z]/g,''); let fw=w; if(app.dictMode&&words[c])fw=words[c]; else if(app.encMode&&words[c])fw=words[c]; if(app.encMode){const cl=fw.toLowerCase().replace(/[^a-z]/g,'');out+=app.strToSym(cl,syms)+" ";}else{out+=fw+" ";} }); return out; },
+        strToSym: (str,syms)=>{ let html=""; for(let c of str){if(syms[c.toUpperCase()])html+=`<img src="${syms[c.toUpperCase()]}" class="chat-img">`;else html+=c;} return html; },
 
-        createEvent: async()=>{ const n=document.getElementById('evt-name').value; if(!n)return; await supabase.from('events').insert({name:n, desc:document.getElementById('evt-desc').value, start:document.getElementById('evt-start').value, end:document.getElementById('evt-end').value, creator:state.user, ts:dbHelper.serverTimestamp()}); alert("CREATED"); app.loadEvents(); },
-        loadEvents: async()=>{ const list=document.getElementById('event-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('events').select('*').order('start', {ascending:true}); list.innerHTML=""; (data||[]).forEach(e=>{ list.innerHTML+=`<div class="card"><strong>${e.name}</strong><br><span style="opacity:0.6;font-size:11px;">${e.start} — ${e.end||'?'}</span><br><p style="margin:4px 0;font-size:12px;">${e.desc}</p><small style="opacity:0.4;">ORG: ${e.creator}</small></div>`;}); },
-        createJob: async()=>{ const t=document.getElementById('job-title').value; if(!t)return; await supabase.from('jobs').insert({title:t, desc:document.getElementById('job-desc').value, owner:state.user, worker:null, status:'OPEN', ts:dbHelper.serverTimestamp()}); alert("POSTED"); app.loadJobs(); },
-        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getBadge(j.owner)}</strong></small>${act}</div>`;}); },
-        acceptJob: async(jid)=>{ if(!confirm("ACCEPT?"))return; await supabase.from('jobs').update({worker:state.user, status:'ASSIGNED'}).eq('id', jid); app.openJobChat(jid); },
-        openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
-        sendJobMsg: async()=>{ const t=document.getElementById('job-msg-input').value; if(t) await supabase.from('job_msgs').insert({job_id:state.currentJob, u:state.user, txt:t, ts:dbHelper.serverTimestamp()}); document.getElementById('job-msg-input').value=""; },
-        closeJobChat: ()=>{ document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob=null; },
+        renderDict: ()=>{ const list=document.getElementById('dict-list'); list.innerHTML=""; const words=state.clanData.words||{}; if(!Object.keys(words).length){list.innerHTML="<div style='opacity:0.4;padding:8px;'>DICTIONARY EMPTY</div>";return;} for(const[k,v]of Object.entries(words)){list.innerHTML+=`<div style="border-bottom:1px solid var(--dim);padding:5px;display:flex;justify-content:space-between;"><span>${k} <span style="opacity:0.5;">→</span> ${v}</span><button onclick="app.delWord('${k}')" style="width:auto;padding:2px 6px;margin:0;font-size:10px;" class="danger">X</button></div>`;} },
+        addWord: async()=>{ const k=document.getElementById('dict-orig').value.toLowerCase(); const v=document.getElementById('dict-new').value.toLowerCase(); if(k&&v&&state.clan){ let words = state.clanData.words||{}; words[k]=v; await supabase.from('clans').update({words}).eq('id', state.clan); app.renderDict(); } },
+        delWord: async(k)=>{ if(!confirm("DELETE?"))return; let words = state.clanData.words||{}; delete words[k]; await supabase.from('clans').update({words}).eq('id', state.clan); app.renderDict(); },
 
-        loadEctoTape: async()=>{
-            const feed=document.getElementById('video-feed'); feed.innerHTML="<div style='opacity:0.4;padding:10px;'>LOADING STREAM...</div>";
-            const { data: ud } = await supabase.from('users').select('verified').eq('id', state.user).single();
-            if(ud && ud.verified) document.getElementById('upload-zone').classList.remove('hidden');
-            else { document.getElementById('upload-zone').classList.add('hidden'); document.getElementById('upload-denied').classList.remove('hidden'); }
-            try{
-                const { data } = await supabase.from('ectotape_vids').select('*').order('ts', {ascending:false}).limit(20); feed.innerHTML="";
-                if(!data || data.length===0){feed.innerHTML="<div style='opacity:0.4;padding:20px;text-align:center;'>NO BROADCASTS YET.</div>";return;}
-                data.forEach(v=>{
-                    const isBase64 = v.url.startsWith('data:');
-                    const vh = isBase64 ? 
-                        (v.url.startsWith('data:image') ? `<img src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;">` : `<video controls src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;"></video>`) 
-                        : (app.getEmbedUrl(v.url) ? `<iframe width="100%" height="150" src="${app.getEmbedUrl(v.url)}" frameborder="0" allowfullscreen style="display:block;margin-top:5px;"></iframe>`:`<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`);
-                    feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getBadge(v.uploader)}</strong></small>${vh}</div>`;
-                });
-            }catch(e){feed.innerHTML="<div style='color:red;'>ERROR: "+e.message+"</div>";}
-        },
-        uploadVideo: async()=>{ 
-            const title=document.getElementById('vid-title').value.trim(); const url=document.getElementById('vid-url').value.trim(); 
-            const fileInput = document.getElementById('vid-file-upload');
-            if(!title) return alert("TITLE REQUIRED"); 
-            if(fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                if(file.size > 2000000) return alert("FILE TOO LARGE FOR DB STORAGE (Max 2MB). USE LINK.");
-                const reader = new FileReader(); reader.readAsDataURL(file);
-                reader.onload = async () => { await supabase.from('ectotape_vids').insert({title, url: reader.result, uploader:state.user, ts:dbHelper.serverTimestamp()}); app.loadEctoTape(); alert("BROADCAST UPLOADED"); };
-            } else if (url) { await supabase.from('ectotape_vids').insert({title,url,uploader:state.user,ts:dbHelper.serverTimestamp()}); app.loadEctoTape(); alert("BROADCAST UPLOADED"); } else { alert("PROVIDE URL OR FILE"); }
-            document.getElementById('vid-title').value=""; document.getElementById('vid-url').value=""; fileInput.value="";
-        },
+        createEvent: async()=>{ const n=document.getElementById('evt-name').value; if(!n)return; await supabase.from('events').insert({name:n, desc:document.getElementById('evt-desc').value, start:document.getElementById('evt-start').value, end:document.getElementById('evt-end').value, creator:state.user, ts:dbHelper.serverTimestamp()}); alert("CREATED"); app.loadEvents(); },
+        loadEvents: async()=>{ const list=document.getElementById('event-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('events').select('*').order('start', {ascending:true}); list.innerHTML=""; (data||[]).forEach(e=>{ list.innerHTML+=`<div class="card"><strong>${e.name}</strong><br><span style="opacity:0.6;font-size:11px;">${e.start} — ${e.end||'?'}</span><br><p style="margin:4px 0;font-size:12px;">${e.desc}</p><small style="opacity:0.4;">ORG: ${e.creator}</small></div>`;}); },
+        createJob: async()=>{ const t=document.getElementById('job-title').value; if(!t)return; await supabase.from('jobs').insert({title:t, desc:document.getElementById('job-desc').value, owner:state.user, worker:null, status:'OPEN', ts:dbHelper.serverTimestamp()}); alert("POSTED"); app.loadJobs(); },
+        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getBadge(j.owner)}</strong></small>${act}</div>`;}); },
+        acceptJob: async(jid)=>{ if(!confirm("ACCEPT?"))return; await supabase.from('jobs').update({worker:state.user, status:'ASSIGNED'}).eq('id', jid); app.openJobChat(jid); },
+        openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
+        sendJobMsg: async()=>{ const t=document.getElementById('job-msg-input').value; if(t) await supabase.from('job_msgs').insert({job_id:state.currentJob, u:state.user, txt:t, ts:dbHelper.serverTimestamp()}); document.getElementById('job-msg-input').value=""; },
+        closeJobChat: ()=>{ document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob=null; },
 
-        createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
-        runSecurityScan: (type)=>{ const c=document.getElementById('soc-console'); c.innerHTML+=`<div class="term-line">> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div class="term-line">> COMPLETE. CLEAN.</div>`,1500); },
-        getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; }
-    };
+        loadEctoTape: async()=>{
+            const feed=document.getElementById('video-feed'); feed.innerHTML="<div style='opacity:0.4;padding:10px;'>LOADING STREAM...</div>";
+            const { data: ud } = await supabase.from('users').select('verified').eq('id', state.user).single();
+            if(ud && ud.verified) document.getElementById('upload-zone').classList.remove('hidden');
+            else { document.getElementById('upload-zone').classList.add('hidden'); document.getElementById('upload-denied').classList.remove('hidden'); }
+            try{
+                const { data } = await supabase.from('ectotape_vids').select('*').order('ts', {ascending:false}).limit(20); feed.innerHTML="";
+                if(!data || data.length===0){feed.innerHTML="<div style='opacity:0.4;padding:20px;text-align:center;'>NO BROADCASTS YET.</div>";return;}
+                data.forEach(v=>{
+                    const isBase64 = v.url.startsWith('data:');
+                    const vh = isBase64 ? 
+                        (v.url.startsWith('data:image') ? `<img src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;">` : `<video controls src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;"></video>`) 
+                        : (app.getEmbedUrl(v.url) ? `<iframe width="100%" height="150" src="${app.getEmbedUrl(v.url)}" frameborder="0" allowfullscreen style="display:block;margin-top:5px;"></iframe>`:`<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`);
+                    feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getBadge(v.uploader)}</strong></small>${vh}</div>`;
+                });
+            }catch(e){feed.innerHTML="<div style='color:red;'>ERROR: "+e.message+"</div>";}
+        },
+        uploadVideo: async()=>{ 
+            const title=document.getElementById('vid-title').value.trim(); const url=document.getElementById('vid-url').value.trim(); 
+            const fileInput = document.getElementById('vid-file-upload');
+            if(!title) return alert("TITLE REQUIRED"); 
+            if(fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if(file.size > 2000000) return alert("FILE TOO LARGE FOR DB STORAGE (Max 2MB). USE LINK.");
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = async () => { await supabase.from('ectotape_vids').insert({title, url: reader.result, uploader:state.user, ts:dbHelper.serverTimestamp()}); app.loadEctoTape(); alert("BROADCAST UPLOADED"); };
+            } else if (url) { await supabase.from('ectotape_vids').insert({title,url,uploader:state.user,ts:dbHelper.serverTimestamp()}); app.loadEctoTape(); alert("BROADCAST UPLOADED"); } else { alert("PROVIDE URL OR FILE"); }
+            document.getElementById('vid-title').value=""; document.getElementById('vid-url').value=""; fileInput.value="";
+        },
 
-    // ================================================================
-    // MESSAGING SYSTEM (DMs, Friends, Groups)
-    // ================================================================
-    window.msgSys = {
-        activeDM: null, activeGroup: null, unsubMsg: null, unsubGroup: null, dmTypingTimer: null, rec: null, audioChunks: [],
-        
-        tab: (t) => {
-            ['friends', 'dms', 'groups'].forEach(id => document.getElementById('comms-'+id).classList.add('hidden'));
-            document.getElementById('comms-'+t).classList.remove('hidden');
-            if(t==='friends') msgSys.loadFriends();
-            if(t==='groups') msgSys.loadGroups();
-            if(t==='dms') msgSys.loadDMList();
-        },
-        init: () => { msgSys.tab('friends'); },
+        createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
+        runSecurityScan: (type)=>{ const c=document.getElementById('soc-console'); c.innerHTML+=`<div class="term-line">> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div class="term-line">> COMPLETE. CLEAN.</div>`,1500); },
+        getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; }
+    };
 
-        // Friend/Block System
-        addFriend: async (u) => {
-            if(state.friends.includes(u)) state.friends = state.friends.filter(f=>f!==u); else state.friends.push(u);
-            await supabase.from('users').update({friends: state.friends}).eq('id', state.user); app.openProfile(u);
-        },
-        blockUser: async (u) => {
-            if(state.blocks.includes(u)) state.blocks = state.blocks.filter(b=>b!==u); else state.blocks.push(u);
-            await supabase.from('users').update({blocks: state.blocks}).eq('id', state.user); app.openProfile(u);
-        },
-        reportUser: async (u) => {
-            const reason = prompt(`REPORTING ${u}. REASON:`); if(!reason)return;
-            await supabase.from('reports').insert({reporter: state.user, reported: u, reason, ts: dbHelper.serverTimestamp()}); alert("REPORT LOGGED TO DB ADMINS.");
-        },
-        loadFriends: async () => {
-            const list = document.getElementById('friends-list'); list.innerHTML = "";
-            if(state.friends.length===0) return list.innerHTML = "<div style='opacity:0.5;'>NO FRIENDS IN DATABASE.</div>";
-            const { data } = await supabase.from('users').select('id, presence_status, lastSeen').in('id', state.friends);
-            (data||[]).forEach(f => {
-                list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getBadge(f.id)}</div>
-                    <button onclick="msgSys.openDM('${f.id}')" style="width:auto; padding:4px 8px; margin:0; border-color:#FF00FF; color:#FF00FF;">MESSAGE</button>
-                </div>`;
-            });
-        },
+    // ================================================================
+    // MESSAGING SYSTEM (DMs, Friends, Groups)
+    // ================================================================
+    window.msgSys = {
+        activeDM: null, activeGroup: null, unsubMsg: null, unsubGroup: null, dmTypingTimer: null, rec: null, audioChunks: [],
+        
+        tab: (t) => {
+            ['friends', 'dms', 'groups'].forEach(id => document.getElementById('comms-'+id).classList.add('hidden'));
+            document.getElementById('comms-'+t).classList.remove('hidden');
+            if(t==='friends') msgSys.loadFriends();
+            if(t==='groups') msgSys.loadGroups();
+            if(t==='dms') msgSys.loadDMList();
+        },
+        init: () => { msgSys.tab('friends'); },
 
-        // DMs
-        loadDMList: async () => {
-            const list = document.getElementById('dms-list'); list.innerHTML="Loading active links...";
-            const { data } = await supabase.from('dms').select('*');
-            list.innerHTML = "";
-            const myDMs = (data||[]).filter(d => (d.users||[]).includes(state.user));
-            myDMs.forEach(dm => {
-                const other = dm.users.find(u => u !== state.user);
-                list.innerHTML += `<div onclick="msgSys.openDM('${other}', '${dm.id}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">@${other}</div>`;
-            });
-        },
-        openDM: async (otherUser, knownDmId = null) => {
-            msgSys.tab('dms');
-            const dmId = knownDmId || [state.user, otherUser].sort().join('_');
-            msgSys.activeDM = { id: dmId, other: otherUser };
-            
-            await supabase.from('dms').upsert({ id: dmId, users: [state.user, otherUser] });
-            const box = document.getElementById('dm-chat-box'); box.innerHTML = `Establishing P2P link with ${otherUser}...`;
-            
-            if(msgSys.unsubMsg) msgSys.unsubMsg();
-            msgSys.unsubMsg = await dbHelper.listenQuery('dm_msgs', 'dm_id', dmId, {col:'ts', asc:true}, 100, async (data) => {
-                box.innerHTML = "";
-                let unreadIds = [];
-                data.forEach(m => {
-                    if(state.blocks.includes(m.u)) return;
-                    const isMe = m.u === state.user;
-                    if(!isMe && !(m.read_by||[]).includes(state.user)) unreadIds.push(m.id);
-                    
-                    let content = m.is_deleted ? `<em style="opacity:0.5">[DATA EXPUNGED]</em>` : app.formatMsg(m.txt);
-                    if(m.file) content += `<br><img src="${m.file}" style="max-width:100%; max-height:150px; border:1px solid currentColor; margin-top:4px;">`;
-                    if(m.audio) content += `<br><audio controls src="${m.audio}" style="height:30px; margin-top:4px;"></audio>`;
-                    
-                    const readStatus = (isMe && (m.read_by||[]).includes(otherUser)) ? `<span style="font-size:10px; color:#0f0;">👀</span>` : '';
-                    const editedFlag = m.is_edited && !m.is_deleted ? `<span style="font-size:8px; opacity:0.5;"> (edited)</span>` : '';
-                    const pinnedFlag = state.localPins.includes(m.id) ? `📌 ` : '';
-                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
-                    
-                    let rxHTML = "";
-                    if(m.reactions) { for(const [rx, users] of Object.entries(m.reactions)) { if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('dm_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`; } }
+        // Friend/Block System
+        addFriend: async (u) => {
+            if(state.friends.includes(u)) state.friends = state.friends.filter(f=>f!==u); else state.friends.push(u);
+            await supabase.from('users').update({friends: state.friends}).eq('id', state.user); app.openProfile(u);
+        },
+        blockUser: async (u) => {
+            if(state.blocks.includes(u)) state.blocks = state.blocks.filter(b=>b!==u); else state.blocks.push(u);
+            await supabase.from('users').update({blocks: state.blocks}).eq('id', state.user); app.openProfile(u);
+        },
+        reportUser: async (u) => {
+            const reason = prompt(`REPORTING ${u}. REASON:`); if(!reason)return;
+            await supabase.from('reports').insert({reporter: state.user, reported: u, reason, ts: dbHelper.serverTimestamp()}); alert("REPORT LOGGED TO DB ADMINS.");
+        },
+        loadFriends: async () => {
+            const list = document.getElementById('friends-list'); list.innerHTML = "";
+            if(state.friends.length===0) return list.innerHTML = "<div style='opacity:0.5;'>NO FRIENDS IN DATABASE.</div>";
+            const { data } = await supabase.from('users').select('id, presence_status, lastSeen').in('id', state.friends);
+            (data||[]).forEach(f => {
+                list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getBadge(f.id)}</div>
+                    <button onclick="msgSys.openDM('${f.id}')" style="width:auto; padding:4px 8px; margin:0; border-color:#FF00FF; color:#FF00FF;">MESSAGE</button>
+                </div>`;
+            });
+        },
 
-                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'dm')">REPLY</button><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '💀')">💀</button>`;
-                    if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('dm_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('dm_msgs', '${m.id}')">DEL</button>`;
-                    actions += `</div>`;
+        // DMs
+        loadDMList: async () => {
+            const list = document.getElementById('dms-list'); list.innerHTML="Loading active links...";
+            const { data } = await supabase.from('dms').select('*');
+            list.innerHTML = "";
+            const myDMs = (data||[]).filter(d => (d.users||[]).includes(state.user));
+            myDMs.forEach(dm => {
+                const other = dm.users.find(u => u !== state.user);
+                list.innerHTML += `<div onclick="msgSys.openDM('${other}', '${dm.id}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">@${other}</div>`;
+            });
+        },
+        openDM: async (otherUser, knownDmId = null) => {
+            msgSys.tab('dms');
+            const dmId = knownDmId || [state.user, otherUser].sort().join('_');
+            msgSys.activeDM = { id: dmId, other: otherUser };
+            
+            await supabase.from('dms').upsert({ id: dmId, users: [state.user, otherUser] });
+            const box = document.getElementById('dm-chat-box'); box.innerHTML = `Establishing P2P link with ${otherUser}...`;
+            
+            if(msgSys.unsubMsg) msgSys.unsubMsg();
+            msgSys.unsubMsg = await dbHelper.listenQuery('dm_msgs', 'dm_id', dmId, {col:'ts', asc:true}, 100, async (data) => {
+                box.innerHTML = "";
+                let unreadIds = [];
+                data.forEach(m => {
+                    if(state.blocks.includes(m.u)) return;
+                    const isMe = m.u === state.user;
+                    if(!isMe && !(m.read_by||[]).includes(state.user)) unreadIds.push(m.id);
+                    
+                    let content = m.is_deleted ? `<em style="opacity:0.5">[DATA EXPUNGED]</em>` : app.formatMsg(m.txt);
+                    if(m.file) content += `<br><img src="${m.file}" style="max-width:100%; max-height:150px; border:1px solid currentColor; margin-top:4px;">`;
+                    if(m.audio) content += `<br><audio controls src="${m.audio}" style="height:30px; margin-top:4px;"></audio>`;
+                    
+                    const readStatus = (isMe && (m.read_by||[]).includes(otherUser)) ? `<span style="font-size:10px; color:#0f0;">👀</span>` : '';
+                    const editedFlag = m.is_edited && !m.is_deleted ? `<span style="font-size:8px; opacity:0.5;"> (edited)</span>` : '';
+                    const pinnedFlag = state.localPins.includes(m.id) ? `📌 ` : '';
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
+                    
+                    let rxHTML = "";
+                    if(m.reactions) { for(const [rx, users] of Object.entries(m.reactions)) { if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('dm_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`; } }
 
-                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
-                });
-                box.scrollTop = box.scrollHeight;
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'dm')">REPLY</button><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '💀')">💀</button>`;
+                    if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('dm_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('dm_msgs', '${m.id}')">DEL</button>`;
+                    actions += `</div>`;
 
-                if(unreadIds.length > 0) {
-                    for(let uid of unreadIds) {
-                        const { data: dRow } = await supabase.from('dm_msgs').select('read_by').eq('id', uid).single();
-                        let rb = dRow.read_by || []; rb.push(state.user);
-                        await supabase.from('dm_msgs').update({read_by: rb}).eq('id', uid);
-                    }
-                }
-            });
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
+                });
+                box.scrollTop = box.scrollHeight;
 
-            dbHelper.listenDoc('dms', dmId, (dmData) => {
-                const typing = (dmData.typing||[]).filter(t => t !== state.user);
-                const tDiv = document.getElementById('dm-typing');
-                if(typing.length === 0) tDiv.innerText = "";
-                else if(typing.length <= 3) tDiv.innerText = typing.join(', ') + " is typing...";
-                else tDiv.innerText = `${typing[0]}, ${typing[1]} and ${typing.length - 2} others are typing...`;
-            });
-        },
-        updateTyping: async (type) => {
-            if(type==='dm' && msgSys.activeDM) {
-                const dmId = msgSys.activeDM.id;
-                const { data } = await supabase.from('dms').select('typing').eq('id', dmId).single();
-                let typing = data?.typing || [];
-                if(!typing.includes(state.user)) { typing.push(state.user); await supabase.from('dms').update({typing}).eq('id', dmId); }
-                if(msgSys.dmTypingTimer) clearTimeout(msgSys.dmTypingTimer);
-                msgSys.dmTypingTimer = setTimeout(async () => {
-                    const { data: d2 } = await supabase.from('dms').select('typing').eq('id', dmId).single();
-                    let typ2 = (d2?.typing || []).filter(u => u !== state.user);
-                    await supabase.from('dms').update({typing: typ2}).eq('id', dmId);
-                }, 2000);
-            }
-        },
-        attachFile: (input) => { if(input.files.length > 0 && input.files[0].size > 1000000) { alert("FILE TOO LARGE (Max 1MB via Base64)."); input.value=""; } },
-        sendDM: async () => {
-            const inp = document.getElementById('dm-input'); const txt = inp.value.trim(); const fInp = document.getElementById('dm-file');
-            if(!txt && fInp.files.length===0) return;
-            let fileB64 = null;
-            if(fInp.files.length > 0) { const reader = new FileReader(); reader.readAsDataURL(fInp.files[0]); await new Promise(r => reader.onload = () => { fileB64 = reader.result; r(); }); }
-            
-            const { error } = await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: txt, file: fileB64, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
-            if (error) alert("DM ERROR: " + error.message);
-            else { inp.value = ""; fInp.value = ""; app.cancelReply('dm'); msgSys.updateTyping('dm'); }
-        },
+                if(unreadIds.length > 0) {
+                    for(let uid of unreadIds) {
+                        const { data: dRow } = await supabase.from('dm_msgs').select('read_by').eq('id', uid).single();
+                        let rb = dRow.read_by || []; rb.push(state.user);
+                        await supabase.from('dm_msgs').update({read_by: rb}).eq('id', uid);
+                    }
+                }
+            });
 
-        startVoiceRec: async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                msgSys.rec = new MediaRecorder(stream); msgSys.audioChunks = [];
-                msgSys.rec.ondataavailable = e => msgSys.audioChunks.push(e.data);
-                msgSys.rec.onstop = async () => {
-                    const blob = new Blob(msgSys.audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader(); reader.readAsDataURL(blob);
-                    reader.onloadend = async () => { await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: "[VOICE MEMO]", audio: reader.result, ts: dbHelper.serverTimestamp()}); }
-                };
-                msgSys.rec.start(); document.getElementById('dm-mic-btn').style.background = "red";
-            } catch(e) { alert("MIC DENIED"); }
-        },
-        stopVoiceRec: () => { if(msgSys.rec) { msgSys.rec.stop(); document.getElementById('dm-mic-btn').style.background = "transparent"; } },
+            dbHelper.listenDoc('dms', dmId, (dmData) => {
+                const typing = (dmData.typing||[]).filter(t => t !== state.user);
+                const tDiv = document.getElementById('dm-typing');
+                if(typing.length === 0) tDiv.innerText = "";
+                else if(typing.length <= 3) tDiv.innerText = typing.join(', ') + " is typing...";
+                else tDiv.innerText = `${typing[0]}, ${typing[1]} and ${typing.length - 2} others are typing...`;
+            });
+        },
+        updateTyping: async (type) => {
+            if(type==='dm' && msgSys.activeDM) {
+                const dmId = msgSys.activeDM.id;
+                const { data } = await supabase.from('dms').select('typing').eq('id', dmId).single();
+                let typing = data?.typing || [];
+                if(!typing.includes(state.user)) { typing.push(state.user); await supabase.from('dms').update({typing}).eq('id', dmId); }
+                if(msgSys.dmTypingTimer) clearTimeout(msgSys.dmTypingTimer);
+                msgSys.dmTypingTimer = setTimeout(async () => {
+                    const { data: d2 } = await supabase.from('dms').select('typing').eq('id', dmId).single();
+                    let typ2 = (d2?.typing || []).filter(u => u !== state.user);
+                    await supabase.from('dms').update({typing: typ2}).eq('id', dmId);
+                }, 2000);
+            }
+        },
+        attachFile: (input) => { if(input.files.length > 0 && input.files[0].size > 1000000) { alert("FILE TOO LARGE (Max 1MB via Base64)."); input.value=""; } },
+        sendDM: async () => {
+            const inp = document.getElementById('dm-input'); const txt = inp.value.trim(); const fInp = document.getElementById('dm-file');
+            if(!txt && fInp.files.length===0) return;
+            let fileB64 = null;
+            if(fInp.files.length > 0) { const reader = new FileReader(); reader.readAsDataURL(fInp.files[0]); await new Promise(r => reader.onload = () => { fileB64 = reader.result; r(); }); }
+            
+            const { error } = await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: txt, file: fileB64, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
+            if (error) alert("DM ERROR: " + error.message);
+            else { inp.value = ""; fInp.value = ""; app.cancelReply('dm'); msgSys.updateTyping('dm'); }
+        },
 
-        // Groups
-        createGroupPrompt: async () => {
-            const name = prompt("GROUP NAME:"); if(!name) return;
-            const memStr = prompt(`ENTER USERNAMES (COMMA SEPARATED). \nYOUR FRIENDS: ${state.friends.join(', ')}`); if(!memStr) return;
-            let members = memStr.split(',').map(s=>s.trim()); members.push(state.user);
-            const gid = 'GRP_'+Date.now(); await supabase.from('group_chats').insert({id: gid, name, leader: state.user, members}); msgSys.loadGroups();
-        },
-        loadGroups: async () => {
-            const list = document.getElementById('groups-list'); list.innerHTML="Loading groups...";
-            const { data } = await supabase.from('group_chats').select('*'); list.innerHTML = "";
-            const myGroups = (data||[]).filter(g => (g.members||[]).includes(state.user));
-            myGroups.forEach(g => { list.innerHTML += `<div onclick="msgSys.openGroup('${g.id}', '${g.name}', '${g.leader}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">[GRP] ${g.name}</div>`; });
-        },
-        openGroup: async (gId, gName, gLeader) => {
-            msgSys.activeGroup = { id: gId, leader: gLeader };
-            const box = document.getElementById('group-chat-box'); box.innerHTML = `Joining ${gName}...`;
-            if(msgSys.unsubGroup) msgSys.unsubGroup();
-            msgSys.unsubGroup = await dbHelper.listenQuery('group_msgs', 'group_id', gId, {col:'ts', asc:true}, 100, (data) => {
-                box.innerHTML = "";
-                data.forEach(m => {
-                    if(state.blocks.includes(m.u)) return;
-                    const isMe = m.u === state.user; const isLeader = state.user === gLeader;
-                    let content = m.is_deleted ? `<em style="opacity:0.5">[DATA EXPUNGED]</em>` : app.formatMsg(m.txt);
-                    
-                    const editedFlag = m.is_edited && !m.is_deleted ? `<span style="font-size:8px; opacity:0.5;"> (edited)</span>` : '';
-                    let pinnedFlag = m.pinned ? `<strong style="color:#FF00FF;">[PUBLIC PIN] 📌 </strong>` : '';
-                    if(state.localPins.includes(m.id)) pinnedFlag += `📌 `;
-                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
+        startVoiceRec: async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                msgSys.rec = new MediaRecorder(stream); msgSys.audioChunks = [];
+                msgSys.rec.ondataavailable = e => msgSys.audioChunks.push(e.data);
+                msgSys.rec.onstop = async () => {
+                    const blob = new Blob(msgSys.audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader(); reader.readAsDataURL(blob);
+                    reader.onloadend = async () => { await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: "[VOICE MEMO]", audio: reader.result, ts: dbHelper.serverTimestamp()}); }
+                };
+                msgSys.rec.start(); document.getElementById('dm-mic-btn').style.background = "red";
+            } catch(e) { alert("MIC DENIED"); }
+        },
+        stopVoiceRec: () => { if(msgSys.rec) { msgSys.rec.stop(); document.getElementById('dm-mic-btn').style.background = "transparent"; } },
 
-                    let rxHTML = "";
-                    if(m.reactions) { for(const [rx, users] of Object.entries(m.reactions)) { if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('group_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`; } }
+        // Groups
+        createGroupPrompt: async () => {
+            const name = prompt("GROUP NAME:"); if(!name) return;
+            const memStr = prompt(`ENTER USERNAMES (COMMA SEPARATED). \nYOUR FRIENDS: ${state.friends.join(', ')}`); if(!memStr) return;
+            let members = memStr.split(',').map(s=>s.trim()); members.push(state.user);
+            const gid = 'GRP_'+Date.now(); await supabase.from('group_chats').insert({id: gid, name, leader: state.user, members}); msgSys.loadGroups();
+        },
+        loadGroups: async () => {
+            const list = document.getElementById('groups-list'); list.innerHTML="Loading groups...";
+            const { data } = await supabase.from('group_chats').select('*'); list.innerHTML = "";
+            const myGroups = (data||[]).filter(g => (g.members||[]).includes(state.user));
+            myGroups.forEach(g => { list.innerHTML += `<div onclick="msgSys.openGroup('${g.id}', '${g.name}', '${g.leader}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">[GRP] ${g.name}</div>`; });
+        },
+        openGroup: async (gId, gName, gLeader) => {
+            msgSys.activeGroup = { id: gId, leader: gLeader };
+            const box = document.getElementById('group-chat-box'); box.innerHTML = `Joining ${gName}...`;
+            if(msgSys.unsubGroup) msgSys.unsubGroup();
+            msgSys.unsubGroup = await dbHelper.listenQuery('group_msgs', 'group_id', gId, {col:'ts', asc:true}, 100, (data) => {
+                box.innerHTML = "";
+                data.forEach(m => {
+                    if(state.blocks.includes(m.u)) return;
+                    const isMe = m.u === state.user; const isLeader = state.user === gLeader;
+                    let content = m.is_deleted ? `<em style="opacity:0.5">[DATA EXPUNGED]</em>` : app.formatMsg(m.txt);
+                    
+                    const editedFlag = m.is_edited && !m.is_deleted ? `<span style="font-size:8px; opacity:0.5;"> (edited)</span>` : '';
+                    let pinnedFlag = m.pinned ? `<strong style="color:#FF00FF;">[PUBLIC PIN] 📌 </strong>` : '';
+                    if(state.localPins.includes(m.id)) pinnedFlag += `📌 `;
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
 
-                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'group')">REPLY</button><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '💀')">💀</button>`;
-                    if(isLeader) actions += `<button class="msg-btn" onclick="msgSys.pinPublic('${m.id}')">PUB-PIN</button>`;
-                    if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('group_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('group_msgs', '${m.id}')">DEL</button>`;
-                    actions += `</div>`;
+                    let rxHTML = "";
+                    if(m.reactions) { for(const [rx, users] of Object.entries(m.reactions)) { if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('group_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`; } }
 
-                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
-                });
-                box.scrollTop = box.scrollHeight;
-            });
-        },
-        sendGroupMsg: async () => {
-            const inp = document.getElementById('group-input'); const txt = inp.value.trim(); if(!txt) return;
-            const { error } = await supabase.from('group_msgs').insert({group_id: msgSys.activeGroup.id, u: state.user, txt: txt, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
-            if (error) alert("GROUP COMMS ERROR: " + error.message);
-            else { inp.value = ""; app.cancelReply('group'); }
-        },
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'group')">REPLY</button><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '💀')">💀</button>`;
+                    if(isLeader) actions += `<button class="msg-btn" onclick="msgSys.pinPublic('${m.id}')">PUB-PIN</button>`;
+                    if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('group_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('group_msgs', '${m.id}')">DEL</button>`;
+                    actions += `</div>`;
 
-        react: async (table, id, emoji) => { const { data } = await supabase.from(table).select('reactions').eq('id', id).single(); let rx = data.reactions || {}; if(!rx[emoji]) rx[emoji] = []; if(rx[emoji].includes(state.user)) rx[emoji] = rx[emoji].filter(u=>u!==state.user); else rx[emoji].push(state.user); await supabase.from(table).update({reactions: rx}).eq('id', id); },
-        editMsg: async (table, id, oldTxt) => { const nTxt = prompt("EDIT MESSAGE:", oldTxt); if(!nTxt || nTxt===oldTxt) return; await supabase.from(table).update({txt: nTxt, is_edited: true}).eq('id', id); },
-        delMsg: async (table, id) => { if(confirm("DELETE MESSAGE?")) await supabase.from(table).update({txt: "", is_deleted: true, file: null, audio: null}).eq('id', id); },
-        pinLocal: (id) => { if(state.localPins.includes(id)) state.localPins = state.localPins.filter(p=>p!==id); else state.localPins.push(id); localStorage.setItem('localPins', JSON.stringify(state.localPins)); if(msgSys.activeDM) msgSys.openDM(msgSys.activeDM.other, msgSys.activeDM.id); if(msgSys.activeGroup) msgSys.openGroup(msgSys.activeGroup.id, document.getElementById('group-chat-box').innerHTML.split(' ')[1], msgSys.activeGroup.leader); },
-        pinPublic: async (id) => { const { data } = await supabase.from('group_msgs').select('pinned').eq('id', id).single(); await supabase.from('group_msgs').update({pinned: !data.pinned}).eq('id', id); }
-    };
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        },
+        sendGroupMsg: async () => {
+            const inp = document.getElementById('group-input'); const txt = inp.value.trim(); if(!txt) return;
+            const { error } = await supabase.from('group_msgs').insert({group_id: msgSys.activeGroup.id, u: state.user, txt: txt, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
+            if (error) alert("GROUP COMMS ERROR: " + error.message);
+            else { inp.value = ""; app.cancelReply('group'); }
+        },
 
-    // ================================================================
-    // SOCIAL
-    // ================================================================
-    window.social = {
-        tab: (t)=>{ document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-'+t).classList.remove('hidden'); if(t==='posts')social.loadPosts(); if(t==='polls')social.loadPolls(); },
-        like: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); else{ likes.push(state.user); if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
-        dislike: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); else{ dislikes.push(state.user); if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
+        react: async (table, id, emoji) => { const { data } = await supabase.from(table).select('reactions').eq('id', id).single(); let rx = data.reactions || {}; if(!rx[emoji]) rx[emoji] = []; if(rx[emoji].includes(state.user)) rx[emoji] = rx[emoji].filter(u=>u!==state.user); else rx[emoji].push(state.user); await supabase.from(table).update({reactions: rx}).eq('id', id); },
+        editMsg: async (table, id, oldTxt) => { const nTxt = prompt("EDIT MESSAGE:", oldTxt); if(!nTxt || nTxt===oldTxt) return; await supabase.from(table).update({txt: nTxt, is_edited: true}).eq('id', id); },
+        delMsg: async (table, id) => { if(confirm("DELETE MESSAGE?")) await supabase.from(table).update({txt: "", is_deleted: true, file: null, audio: null}).eq('id', id); },
+        pinLocal: (id) => { if(state.localPins.includes(id)) state.localPins = state.localPins.filter(p=>p!==id); else state.localPins.push(id); localStorage.setItem('localPins', JSON.stringify(state.localPins)); if(msgSys.activeDM) msgSys.openDM(msgSys.activeDM.other, msgSys.activeDM.id); if(msgSys.activeGroup) msgSys.openGroup(msgSys.activeGroup.id, document.getElementById('group-chat-box').innerHTML.split(' ')[1], msgSys.activeGroup.leader); },
+        pinPublic: async (id) => { const { data } = await supabase.from('group_msgs').select('pinned').eq('id', id).single(); await supabase.from('group_msgs').update({pinned: !data.pinned}).eq('id', id); }
+    };
 
-        openComments: async (id, type) => {
-            document.querySelector('#comment-overlay .screen').classList.remove('hidden'); state.activeCommentId = id; state.activeCommentType = type;
-            const overlay = document.getElementById('comment-overlay'); overlay.classList.remove('hidden'); 
-            const div = document.getElementById('active-comment-list'); div.innerHTML = "<div style='opacity:0.4;'>>> ACCESSING ENCRYPTED THREAD...</div>";
-            if (state.unsubComments) { state.unsubComments(); }
-            state.unsubComments = await dbHelper.listenQuery('comments', {parent_id: id}, {col:'ts', asc:true}, null, (data) => {
-                div.innerHTML = ""; if (!data || data.length === 0) { div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; return; }
-                data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
-                div.scrollTop = div.scrollHeight;
-            });
-        },
-        closeComments: () => { document.getElementById('comment-overlay').classList.add('hidden'); if (state.unsubComments) { state.unsubComments(); state.unsubComments = null; } state.activeCommentId = null; state.activeCommentType = null; },
-        submitComment: async()=>{ const txt=document.getElementById('new-comment-input').value.trim(); if(!txt||!state.activeCommentId)return; const btn=document.querySelector('#comment-overlay button:last-child'); if(btn)btn.disabled=true; await supabase.from('comments').insert({parent_type: state.activeCommentType, parent_id: state.activeCommentId, u: state.user, txt, ts: dbHelper.serverTimestamp()}); document.getElementById('new-comment-input').value=""; if(btn)btn.disabled=false; },
+    // ================================================================
+    // SOCIAL
+    // ================================================================
+    window.social = {
+        tab: (t)=>{ document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-'+t).classList.remove('hidden'); if(t==='posts')social.loadPosts(); if(t==='polls')social.loadPolls(); },
+        like: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); else{ likes.push(state.user); if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
+        dislike: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); else{ dislikes.push(state.user); if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
 
-        createPost: async()=>{ const txt=document.getElementById('post-content').value; const vid=document.getElementById('post-video').value; if(!txt)return; await supabase.from('posts').insert({u:state.user, txt, video:vid||null, ts:dbHelper.serverTimestamp(), likes:[], dislikes:[]}); document.getElementById('post-content').value=""; document.getElementById('post-video').value=""; social.loadPosts(); },
-        loadPosts: async()=>{
-            const div=document.getElementById('feed-posts'); div.innerHTML="LOADING FEED..."; const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); div.innerHTML="";
-            (data||[]).forEach(p=>{ 
-                if(state.blocks.includes(p.u)) return;
-                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
-            });
-        },
-        createPoll: async()=>{ const q=document.getElementById('poll-q').value; const o1=document.getElementById('poll-o1').value; const o2=document.getElementById('poll-o2').value; const vid=document.getElementById('poll-video').value; if(!q||!o1||!o2)return; await supabase.from('polls').insert({u:state.user, q, video:vid||null, opts:[{t:o1,v:0},{t:o2,v:0}], voters:[], likes:[], dislikes:[], ts:dbHelper.serverTimestamp()}); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
-        loadPolls: async()=>{
-            const div=document.getElementById('feed-polls'); div.innerHTML="LOADING POLLS..."; const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); div.innerHTML="";
-            (data||[]).forEach(p=>{ 
-                if(state.blocks.includes(p.u)) return;
-                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
-            });
-        },
-        vote: async(id,optIdx)=>{ const { data: d } = await supabase.from('polls').select('*').eq('id', id).single(); if((d.voters||[]).includes(state.user))return alert("ALREADY VOTED"); let opts=d.opts; let voters=d.voters||[]; opts[optIdx].v++; voters.push(state.user); await supabase.from('polls').update({opts, voters}).eq('id', id); social.loadPolls(); }
-    };
+        openComments: async (id, type) => {
+            document.querySelector('#comment-overlay .screen').classList.remove('hidden'); state.activeCommentId = id; state.activeCommentType = type;
+            const overlay = document.getElementById('comment-overlay'); overlay.classList.remove('hidden'); 
+            const div = document.getElementById('active-comment-list'); div.innerHTML = "<div style='opacity:0.4;'>>> ACCESSING ENCRYPTED THREAD...</div>";
+            if (state.unsubComments) { state.unsubComments(); }
+            state.unsubComments = await dbHelper.listenQuery('comments', {parent_id: id}, {col:'ts', asc:true}, null, (data) => {
+                div.innerHTML = ""; if (!data || data.length === 0) { div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; return; }
+                data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
+                div.scrollTop = div.scrollHeight;
+            });
+        },
+        closeComments: () => { document.getElementById('comment-overlay').classList.add('hidden'); if (state.unsubComments) { state.unsubComments(); state.unsubComments = null; } state.activeCommentId = null; state.activeCommentType = null; },
+        submitComment: async()=>{ const txt=document.getElementById('new-comment-input').value.trim(); if(!txt||!state.activeCommentId)return; const btn=document.querySelector('#comment-overlay button:last-child'); if(btn)btn.disabled=true; await supabase.from('comments').insert({parent_type: state.activeCommentType, parent_id: state.activeCommentId, u: state.user, txt, ts: dbHelper.serverTimestamp()}); document.getElementById('new-comment-input').value=""; if(btn)btn.disabled=false; },
 
-    // ================================================================
-    // NEWS
-    // ================================================================
-    window.news = {
-        init: async()=>{ news.loadInternal(); },
-        post: async()=>{ const h=document.getElementById('news-headline').value; const l=document.getElementById('news-link-input').value; if(!h)return; await supabase.from('news').insert({title:h, link:l||null, u:state.user, ts:dbHelper.serverTimestamp()}); document.getElementById('news-headline').value=""; document.getElementById('news-link-input').value=""; news.loadInternal(); },
-        loadInternal: async()=>{
-            const d=document.getElementById('news-feed-internal'); d.innerHTML="Scanning local nodes..."; const { data } = await supabase.from('news').select('*').order('ts', {ascending:false}).limit(10); d.innerHTML="";
-            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getBadge(n.u)}</small></div>`; });
-            if(!data || data.length===0) d.innerHTML="<div style='opacity:0.4;'>No broadcasts yet.</div>";
-        }
-    };
+        createPost: async()=>{ const txt=document.getElementById('post-content').value; const vid=document.getElementById('post-video').value; if(!txt)return; await supabase.from('posts').insert({u:state.user, txt, video:vid||null, ts:dbHelper.serverTimestamp(), likes:[], dislikes:[]}); document.getElementById('post-content').value=""; document.getElementById('post-video').value=""; social.loadPosts(); },
+        loadPosts: async()=>{
+            const div=document.getElementById('feed-posts'); div.innerHTML="LOADING FEED..."; const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); div.innerHTML="";
+            (data||[]).forEach(p=>{ 
+                if(state.blocks.includes(p.u)) return;
+                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
+            });
+        },
+        createPoll: async()=>{ const q=document.getElementById('poll-q').value; const o1=document.getElementById('poll-o1').value; const o2=document.getElementById('poll-o2').value; const vid=document.getElementById('poll-video').value; if(!q||!o1||!o2)return; await supabase.from('polls').insert({u:state.user, q, video:vid||null, opts:[{t:o1,v:0},{t:o2,v:0}], voters:[], likes:[], dislikes:[], ts:dbHelper.serverTimestamp()}); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
+        loadPolls: async()=>{
+            const div=document.getElementById('feed-polls'); div.innerHTML="LOADING POLLS..."; const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); div.innerHTML="";
+            (data||[]).forEach(p=>{ 
+                if(state.blocks.includes(p.u)) return;
+                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
+            });
+        },
+        vote: async(id,optIdx)=>{ const { data: d } = await supabase.from('polls').select('*').eq('id', id).single(); if((d.voters||[]).includes(state.user))return alert("ALREADY VOTED"); let opts=d.opts; let voters=d.voters||[]; opts[optIdx].v++; voters.push(state.user); await supabase.from('polls').update({opts, voters}).eq('id', id); social.loadPolls(); }
+    };
 
-    // ================================================================
-    // RADIO
-    // ================================================================
-    window.radio = {
-        interval:null, noiseNode:null,
-        init: ()=>{ const viz=document.getElementById('freq-viz'); viz.innerHTML=""; for(let i=0;i<24;i++)viz.innerHTML+=`<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*48}px"></div>`; if(radio.interval)clearInterval(radio.interval); radio.interval=setInterval(()=>{ for(let i=0;i<24;i++){const el=document.getElementById(`fb-${i}`);if(el)el.style.height=(Math.random()*44+4)+"px";} },90); },
-        scan: ()=>{ audioSys.playTone(800,'sawtooth',0.1); document.getElementById('radio-freq').innerText=(400+Math.random()*100).toFixed(4); },
-        toggleNoise: ()=>{ if(radio.noiseNode){radio.noiseNode.disconnect();radio.noiseNode=null;document.getElementById('btn-noise').style.cssText="";} else{ const ctx=audioSys.ctx; if(ctx.state==='suspended')ctx.resume(); const wn=ctx.createScriptProcessor(4096,1,1); wn.onaudioprocess=(e)=>{const out=e.outputBuffer.getChannelData(0);for(let i=0;i<4096;i++)out[i]=Math.random()*0.08-0.04;}; wn.connect(ctx.destination); radio.noiseNode=wn; document.getElementById('btn-noise').style.cssText="background:var(--warn-color);color:#000;"; } }
-    };
+    // ================================================================
+    // NEWS
+    // ================================================================
+    window.news = {
+        init: async()=>{ news.loadInternal(); },
+        post: async()=>{ const h=document.getElementById('news-headline').value; const l=document.getElementById('news-link-input').value; if(!h)return; await supabase.from('news').insert({title:h, link:l||null, u:state.user, ts:dbHelper.serverTimestamp()}); document.getElementById('news-headline').value=""; document.getElementById('news-link-input').value=""; news.loadInternal(); },
+        loadInternal: async()=>{
+            const d=document.getElementById('news-feed-internal'); d.innerHTML="Scanning local nodes..."; const { data } = await supabase.from('news').select('*').order('ts', {ascending:false}).limit(10); d.innerHTML="";
+            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getBadge(n.u)}</small></div>`; });
+            if(!data || data.length===0) d.innerHTML="<div style='opacity:0.4;'>No broadcasts yet.</div>";
+        }
+    };
 
-    // ================================================================
-    // COCKPIT
-    // ================================================================
-    window.cockpit = {
-        running:false, ctx:null, canvas:null, gain:50, rate:30, currentDevices:[], currentRemote:null,
-        init: ()=>{ cockpit.canvas=document.getElementById('cockpit-canvas'); cockpit.ctx=cockpit.canvas.getContext('2d'); cockpit.running=true; cockpit.animate(); cockpit.detectLocalIP(); },
-        toggle: (el)=>{ el.classList.toggle('toggle-active'); audioSys.playTone(600,'square',0.05); }, updateGain: (v)=>cockpit.gain=v, updateRate: (v)=>cockpit.rate=v, log: (txt)=>{ const l=document.getElementById('cockpit-log'); l.innerHTML+=`<div class="term-line">${txt}</div>`; l.scrollTop=l.scrollHeight; },
-        runAction: (action)=>{ audioSys.playTone(200,'sawtooth',0.1); const t=document.getElementById('cockpit-target').value; const p=document.getElementById('cockpit-proto').value; const led=event.currentTarget.querySelector('.led'); led.classList.add('on'); cockpit.log(`>> EXEC: ${action} ON ${t} (${p})...`); setTimeout(()=>{ if(action==='PING_SWEEP')cockpit.log(`>> REPLY: BYTES=32 TIME=${Math.floor(Math.random()*50)}ms TTL=54`); else if(action==='PORT_SCAN')cockpit.log(`>> PORT ${Math.floor(Math.random()*65535)} [OPEN]`); else if(action==='BRUTE_FORCE')cockpit.log(`>> CREDENTIALS... [FAIL]`); else if(action==='EXECUTE_PAYLOAD'){cockpit.log(`>> UPLOADING... [||||||||||] 100%`);cockpit.log(`>> ROOT ACCESS GRANTED`);audioSys.playTone(1000,'square',0.5);} else cockpit.log(`>> PROCESS COMPLETE.`); setTimeout(()=>led.classList.remove('on'),200); },1000+Math.random()*2000); },
-        detectLocalIP: ()=>{ const rtc=new RTCPeerConnection({iceServers:[]}); rtc.createDataChannel(''); rtc.createOffer().then(o=>rtc.setLocalDescription(o)); rtc.onicecandidate=(e)=>{ if(e.candidate){const ip=/([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate)?.[1];if(ip)cockpit.log(`>> LOCAL IP: ${ip}`);} }; setTimeout(()=>rtc.close(),1000); },
-        scanNetwork: ()=>{ cockpit.log(`>> INITIATING LAN DISCOVERY...`); audioSys.playTone(400,'sawtooth',0.2); const pf=document.getElementById('scan-progress-fill'); let prog=0; const iv=setInterval(()=>{prog+=Math.random()*10;if(prog>100)prog=100;pf.style.width=prog+'%';},100); setTimeout(()=>{ clearInterval(iv); pf.style.width='100%'; cockpit.currentDevices=[ {ip:'192.168.1.1',mac:'00:11:22:33:44:55',os:'Router (Firmware v2.1)',ports:'80,443',vuln:'Low',type:'Router'}, {ip:'192.168.1.10',mac:'AA:BB:CC:DD:EE:FF',os:'Windows 10',ports:'3389,445',vuln:'Medium',type:'PC'}, {ip:'192.168.1.15',mac:'11:22:33:44:55:66',os:'iOS 17',ports:'5353',vuln:'Low',type:'Mobile'}, {ip:'192.168.1.20',mac:'FF:EE:DD:CC:BB:AA',os:'Linux Ubuntu 22.04',ports:'22,80',vuln:'High',type:'Server'}, {ip:'192.168.1.50',mac:'77:88:99:00:11:22',os:'Nintendo Wii (v4.3)',ports:'80',vuln:'High',type:'Console'}, {ip:'192.168.1.100',mac:'33:44:55:66:77:88',os:'Smart TV (Android)',ports:'8080',vuln:'Medium',type:'IoT'} ]; const rd=document.getElementById('scan-results'); rd.innerHTML='<div style="color:#00FFFF;font-weight:bold;margin-bottom:5px;">DISCOVERED: 6 DEVICES (SIM)</div>'; cockpit.currentDevices.forEach(dev=>{rd.innerHTML+=`<div class="device-card" onclick="cockpit.showDeviceDetails('${dev.ip}')"><div class="device-info"><span>IP: ${dev.ip} | ${dev.type}</span><span>OS: ${dev.os}</span><span>PORTS: ${dev.ports}</span><span>VULN: <span style="color:${dev.vuln==='High'?'red':dev.vuln==='Medium'?'orange':'#0f0'}">${dev.vuln}</span></span></div></div>`;}); document.getElementById('network-scan-panel').classList.remove('hidden'); cockpit.log(`>> SCAN COMPLETE: ${cockpit.currentDevices.length} DEVICES`); },3000); },
-        showDeviceDetails: (ip)=>{ const dev=cockpit.currentDevices.find(d=>d.ip===ip); if(!dev)return; document.getElementById('remote-title').innerText=`DETAILS: ${dev.ip} (${dev.type})`; document.getElementById('remote-content').innerHTML=`<div style="font-size:11px;"><strong>OS:</strong> ${dev.os}<br><strong>Ports:</strong> ${dev.ports}<br><strong>Vulnerability:</strong> ${dev.vuln}<br><br><button onclick="cockpit.remoteInto('${ip}')" style="font-size:10px;padding:5px;margin:2px;">REMOTE (SIM)</button><button onclick="cockpit.hackDevice('${ip}','${dev.vuln}')" style="font-size:10px;padding:5px;margin:2px;background:red;color:#000;border-color:red;">HACK/DEFEND (SIM)</button></div>`; document.getElementById('remote-access-overlay').classList.remove('hidden'); audioSys.playTone(500,'square',0.1); },
-        remoteInto: (ip)=>{ const dev=cockpit.currentDevices.find(d=>d.ip===ip); cockpit.currentRemote=ip; let gui=`<h4 style="color:var(--warn-color);">REMOTE: ${dev.os} (${ip}) SIM</h4>`; if(dev.type==='Console')gui+=`<div style="background:#111;padding:20px;text-align:center;color:#ff6b35;"><p>Wii Dashboard Sim</p><button onclick="alert('SIM: Homebrew!')" style="background:#ff6b35;color:#000;padding:5px;">INSTALL HOMEBREW (SIM)</button></div>`; else gui+=`<div style="height:200px;background:#000;color:#555;display:flex;align-items:center;justify-content:center;font-size:11px;">Device GUI Sim — ${dev.type}</div>`; document.getElementById('remote-content').innerHTML=gui; },
-        closeRemote: ()=>{ document.getElementById('remote-access-overlay').classList.add('hidden'); cockpit.currentRemote=null; },
-        hackDevice: (ip,vuln)=>{ cockpit.log(`>> SIM HACK/DEFEND ${ip} (${vuln}):`); setTimeout(()=>{ if(vuln==='Low')cockpit.log(`>> DEFEND: Patched.`); else if(vuln==='Medium')cockpit.log(`>> PARTIAL: Run updates.`); else cockpit.log(`>> BREACH SIM. DEFEND: Change defaults.`); },1000); audioSys.playTone(300,'sawtooth',0.2); },
-        animate: ()=>{ if(!cockpit.running||document.getElementById('screen-cockpit').classList.contains('hidden'))return; const w=cockpit.canvas.width; const h=cockpit.canvas.height; const ctx=cockpit.ctx; ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,w,h); ctx.lineWidth=2; ctx.strokeStyle=`rgba(255,170,0,${cockpit.gain/100})`; ctx.beginPath(); for(let i=0;i<w;i+=5){const y=h/2+Math.sin(i*0.05+Date.now()*(cockpit.rate*0.001))*(h/3);ctx.lineTo(i,y);} ctx.stroke(); if(Math.random()>0.8)document.getElementById('visual-text').innerText="HEX_DUMP: "+Math.random().toString(16).substr(2,8).toUpperCase(); requestAnimationFrame(cockpit.animate); }
-    };
+    // ================================================================
+    // RADIO
+    // ================================================================
+    window.radio = {
+        interval:null, noiseNode:null,
+        init: ()=>{ const viz=document.getElementById('freq-viz'); viz.innerHTML=""; for(let i=0;i<24;i++)viz.innerHTML+=`<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*48}px"></div>`; if(radio.interval)clearInterval(radio.interval); radio.interval=setInterval(()=>{ for(let i=0;i<24;i++){const el=document.getElementById(`fb-${i}`);if(el)el.style.height=(Math.random()*44+4)+"px";} },90); },
+        scan: ()=>{ audioSys.playTone(800,'sawtooth',0.1); document.getElementById('radio-freq').innerText=(400+Math.random()*100).toFixed(4); },
+        toggleNoise: ()=>{ if(radio.noiseNode){radio.noiseNode.disconnect();radio.noiseNode=null;document.getElementById('btn-noise').style.cssText="";} else{ const ctx=audioSys.ctx; if(ctx.state==='suspended')ctx.resume(); const wn=ctx.createScriptProcessor(4096,1,1); wn.onaudioprocess=(e)=>{const out=e.outputBuffer.getChannelData(0);for(let i=0;i<4096;i++)out[i]=Math.random()*0.08-0.04;}; wn.connect(ctx.destination); radio.noiseNode=wn; document.getElementById('btn-noise').style.cssText="background:var(--warn-color);color:#000;"; } }
+    };
 
-    // ================================================================
-    // DRAWING
-    // ================================================================
-    window.drawing = {
-        canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing:false, mode:'create', letters:[], idx:0, tempData:{},
-        init: ()=>{ drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle=getComputedStyle(document.body).color; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; },
-        clear: ()=>drawing.ctx.clearRect(0,0,280,280), cancel: ()=>nav.to('hub'),
-        save: async()=>{ const char=drawing.letters[drawing.idx]; drawing.tempData.syms[char]=drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx<drawing.letters.length){drawing.clear();document.getElementById('draw-title').innerText="DRAW: "+drawing.letters[drawing.idx];} else{ loading(true); if(drawing.mode==='create'){ await supabase.from('clans').insert({id: drawing.tempData.name, pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: {[state.user]: 'leader'}}); await supabase.from('users').update({clan: drawing.tempData.name}).eq('id', state.user); } else if(drawing.mode==='edit'){ await supabase.from('clans').update({symbols: drawing.tempData.syms}).eq('id', state.clan); } loading(false); nav.to('hub'); } }
-    };
-    drawing.init();
+    // ================================================================
+    // COCKPIT
+    // ================================================================
+    window.cockpit = {
+        running:false, ctx:null, canvas:null, gain:50, rate:30, currentDevices:[], currentRemote:null,
+        init: ()=>{ cockpit.canvas=document.getElementById('cockpit-canvas'); cockpit.ctx=cockpit.canvas.getContext('2d'); cockpit.running=true; cockpit.animate(); cockpit.detectLocalIP(); },
+        toggle: (el)=>{ el.classList.toggle('toggle-active'); audioSys.playTone(600,'square',0.05); }, updateGain: (v)=>cockpit.gain=v, updateRate: (v)=>cockpit.rate=v, log: (txt)=>{ const l=document.getElementById('cockpit-log'); l.innerHTML+=`<div class="term-line">${txt}</div>`; l.scrollTop=l.scrollHeight; },
+        runAction: (action)=>{ audioSys.playTone(200,'sawtooth',0.1); const t=document.getElementById('cockpit-target').value; const p=document.getElementById('cockpit-proto').value; const led=event.currentTarget.querySelector('.led'); led.classList.add('on'); cockpit.log(`>> EXEC: ${action} ON ${t} (${p})...`); setTimeout(()=>{ if(action==='PING_SWEEP')cockpit.log(`>> REPLY: BYTES=32 TIME=${Math.floor(Math.random()*50)}ms TTL=54`); else if(action==='PORT_SCAN')cockpit.log(`>> PORT ${Math.floor(Math.random()*65535)} [OPEN]`); else if(action==='BRUTE_FORCE')cockpit.log(`>> CREDENTIALS... [FAIL]`); else if(action==='EXECUTE_PAYLOAD'){cockpit.log(`>> UPLOADING... [||||||||||] 100%`);cockpit.log(`>> ROOT ACCESS GRANTED`);audioSys.playTone(1000,'square',0.5);} else cockpit.log(`>> PROCESS COMPLETE.`); setTimeout(()=>led.classList.remove('on'),200); },1000+Math.random()*2000); },
+        detectLocalIP: ()=>{ const rtc=new RTCPeerConnection({iceServers:[]}); rtc.createDataChannel(''); rtc.createOffer().then(o=>rtc.setLocalDescription(o)); rtc.onicecandidate=(e)=>{ if(e.candidate){const ip=/([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate)?.[1];if(ip)cockpit.log(`>> LOCAL IP: ${ip}`);} }; setTimeout(()=>rtc.close(),1000); },
+        scanNetwork: ()=>{ cockpit.log(`>> INITIATING LAN DISCOVERY...`); audioSys.playTone(400,'sawtooth',0.2); const pf=document.getElementById('scan-progress-fill'); let prog=0; const iv=setInterval(()=>{prog+=Math.random()*10;if(prog>100)prog=100;pf.style.width=prog+'%';},100); setTimeout(()=>{ clearInterval(iv); pf.style.width='100%'; cockpit.currentDevices=[ {ip:'192.168.1.1',mac:'00:11:22:33:44:55',os:'Router (Firmware v2.1)',ports:'80,443',vuln:'Low',type:'Router'}, {ip:'192.168.1.10',mac:'AA:BB:CC:DD:EE:FF',os:'Windows 10',ports:'3389,445',vuln:'Medium',type:'PC'}, {ip:'192.168.1.15',mac:'11:22:33:44:55:66',os:'iOS 17',ports:'5353',vuln:'Low',type:'Mobile'}, {ip:'192.168.1.20',mac:'FF:EE:DD:CC:BB:AA',os:'Linux Ubuntu 22.04',ports:'22,80',vuln:'High',type:'Server'}, {ip:'192.168.1.50',mac:'77:88:99:00:11:22',os:'Nintendo Wii (v4.3)',ports:'80',vuln:'High',type:'Console'}, {ip:'192.168.1.100',mac:'33:44:55:66:77:88',os:'Smart TV (Android)',ports:'8080',vuln:'Medium',type:'IoT'} ]; const rd=document.getElementById('scan-results'); rd.innerHTML='<div style="color:#00FFFF;font-weight:bold;margin-bottom:5px;">DISCOVERED: 6 DEVICES (SIM)</div>'; cockpit.currentDevices.forEach(dev=>{rd.innerHTML+=`<div class="device-card" onclick="cockpit.showDeviceDetails('${dev.ip}')"><div class="device-info"><span>IP: ${dev.ip} | ${dev.type}</span><span>OS: ${dev.os}</span><span>PORTS: ${dev.ports}</span><span>VULN: <span style="color:${dev.vuln==='High'?'red':dev.vuln==='Medium'?'orange':'#0f0'}">${dev.vuln}</span></span></div></div>`;}); document.getElementById('network-scan-panel').classList.remove('hidden'); cockpit.log(`>> SCAN COMPLETE: ${cockpit.currentDevices.length} DEVICES`); },3000); },
+        showDeviceDetails: (ip)=>{ const dev=cockpit.currentDevices.find(d=>d.ip===ip); if(!dev)return; document.getElementById('remote-title').innerText=`DETAILS: ${dev.ip} (${dev.type})`; document.getElementById('remote-content').innerHTML=`<div style="font-size:11px;"><strong>OS:</strong> ${dev.os}<br><strong>Ports:</strong> ${dev.ports}<br><strong>Vulnerability:</strong> ${dev.vuln}<br><br><button onclick="cockpit.remoteInto('${ip}')" style="font-size:10px;padding:5px;margin:2px;">REMOTE (SIM)</button><button onclick="cockpit.hackDevice('${ip}','${dev.vuln}')" style="font-size:10px;padding:5px;margin:2px;background:red;color:#000;border-color:red;">HACK/DEFEND (SIM)</button></div>`; document.getElementById('remote-access-overlay').classList.remove('hidden'); audioSys.playTone(500,'square',0.1); },
+        remoteInto: (ip)=>{ const dev=cockpit.currentDevices.find(d=>d.ip===ip); cockpit.currentRemote=ip; let gui=`<h4 style="color:var(--warn-color);">REMOTE: ${dev.os} (${ip}) SIM</h4>`; if(dev.type==='Console')gui+=`<div style="background:#111;padding:20px;text-align:center;color:#ff6b35;"><p>Wii Dashboard Sim</p><button onclick="alert('SIM: Homebrew!')" style="background:#ff6b35;color:#000;padding:5px;">INSTALL HOMEBREW (SIM)</button></div>`; else gui+=`<div style="height:200px;background:#000;color:#555;display:flex;align-items:center;justify-content:center;font-size:11px;">Device GUI Sim — ${dev.type}</div>`; document.getElementById('remote-content').innerHTML=gui; },
+        closeRemote: ()=>{ document.getElementById('remote-access-overlay').classList.add('hidden'); cockpit.currentRemote=null; },
+        hackDevice: (ip,vuln)=>{ cockpit.log(`>> SIM HACK/DEFEND ${ip} (${vuln}):`); setTimeout(()=>{ if(vuln==='Low')cockpit.log(`>> DEFEND: Patched.`); else if(vuln==='Medium')cockpit.log(`>> PARTIAL: Run updates.`); else cockpit.log(`>> BREACH SIM. DEFEND: Change defaults.`); },1000); audioSys.playTone(300,'sawtooth',0.2); },
+        animate: ()=>{ if(!cockpit.running||document.getElementById('screen-cockpit').classList.contains('hidden'))return; const w=cockpit.canvas.width; const h=cockpit.canvas.height; const ctx=cockpit.ctx; ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,w,h); ctx.lineWidth=2; ctx.strokeStyle=`rgba(255,170,0,${cockpit.gain/100})`; ctx.beginPath(); for(let i=0;i<w;i+=5){const y=h/2+Math.sin(i*0.05+Date.now()*(cockpit.rate*0.001))*(h/3);ctx.lineTo(i,y);} ctx.stroke(); if(Math.random()>0.8)document.getElementById('visual-text').innerText="HEX_DUMP: "+Math.random().toString(16).substr(2,8).toUpperCase(); requestAnimationFrame(cockpit.animate); }
+    };
 
-    // ================================================================
-    // KALI
-    // ================================================================
-    window.kali = { dragTarget:null, offsetX:0, offsetY:0, openApp: (a)=>{ const c=document.getElementById('py-console'); c.innerHTML+=`\n<span class="term-info">root@kali:~# start ${a}</span>\n`; setTimeout(()=>c.scrollTop=c.scrollHeight,100); }, handleInput: (e)=>{ if(e.key==='Enter'){ const inp=document.getElementById('py-input'); const cmd=inp.value.trim(); const con=document.getElementById('py-console'); con.innerHTML+=`\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value=""; con.scrollTop=con.scrollHeight; audioSys.playTone(600,'sine',0.1); } else audioSys.playTone(800,'sine',0.05); }, startDrag: (e,id)=>{ kali.dragTarget=document.getElementById(id); const r=kali.dragTarget.getBoundingClientRect(); kali.offsetX=e.clientX-r.left; kali.offsetY=e.clientY-r.top; }, drag: (e)=>{ if(kali.dragTarget){kali.dragTarget.style.left=(e.clientX-kali.offsetX)+'px';kali.dragTarget.style.top=(e.clientY-kali.offsetY)+'px';} }, stopDrag: ()=>{ kali.dragTarget=null; } };
+    // ================================================================
+    // DRAWING
+    // ================================================================
+    window.drawing = {
+        canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing:false, mode:'create', letters:[], idx:0, tempData:{},
+        init: ()=>{ drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle=getComputedStyle(document.body).color; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; },
+        clear: ()=>drawing.ctx.clearRect(0,0,280,280), cancel: ()=>nav.to('hub'),
+        save: async()=>{ const char=drawing.letters[drawing.idx]; drawing.tempData.syms[char]=drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx<drawing.letters.length){drawing.clear();document.getElementById('draw-title').innerText="DRAW: "+drawing.letters[drawing.idx];} else{ loading(true); if(drawing.mode==='create'){ await supabase.from('clans').insert({id: drawing.tempData.name, pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: {[state.user]: 'leader'}}); await supabase.from('users').update({clan: drawing.tempData.name}).eq('id', state.user); } else if(drawing.mode==='edit'){ await supabase.from('clans').update({symbols: drawing.tempData.syms}).eq('id', state.clan); } loading(false); nav.to('hub'); } }
+    };
+    drawing.init();
 
-    // ================================================================
-    // GAME (Terminal Jump)
-    // ================================================================
-    // ================================================================
-    // GAME (Terminal Jump)
-    // ================================================================
-    window.game = {
-        ctx: document.getElementById('game-canvas').getContext('2d'),
-        player: {y: 10, v: 0}, obs: [], score: 0, frame: null, frameCount: 0, highScore: 0,
-        init: () => { 
-            document.getElementById('game-canvas').onclick = () => { if(game.frame) game.player.v = -1; }; 
-            game.highScore = parseInt(localStorage.getItem('terminalJumpHS') || 0);
-            document.getElementById('game-highscore').innerText = game.highScore;
-            game.loadLeaderboard();
-        },
-        loadLeaderboard: async () => {
-            const lb = document.getElementById('game-leaderboard');
-            const { data } = await supabase.from('game_scores').select('*').order('score', {ascending: false}).limit(10);
-            lb.innerHTML = "";
-            if(!data || data.length === 0) { lb.innerHTML = "<div style='opacity:0.5;'>NO SCORES YET</div>"; return; }
-            data.forEach((entry, i) => {
-                lb.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(0,255,255,0.2); padding:4px 0;"><span>${i+1}. @${entry.u}</span><span style="color:#00FFFF;">${entry.score}</span></div>`;
-            });
-        },
-        submitScore: async () => {
-            if(game.score > 0) {
-                await supabase.from('game_scores').insert({u: state.user, score: game.score, ts: dbHelper.serverTimestamp()});
-                game.loadLeaderboard();
-            }
-        },
-        start: () => {
-            if(game.frame) cancelAnimationFrame(game.frame);
-            game.player = {y: 100, v: 0}; game.obs = []; game.score = 0; game.frameCount = 0;
-            document.getElementById('game-score').innerText = game.score;
-            
-            const loop = () => {
-                game.ctx.clearRect(0,0,400,200);
-                game.player.v += 0.2; // Softer gravity
-                game.player.y += game.player.v;
-                game.ctx.fillStyle = getComputedStyle(document.body).color;
-                game.ctx.fillRect(50, game.player.y, 10, 10);
-                
-                game.frameCount++;
-                
-                // Spawn structured Flappy Bird style pipes (Top and Bottom with a guaranteed gap)
-                if(game.frameCount % 110 === 0) {
-                    const gapSize = 75; // Generous gap so it's not impossible
-                    const gapY = Math.random() * (200 - gapSize - 40) + 20; 
-                    
-                    game.obs.push({x: 400, y: 0, w: 20, h: gapY, passed: false, isTop: true}); // Top pipe
-                    game.obs.push({x: 400, y: gapY + gapSize, w: 20, h: 200 - (gapY + gapSize), passed: false, isTop: false}); // Bottom pipe
-                }
-                
-                let collision = false;
-                for(let i=game.obs.length-1; i>=0; i--) {
-                    let o = game.obs[i]; 
-                    o.x -= 4; // Slower, more readable speed
-                    game.ctx.fillRect(o.x, o.y, o.w, o.h);
-                    
-                    // Score tracking (only trigger when passing a Top pipe to avoid double points)
-                    if(o.isTop && o.x + o.w < 50 && !o.passed) {
-                        o.passed = true; game.score++; document.getElementById('game-score').innerText = game.score;
-                        if(game.score > game.highScore) {
-                            game.highScore = game.score;
-                            localStorage.setItem('terminalJumpHS', game.highScore);
-                            document.getElementById('game-highscore').innerText = game.highScore;
-                        }
-                    }
-                    
-                    if(o.x < -20) { game.obs.splice(i, 1); }
-                    
-                    // Collision logic mapped to structured objects
-                    if (50 < o.x + o.w && 50 + 10 > o.x && game.player.y < o.y + o.h && game.player.y + 10 > o.y) collision = true;
-                }
-                
-                if(game.player.y > 200 || game.player.y < 0 || collision) {
-                    audioSys.playTone(300, 'sawtooth', 0.5);
-                    alert("SYSTEM FAILURE! Final Score: " + game.score);
-                    game.frame = null; // Stop game
-                    game.submitScore(); // Upload to leaderboard
-                    return;
-                }
-                game.frame = requestAnimationFrame(loop);
-            };
-            loop();
-        }
-    };
+    // ================================================================
+    // KALI
+    // ================================================================
+    window.kali = { dragTarget:null, offsetX:0, offsetY:0, openApp: (a)=>{ const c=document.getElementById('py-console'); c.innerHTML+=`\n<span class="term-info">root@kali:~# start ${a}</span>\n`; setTimeout(()=>c.scrollTop=c.scrollHeight,100); }, handleInput: (e)=>{ if(e.key==='Enter'){ const inp=document.getElementById('py-input'); const cmd=inp.value.trim(); const con=document.getElementById('py-console'); con.innerHTML+=`\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value=""; con.scrollTop=con.scrollHeight; audioSys.playTone(600,'sine',0.1); } else audioSys.playTone(800,'sine',0.05); }, startDrag: (e,id)=>{ kali.dragTarget=document.getElementById(id); const r=kali.dragTarget.getBoundingClientRect(); kali.offsetX=e.clientX-r.left; kali.offsetY=e.clientY-r.top; }, drag: (e)=>{ if(kali.dragTarget){kali.dragTarget.style.left=(e.clientX-kali.offsetX)+'px';kali.dragTarget.style.top=(e.clientY-kali.offsetY)+'px';} }, stopDrag: ()=>{ kali.dragTarget=null; } };
 
-    // ================================================================
-    // EMERGENCY FEED
-    // ================================================================
-    window.emergency = {
-        interval: null,
-        init: () => { emergency.fetchFeed(); if(emergency.interval) clearInterval(emergency.interval); emergency.interval = setInterval(emergency.fetchFeed, 300000);  },
-        triggerAlarm: () => { let beeps = 0; const alarm = setInterval(() => { audioSys.playTone(900, 'sawtooth', 0.4);  beeps++; if (beeps >= 3) clearInterval(alarm); }, 600); },
-        scanLocal: () => {
-            const localFeed = document.getElementById('local-alert-feed'); localFeed.innerHTML = "<div style='opacity:0.5; animation:blinkAnim 1s infinite;'>>> INITIATING GEOLOCATION TRACE...</div>"; audioSys.playTone(300, 'sine', 0.1);
-            if (!navigator.geolocation) return localFeed.innerHTML = "<div style='color:var(--err-color);'>[ ERROR: HARDWARE DOES NOT SUPPORT GEOLOCATION ]</div>";
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude; const lon = position.coords.longitude; localFeed.innerHTML = `<div style='opacity:0.5;'>>> COORDS ACQUIRED: ${lat.toFixed(2)}, ${lon.toFixed(2)}. SCANNING LOCAL FREQUENCIES...</div>`;
-                try {
-                    const response = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`); if (!response.ok) throw new Error("NWS Uplink Failed"); const data = await response.json();
-                    if (data.features && data.features.length > 0) {
-                        let html = ""; let hasSevereThreat = false;
-                        data.features.forEach(alert => { const props = alert.properties; if (props.severity === "Severe" || props.severity === "Extreme") hasSevereThreat = true; html += `<div style="border-left:2px solid var(--err-color); padding-left:8px; margin-top:8px; background:rgba(255,0,0,0.1);"><strong style="color:var(--err-color);">${props.event}</strong><div style="opacity:0.8; font-size:0.9em;">Severity: ${props.severity}</div><div style="opacity:0.6; font-size:0.8em; margin-top:4px;">${props.headline}</div></div>`; });
-                        localFeed.innerHTML = html; if (hasSevereThreat) emergency.triggerAlarm(); else audioSys.playTone(500, 'square', 0.2); 
-                    } else { localFeed.innerHTML = "<div style='color:#00FF00; margin-top:8px; font-weight:bold;'>[ AREA SECURE: NO ACTIVE LOCAL WARNINGS DETECTED ]</div>"; audioSys.playTone(600, 'sine', 0.2); }
-                } catch (e) { localFeed.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: ${e.message} ]</div>`; }
-            }, (error) => { localFeed.innerHTML = `<div style="color:var(--err-color);">[ TRACE FAILED: ACCESS DENIED BY USER ]</div>`; });
-        },
-        fetchFeed: async () => {
-            const feedDiv = document.getElementById('emergency-feed');
-            try {
-                const response = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.gdacs.org%2Fxml%2Frss.xml");
-                if (!response.ok) throw new Error("Network response was not OK"); const data = await response.json(); let html = "";
-                data.items.forEach(item => { html += `<div class="card" style="border-color:var(--err-color); margin-bottom:10px;"><strong style="font-size:1.1em;">[!] ${item.title}</strong><p style="font-size:0.85em; margin:6px 0; color:inherit; opacity:0.8;">${item.description}</p><a href="${item.link}" target="_blank" class="news-link" style="color:var(--err-color);border-color:var(--err-color);display:inline-block;width:auto;">>> VIEW SATELLITE DATA</a></div>`; });
-                feedDiv.innerHTML = html || "<div style='opacity:0.5;'>NO ACTIVE ALERTS DETECTED.</div>";
-            } catch (e) { feedDiv.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: CONNECTION BLOCKED ]</div>`; }
-        }
-    };
+    // ================================================================
+    // GAME (Terminal Jump)
+    // ================================================================
+    // ================================================================
+    // GAME (Terminal Jump)
+    // ================================================================
+    window.game = {
+        ctx: document.getElementById('game-canvas').getContext('2d'),
+        player: {y: 10, v: 0}, obs: [], score: 0, frame: null, frameCount: 0, highScore: 0,
+        init: () => { 
+            document.getElementById('game-canvas').onclick = () => { if(game.frame) game.player.v = -1; }; 
+            game.highScore = parseInt(localStorage.getItem('terminalJumpHS') || 0);
+            document.getElementById('game-highscore').innerText = game.highScore;
+            game.loadLeaderboard();
+        },
+        loadLeaderboard: async () => {
+            const lb = document.getElementById('game-leaderboard');
+            const { data } = await supabase.from('game_scores').select('*').order('score', {ascending: false}).limit(10);
+            lb.innerHTML = "";
+            if(!data || data.length === 0) { lb.innerHTML = "<div style='opacity:0.5;'>NO SCORES YET</div>"; return; }
+            data.forEach((entry, i) => {
+                lb.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(0,255,255,0.2); padding:4px 0;"><span>${i+1}. @${entry.u}</span><span style="color:#00FFFF;">${entry.score}</span></div>`;
+            });
+        },
+        submitScore: async () => {
+            if(game.score > 0) {
+                await supabase.from('game_scores').insert({u: state.user, score: game.score, ts: dbHelper.serverTimestamp()});
+                game.loadLeaderboard();
+            }
+        },
+        start: () => {
+            if(game.frame) cancelAnimationFrame(game.frame);
+            game.player = {y: 100, v: 0}; game.obs = []; game.score = 0; game.frameCount = 0;
+            document.getElementById('game-score').innerText = game.score;
+            
+            const loop = () => {
+                game.ctx.clearRect(0,0,400,200);
+                game.player.v += 0.2; // Softer gravity
+                game.player.y += game.player.v;
+                game.ctx.fillStyle = getComputedStyle(document.body).color;
+                game.ctx.fillRect(50, game.player.y, 10, 10);
+                
+                game.frameCount++;
+                
+                // Spawn structured Flappy Bird style pipes (Top and Bottom with a guaranteed gap)
+                if(game.frameCount % 110 === 0) {
+                    const gapSize = 75; // Generous gap so it's not impossible
+                    const gapY = Math.random() * (200 - gapSize - 40) + 20; 
+                    
+                    game.obs.push({x: 400, y: 0, w: 20, h: gapY, passed: false, isTop: true}); // Top pipe
+                    game.obs.push({x: 400, y: gapY + gapSize, w: 20, h: 200 - (gapY + gapSize), passed: false, isTop: false}); // Bottom pipe
+                }
+                
+                let collision = false;
+                for(let i=game.obs.length-1; i>=0; i--) {
+                    let o = game.obs[i]; 
+                    o.x -= 4; // Slower, more readable speed
+                    game.ctx.fillRect(o.x, o.y, o.w, o.h);
+                    
+                    // Score tracking (only trigger when passing a Top pipe to avoid double points)
+                    if(o.isTop && o.x + o.w < 50 && !o.passed) {
+                        o.passed = true; game.score++; document.getElementById('game-score').innerText = game.score;
+                        if(game.score > game.highScore) {
+                            game.highScore = game.score;
+                            localStorage.setItem('terminalJumpHS', game.highScore);
+                            document.getElementById('game-highscore').innerText = game.highScore;
+                        }
+                    }
+                    
+                    if(o.x < -20) { game.obs.splice(i, 1); }
+                    
+                    // Collision logic mapped to structured objects
+                    if (50 < o.x + o.w && 50 + 10 > o.x && game.player.y < o.y + o.h && game.player.y + 10 > o.y) collision = true;
+                }
+                
+                if(game.player.y > 200 || game.player.y < 0 || collision) {
+                    audioSys.playTone(300, 'sawtooth', 0.5);
+                    alert("SYSTEM FAILURE! Final Score: " + game.score);
+                    game.frame = null; // Stop game
+                    game.submitScore(); // Upload to leaderboard
+                    return;
+                }
+                game.frame = requestAnimationFrame(loop);
+            };
+            loop();
+        }
+    };
 
-    // ================================================================
-    // SETTINGS — theme preset system
-    // ================================================================
-    window.settings = {
-        themeMap: { green:  'color-green', red:    'color-red', blue:   'color-blue', white:  'color-white', gold:   'color-gold', purple: 'color-purple', cyan:   'color-cyan', rainbow: 'color-rainbow', rgb: 'color-rgb' },
-        apply: (theme) => {
-            const cls = settings.themeMap[theme] || 'color-green'; document.body.className = cls; localStorage.setItem('clanNetTheme', theme);
-            if(drawing && drawing.ctx) drawing.ctx.strokeStyle = getComputedStyle(document.body).color;
-            const label = document.getElementById('active-theme-name'); if(label) label.innerText = theme.toUpperCase();
-            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active')); const btn = document.querySelector(`.theme-btn-${theme}`); if(btn) btn.classList.add('active');
-            audioSys.playTone(600, 'sine', 0.1);
-        },
-        applyHex: () => {
-            const hex = document.getElementById('config-hex').value; if(!hex.startsWith('#')) return alert("MUST START WITH #");
-            document.body.className = ""; document.body.style.color = hex; localStorage.setItem('clanNetThemeHex', hex);
-        },
-        applyBg: () => {
-            const bg = document.getElementById('config-bg').value; 
-            document.body.style.backgroundImage = `url('${bg}')`; localStorage.setItem('clanNetBg', bg);
-        },
-        toggleDarkSchedule: (isActive) => {
-            localStorage.setItem('darkSchedule', isActive);
-            if(isActive) settings.runDarkSchedule(); else document.body.style.backgroundColor = "#000";
-        },
-        runDarkSchedule: () => {
-            if(localStorage.getItem('darkSchedule') !== 'true') return;
-            const hour = new Date().getHours();
-            if(hour >= 7 && hour < 17) { document.documentElement.style.setProperty('--bg-color', '#dddddd'); document.body.style.color = '#000'; } // Day
-            else if(hour >= 17 && hour < 20) { document.documentElement.style.setProperty('--bg-color', '#444444'); } // Dusk
-            else { document.documentElement.style.setProperty('--bg-color', '#000000'); } // Night
-        },
-        loadUI: () => {
-            const saved = localStorage.getItem('clanNetTheme') || 'green'; document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-            const btn = document.querySelector(`.theme-btn-${saved}`); if(btn) btn.classList.add('active');
-            const label = document.getElementById('active-theme-name'); if(label) label.innerText = saved.toUpperCase();
-            document.getElementById('config-bg').value = localStorage.getItem('clanNetBg') || "";
-            document.getElementById('config-dark-schedule').checked = localStorage.getItem('darkSchedule') === 'true';
-        },
-        load: () => { 
-            const savedHex = localStorage.getItem('clanNetThemeHex');
-            if(savedHex) { document.body.style.color = savedHex; }
-            else { const saved = localStorage.getItem('clanNetTheme') || 'green'; const cls = settings.themeMap[saved] || 'color-green'; document.body.className = cls; }
-            const savedBg = localStorage.getItem('clanNetBg'); if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
-            settings.runDarkSchedule(); setInterval(settings.runDarkSchedule, 60000); // Check time every minute
-        },
-        reset: () => {
-            if(!confirm("RESET TO DEFAULT?")) return; 
-            localStorage.clear(); document.body.className = 'color-green'; document.body.style.color = ''; document.body.style.backgroundImage = 'none';
-            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active')); const btn = document.querySelector('.theme-btn-green'); if(btn) btn.classList.add('active');
-            const label = document.getElementById('active-theme-name'); if(label) label.innerText = 'GREEN'; audioSys.playTone(400, 'sine', 0.2);
-        }
-    };
+    // ================================================================
+    // EMERGENCY FEED
+    // ================================================================
+    window.emergency = {
+        interval: null,
+        init: () => { emergency.fetchFeed(); if(emergency.interval) clearInterval(emergency.interval); emergency.interval = setInterval(emergency.fetchFeed, 300000);  },
+        triggerAlarm: () => { let beeps = 0; const alarm = setInterval(() => { audioSys.playTone(900, 'sawtooth', 0.4);  beeps++; if (beeps >= 3) clearInterval(alarm); }, 600); },
+        scanLocal: () => {
+            const localFeed = document.getElementById('local-alert-feed'); localFeed.innerHTML = "<div style='opacity:0.5; animation:blinkAnim 1s infinite;'>>> INITIATING GEOLOCATION TRACE...</div>"; audioSys.playTone(300, 'sine', 0.1);
+            if (!navigator.geolocation) return localFeed.innerHTML = "<div style='color:var(--err-color);'>[ ERROR: HARDWARE DOES NOT SUPPORT GEOLOCATION ]</div>";
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude; const lon = position.coords.longitude; localFeed.innerHTML = `<div style='opacity:0.5;'>>> COORDS ACQUIRED: ${lat.toFixed(2)}, ${lon.toFixed(2)}. SCANNING LOCAL FREQUENCIES...</div>`;
+                try {
+                    const response = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`); if (!response.ok) throw new Error("NWS Uplink Failed"); const data = await response.json();
+                    if (data.features && data.features.length > 0) {
+                        let html = ""; let hasSevereThreat = false;
+                        data.features.forEach(alert => { const props = alert.properties; if (props.severity === "Severe" || props.severity === "Extreme") hasSevereThreat = true; html += `<div style="border-left:2px solid var(--err-color); padding-left:8px; margin-top:8px; background:rgba(255,0,0,0.1);"><strong style="color:var(--err-color);">${props.event}</strong><div style="opacity:0.8; font-size:0.9em;">Severity: ${props.severity}</div><div style="opacity:0.6; font-size:0.8em; margin-top:4px;">${props.headline}</div></div>`; });
+                        localFeed.innerHTML = html; if (hasSevereThreat) emergency.triggerAlarm(); else audioSys.playTone(500, 'square', 0.2); 
+                    } else { localFeed.innerHTML = "<div style='color:#00FF00; margin-top:8px; font-weight:bold;'>[ AREA SECURE: NO ACTIVE LOCAL WARNINGS DETECTED ]</div>"; audioSys.playTone(600, 'sine', 0.2); }
+                } catch (e) { localFeed.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: ${e.message} ]</div>`; }
+            }, (error) => { localFeed.innerHTML = `<div style="color:var(--err-color);">[ TRACE FAILED: ACCESS DENIED BY USER ]</div>`; });
+        },
+        fetchFeed: async () => {
+            const feedDiv = document.getElementById('emergency-feed');
+            try {
+                const response = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.gdacs.org%2Fxml%2Frss.xml");
+                if (!response.ok) throw new Error("Network response was not OK"); const data = await response.json(); let html = "";
+                data.items.forEach(item => { html += `<div class="card" style="border-color:var(--err-color); margin-bottom:10px;"><strong style="font-size:1.1em;">[!] ${item.title}</strong><p style="font-size:0.85em; margin:6px 0; color:inherit; opacity:0.8;">${item.description}</p><a href="${item.link}" target="_blank" class="news-link" style="color:var(--err-color);border-color:var(--err-color);display:inline-block;width:auto;">>> VIEW SATELLITE DATA</a></div>`; });
+                feedDiv.innerHTML = html || "<div style='opacity:0.5;'>NO ACTIVE ALERTS DETECTED.</div>";
+            } catch (e) { feedDiv.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: CONNECTION BLOCKED ]</div>`; }
+        }
+    };
 
-    settings.load();
-    document.addEventListener('keydown', (e)=>{
-        // Jump velocity updated to match the new balanced physics
-        if(e.key === ' ' && !document.getElementById('screen-minigame').classList.contains('hidden')) { e.preventDefault(); if(game.frame) game.player.v = -4.5; }
-        
-        if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
-            if(e.key==='Enter')audioSys.playTone(400,'square',0.1); else if(e.key==='Backspace')audioSys.playTone(300,'sawtooth',0.1); else audioSys.playTone(800,'sine',0.05);
-        }
-    });
+    // ================================================================
+    // SETTINGS — theme preset system
+    // ================================================================
+    window.settings = {
+        themeMap: { green:  'color-green', red:    'color-red', blue:   'color-blue', white:  'color-white', gold:   'color-gold', purple: 'color-purple', cyan:   'color-cyan', rainbow: 'color-rainbow', rgb: 'color-rgb' },
+        apply: (theme) => {
+            const cls = settings.themeMap[theme] || 'color-green'; document.body.className = cls; localStorage.setItem('clanNetTheme', theme);
+            if(drawing && drawing.ctx) drawing.ctx.strokeStyle = getComputedStyle(document.body).color;
+            const label = document.getElementById('active-theme-name'); if(label) label.innerText = theme.toUpperCase();
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active')); const btn = document.querySelector(`.theme-btn-${theme}`); if(btn) btn.classList.add('active');
+            audioSys.playTone(600, 'sine', 0.1);
+        },
+        applyHex: () => {
+            const hex = document.getElementById('config-hex').value; if(!hex.startsWith('#')) return alert("MUST START WITH #");
+            document.body.className = ""; document.body.style.color = hex; localStorage.setItem('clanNetThemeHex', hex);
+        },
+        applyBg: () => {
+            const bg = document.getElementById('config-bg').value; 
+            document.body.style.backgroundImage = `url('${bg}')`; localStorage.setItem('clanNetBg', bg);
+        },
+        toggleDarkSchedule: (isActive) => {
+            localStorage.setItem('darkSchedule', isActive);
+            if(isActive) settings.runDarkSchedule(); else document.body.style.backgroundColor = "#000";
+        },
+        runDarkSchedule: () => {
+            if(localStorage.getItem('darkSchedule') !== 'true') return;
+            const hour = new Date().getHours();
+            if(hour >= 7 && hour < 17) { document.documentElement.style.setProperty('--bg-color', '#dddddd'); document.body.style.color = '#000'; } // Day
+            else if(hour >= 17 && hour < 20) { document.documentElement.style.setProperty('--bg-color', '#444444'); } // Dusk
+            else { document.documentElement.style.setProperty('--bg-color', '#000000'); } // Night
+        },
+        loadUI: () => {
+            const saved = localStorage.getItem('clanNetTheme') || 'green'; document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.querySelector(`.theme-btn-${saved}`); if(btn) btn.classList.add('active');
+            const label = document.getElementById('active-theme-name'); if(label) label.innerText = saved.toUpperCase();
+            document.getElementById('config-bg').value = localStorage.getItem('clanNetBg') || "";
+            document.getElementById('config-dark-schedule').checked = localStorage.getItem('darkSchedule') === 'true';
+        },
+        load: () => { 
+            const savedHex = localStorage.getItem('clanNetThemeHex');
+            if(savedHex) { document.body.style.color = savedHex; }
+            else { const saved = localStorage.getItem('clanNetTheme') || 'green'; const cls = settings.themeMap[saved] || 'color-green'; document.body.className = cls; }
+            const savedBg = localStorage.getItem('clanNetBg'); if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
+            settings.runDarkSchedule(); setInterval(settings.runDarkSchedule, 60000); // Check time every minute
+        },
+        reset: () => {
+            if(!confirm("RESET TO DEFAULT?")) return; 
+            localStorage.clear(); document.body.className = 'color-green'; document.body.style.color = ''; document.body.style.backgroundImage = 'none';
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active')); const btn = document.querySelector('.theme-btn-green'); if(btn) btn.classList.add('active');
+            const label = document.getElementById('active-theme-name'); if(label) label.innerText = 'GREEN'; audioSys.playTone(400, 'sine', 0.2);
+        }
+    };
+    settings.load();
+    document.addEventListener('keydown', (e)=>{
+        // Jump velocity updated to match the new balanced physics
+        if(e.key === ' ' && !document.getElementById('screen-minigame').classList.contains('hidden')) { e.preventDefault(); if(game.frame) game.player.v = -4.5; }
+        
+        if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+            if(e.key==='Enter')audioSys.playTone(400,'square',0.1); else if(e.key==='Backspace')audioSys.playTone(300,'sawtooth',0.1); else audioSys.playTone(800,'sine',0.05);
+        }
+    });
 </script>
 </body>
 </html>
-
-
-
-
