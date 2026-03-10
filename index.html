@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLAN_NET // SYSTEM_V3.2</title>
+    <title>CLAN_NET // SYSTEM_V3.3</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4002392683798426" crossorigin="anonymous"></script>
     <style>
@@ -99,6 +99,8 @@
         .comment-item { border-bottom: 1px solid var(--dim, #003300); padding: 6px 0; font-size: 0.88em; word-wrap: break-word; line-height: 1.4; }
 
         .verified-badge { display: inline-block; color: #00FFFF; margin-left: 4px; font-size: 1.1em; text-shadow: 0 0 5px #00FFFF; }
+        .commander-badge { display: inline-block; color: #FF0000; margin-left: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #FF0000; padding: 0 3px; text-shadow: 0 0 8px #FF0000; box-shadow: 0 0 5px #FF0000; letter-spacing: 1px; }
+        
         .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
         .status-online { background: #00FF00; box-shadow: 0 0 5px #00FF00; }
         .status-offline { background: #555; }
@@ -297,6 +299,13 @@
         </div>
     </div>
 
+    <div id="hardware-profiler" class="card" style="border-color:#00AAFF; display:flex; justify-content:space-between; font-size:10px; margin-bottom:10px; align-items:center;">
+        <span style="color:#00AAFF; font-weight:bold;">[ CYBER-DECK PROFILER ]</span>
+        <span>CPU TEMP: <span id="hw-temp">38°C</span></span>
+        <span>NEURAL LINK: <span id="hw-stab" style="color:#0f0;">99% STABLE</span></span>
+        <span>UPLINK PING: <span id="hw-ping">12ms</span></span>
+    </div>
+
     <div style="margin-bottom:10px;font-size:11px;opacity:0.7;">
         <span id="hub-rep">REP: 0</span> &nbsp;|&nbsp;
         <span id="device-info">DEVICE: DETECTING...</span>
@@ -306,6 +315,8 @@
         <input type="text" id="search-user-input" placeholder="SEARCH EXACT USERNAME..." style="margin:0;">
         <button onclick="app.searchUser()" style="width:80px;margin:0;">FIND</button>
     </div>
+
+    <button id="btn-commander-control" onclick="commanderSys.start()" class="hidden danger" style="margin-bottom:10px; font-weight:bold; border-style:double;">[ INIT COMMANDER EMERGENCY BROADCAST ]</button>
 
     <div class="grid-2" style="margin-bottom:10px;">
         <button onclick="nav.tab('clans')">CLANS</button>
@@ -336,6 +347,16 @@
         <button onclick="nav.to('emergency')" style="color:var(--err-color);border-color:var(--err-color);grid-column:span 2;">[ LIVE_EMERGENCY_FEED ]</button>
         <button onclick="app.loadNetworkDirectory()" style="color:#0f0; border-color:#0f0; grid-column:span 2;">[ NETWORK_DIRECTORY ]</button>
         
+        <button onclick="nav.to('blackmarket')" style="color:#888; border-color:#555;">[ BLACK_MARKET ]</button>
+        <button onclick="nav.to('sentinel')" style="color:#0f0; border-color:#0f0;">[ SENTINEL_LOGS ]</button>
+        <button onclick="nav.to('dataextractor')">[ DATA_EXTRACTOR ]</button>
+        <button onclick="nav.to('deaddrop')">[ DEAD_DROP_COORDS ]</button>
+        <button onclick="nav.to('signalencryptor')">[ SIGNAL_ENCRYPTOR ]</button>
+        <button onclick="nav.to('voidbuffer')">[ THE_VOID_BUFFER ]</button>
+        <button onclick="nav.to('neuralstreams')" style="color:var(--rep-watch); border-color:var(--rep-watch);">[ NEURAL_STREAMS ]</button>
+        <button onclick="nav.to('protocolvoting')">[ PROTOCOL_VOTING ]</button>
+        <button onclick="nav.to('clanwarfare')" style="grid-column:span 2; color:#FF3333; border-color:#FF3333;">[ CLAN_WARFARE_SIM ]</button>
+
         <button onclick="nav.to('minigame')" style="grid-column:span 2;">[ MINIGAME: TERMINAL JUMP ]</button>
         <button onclick="nav.to('maze')" style="grid-column:span 2;">[ MINIGAME: DARK MAZE ]</button>
         <button onclick="nav.to('sniffer')" style="grid-column:span 2;">[ MINIGAME: PACKET SNIFFER ]</button>
@@ -419,6 +440,130 @@
     <button onclick="location.reload()" style="margin-top:20px;border:none;opacity:0.35;font-size:11px;">LOGOUT</button>
 </div>
 
+<div id="screen-commander-broadcast" class="screen hidden" style="position:fixed; top:0; left:0; width:100vw; height:100vh; max-width:none; margin:0; z-index:9999999; background:#fff; box-shadow:inset 0 0 150px #000; display:flex; flex-direction:column; justify-content:center; align-items:center; border:none; border-radius:0;">
+    <h1 style="font-family:'Impact', 'Arial Black', sans-serif; font-size:6vw; color:#000; text-transform:uppercase; border:none; margin:0; padding:0; letter-spacing:8px; text-shadow:0 0 20px rgba(0,0,0,0.5);">COMMANDER</h1>
+    <h2 style="font-family:'Impact', 'Arial Black', sans-serif; font-size:4vw; color:#000; text-transform:uppercase; border:none; margin:0; padding:0; letter-spacing:15px; opacity:0.8;">CHELO</h2>
+    
+    <div id="cmd-broadcast-controls" class="hidden" style="margin-top:50px;">
+        <button onclick="commanderSys.stop()" class="danger" style="background:#000; color:#f00; border:2px solid #f00; font-size:1.5em; padding:10px 30px;">END BROADCAST</button>
+    </div>
+    <div id="cmd-listener-ui" style="margin-top:50px; color:#000; font-family:monospace; font-weight:bold;">
+        <div style="width:20px; height:20px; background:#f00; border-radius:50%; margin:0 auto 10px; animation:pulseAnim 1s infinite;"></div>
+        RECEIVING SECURE TRANSMISSION...
+    </div>
+</div>
+
+<div id="screen-blackmarket" class="screen hidden" style="border-color:#555; color:#aaa;">
+    <h2>// BLACK_MARKET (ECONOMY)</h2>
+    <p style="font-size:10px;opacity:0.8;">Exchange REP for exclusive digital assets and system overrides.</p>
+    <div class="card" style="border-color:#555;">
+        <strong style="color:#fff;">GHOST TOKEN (100 REP)</strong>
+        <p style="font-size:11px; margin:4px 0;">Bypass global mute limits to send a high-priority ping to the network.</p>
+        <button onclick="alert('Insufficient REP or System Offline.')" style="border-color:#555; color:#fff;">PURCHASE</button>
+    </div>
+    <div class="card" style="border-color:#555;">
+        <strong style="color:#fff;">NEON_GLOW CSS (500 REP)</strong>
+        <p style="font-size:11px; margin:4px 0;">Unlock a permanent glowing name aesthetic across all hubs.</p>
+        <button onclick="alert('Insufficient REP or System Offline.')" style="border-color:#555; color:#fff;">PURCHASE</button>
+    </div>
+    <button onclick="nav.to('hub')">BACK</button>
+</div>
+
+<div id="screen-sentinel" class="screen hidden" style="border-color:#0f0; color:#0f0;">
+    <h2>// SENTINEL_LOGS (SECURITY)</h2>
+    <div id="sentinel-feed" style="height:250px; overflow-y:auto; font-size:10px; border:1px solid #0f0; padding:10px; background:rgba(0,255,0,0.05); font-family:var(--font-main);">
+        > Firewall active. Monitoring external node pings...<br>
+    </div>
+    <button onclick="nav.to('hub')" style="margin-top:10px; color:#0f0; border-color:#0f0;">BACK</button>
+</div>
+
+<div id="screen-dataextractor" class="screen hidden">
+    <h2>// DATA_EXTRACTOR (MINI-GAME)</h2>
+    <p style="font-size:10px;opacity:0.6;">Type the raw memory block exactly as shown before the trace completes.</p>
+    <div class="card" style="text-align:center;">
+        <div id="de-timer" style="color:var(--warn-color); font-size:1.5em; font-weight:bold; margin-bottom:10px;">10.00s</div>
+        <div id="de-target" style="font-family:monospace; letter-spacing:2px; font-size:1.2em; margin-bottom:10px; user-select:none;">0xFA7B9</div>
+        <input type="text" id="de-input" placeholder="TYPE EXACTLY" style="text-align:center; font-size:1.2em;" oninput="extGame.check()">
+        <button onclick="extGame.start()" style="margin-top:10px;">START EXTRACTION</button>
+    </div>
+    <button onclick="nav.to('hub')">EXIT</button>
+</div>
+
+<div id="screen-deaddrop" class="screen hidden">
+    <h2>// DIGITAL_DEAD_DROP</h2>
+    <p style="font-size:10px;opacity:0.6;">Pin digital data drops on geographical coordinates.</p>
+    <div class="grid-2">
+        <input type="text" id="dd-lat" placeholder="LATITUDE (e.g. 39.09)">
+        <input type="text" id="dd-lon" placeholder="LONGITUDE (e.g. -94.58)">
+    </div>
+    <textarea id="dd-msg" placeholder="Dead drop payload..." style="height:60px;"></textarea>
+    <button onclick="alert('GPS uplink disabled in simulator mode.')">PLANT DROP</button>
+    <button onclick="alert('Scanning local GPS radius... No drops found.')">SCAN FOR DROPS</button>
+    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
+</div>
+
+<div id="screen-signalencryptor" class="screen hidden">
+    <h2>// SIGNAL_ENCRYPTOR (OTP)</h2>
+    <p style="font-size:10px;opacity:0.6;">Generate One-Time Pads for absolute communication security.</p>
+    <textarea id="se-input" placeholder="Message to Encrypt/Decrypt..." style="height:80px;"></textarea>
+    <input type="text" id="se-key" placeholder="OTP KEY (Must match message length)">
+    <div class="grid-2">
+        <button onclick="sigEnc.process()">EXECUTE XOR</button>
+        <button onclick="sigEnc.genKey()">GENERATE RANDOM KEY</button>
+    </div>
+    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
+</div>
+
+<div id="screen-voidbuffer" class="screen hidden" style="border-color:#333; color:#aaa;">
+    <h2>// THE_VOID_BUFFER</h2>
+    <p style="font-size:10px;opacity:0.6;">Off-the-record chat. The buffer is completely purged every 60 seconds.</p>
+    <div style="text-align:right; font-size:10px; color:var(--warn-color); margin-bottom:5px;">PURGE IN: <span id="void-timer">60</span>s</div>
+    <div class="chat-box" id="void-chat" style="border-color:#333; height:200px;"></div>
+    <input type="text" id="void-input" placeholder="Shout into the void..." style="border-color:#333;">
+    <button onclick="voidBuf.send()">SEND</button>
+    <button onclick="nav.to('hub')" style="margin-top:10px;">EXIT</button>
+</div>
+
+<div id="screen-neuralstreams" class="screen hidden" style="border-color:var(--rep-watch); color:var(--rep-watch);">
+    <h2>// NEURAL_LINK_STREAMS</h2>
+    <p style="font-size:10px;opacity:0.8;">Live, low-latency audio briefings for Verified operators.</p>
+    <div class="card" style="border-color:var(--rep-watch); text-align:center; padding:20px;">
+        <strong style="display:block; margin-bottom:10px;">NO ACTIVE OPERATION STREAMS</strong>
+        <button onclick="alert('Must be an Elite Operator to initiate a Stream.')" style="border-color:var(--rep-watch); color:var(--rep-watch);">INITIATE STREAM</button>
+    </div>
+    <button onclick="nav.to('hub')" style="border-color:var(--rep-watch); color:var(--rep-watch);">BACK</button>
+</div>
+
+<div id="screen-protocolvoting" class="screen hidden">
+    <h2>// PROTOCOL_VOTING (DAO)</h2>
+    <div class="card">
+        <h3>SYS_PROPOSAL: Upgrade Base Encryption Level?</h3>
+        <p style="font-size:11px; opacity:0.7; margin-bottom:10px;">Requires 10,000 Total REP to pass.</p>
+        <div class="grid-2">
+            <button onclick="alert('Vote Registered. Voted YES.')">YES (Contribute REP)</button>
+            <button onclick="alert('Vote Registered. Voted NO.')" class="danger">NO</button>
+        </div>
+        <div class="poll-bar" style="margin-top:10px;"><div class="poll-fill" style="width:72%; background:#0f0;"></div></div>
+        <small style="opacity:0.5;">7,200 / 10,000 REP</small>
+    </div>
+    <button onclick="nav.to('hub')">BACK</button>
+</div>
+
+<div id="screen-clanwarfare" class="screen hidden" style="border-color:#FF3333; color:#FF3333;">
+    <h2>// CLAN_WARFARE_SIM (LEADERBOARD)</h2>
+    <p style="font-size:10px; opacity:0.8;">Seasonal competition. Hack nodes to earn points.</p>
+    <div class="card" style="border-color:#FF3333;">
+        <h3 style="border-bottom:1px solid #FF3333;">CURRENT SEASON STANDINGS</h3>
+        <div style="font-size:12px; line-height:1.8;">
+            1. [NULL] - 15,420 PTS<br>
+            2. [CYBER] - 12,100 PTS<br>
+            3. [VOID] - 8,950 PTS<br>
+            4. [ROOT] - 4,200 PTS<br>
+        </div>
+    </div>
+    <button onclick="nav.to('hub')" style="border-color:#FF3333; color:#FF3333;">BACK</button>
+</div>
+
 <div id="screen-ledger" class="screen hidden">
     <h2>// THE_LEDGER (SCRIPT & MACRO REPOSITORY)</h2>
     <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Community-driven library for harmless code snippets, Minecraft server commands, and gaming macros.</p>
@@ -467,535 +612,6 @@
         <button onclick="camo.apply('editor')" style="border-style:dashed;">PLAIN TEXT EDITOR</button>
     </div>
     <button onclick="nav.to('hub')">BACK</button>
-</div>
-
-<div id="screen-vault" class="screen hidden" style="border-color:#aaa;">
-    <h2>// THE_VAULT (LOCAL ENCRYPTION)</h2>
-    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Data stored here never leaves your device. It is encrypted strictly to local storage.</p>
-    <textarea id="vault-text" style="height:300px; font-family:var(--font-main); background:rgba(0,0,0,0.8); color:inherit; border:1px solid #aaa; padding:10px;" placeholder="Enter classified data or codes..."></textarea>
-    <div class="grid-2" style="margin-top:10px;">
-        <button onclick="vault.save()" style="border-color:#0f0; color:#0f0;">ENCRYPT & SAVE</button>
-        <button onclick="vault.clear()" class="danger">PURGE DATA</button>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
-</div>
-
-<div id="screen-ghost" class="screen hidden" style="border-color:#FFD700; box-shadow:0 0 28px #FFD700; color:#FFD700;">
-    <h2>// GHOST_PROTOCOL</h2>
-    <p style="font-size:10px;opacity:0.8;margin-bottom:10px; color:#fff;">EPHEMERAL COMMS. NO DB STORAGE. TRACES WIPED AFTER 10 SECONDS.</p>
-    <div class="chat-box" id="ghost-chat" style="border-color:#FFD700; height:300px; background:rgba(255,215,0,0.05);"></div>
-    <input type="text" id="ghost-input" placeholder="Whisper into the void..." style="border-color:#FFD700; color:#FFD700;">
-    <button onclick="ghost.send()" style="border-color:#FFD700; color:#FFD700; font-weight:bold;">TRANSMIT</button>
-    <button onclick="ghost.stop(); nav.to('hub')" style="margin-top:10px;">DISCONNECT</button>
-</div>
-
-<div id="screen-maze" class="screen hidden">
-    <h2>// DARK_MAZE.SIM</h2>
-    <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">W/S: Move | A/D: Turn. AVOID WALLS.</div>
-    <canvas id="maze-canvas" width="400" height="400" style="border:1px solid currentColor; background:#000; display:block; margin:0 auto 10px;"></canvas>
-    <button onclick="maze.start()" style="margin-bottom:15px;">INITIALIZE SIM</button>
-    <button onclick="maze.stop(); nav.to('hub')">EXIT</button>
-</div>
-
-<div id="screen-sniffer" class="screen hidden">
-    <h2>// PACKET_SNIFFER.EXE</h2>
-    <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">INTERCEPT MATCHING PACKETS. AVOID OTHERS.</div>
-    <div style="text-align:center; margin-bottom:10px; font-weight:bold;">TARGET HASH: <span id="sniffer-target" style="display:inline-block; width:20px; height:20px; vertical-align:middle; border:1px solid #fff;"></span></div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-weight:bold;">
-        <span>PACKETS: <span id="sniffer-score">0</span></span>
-        <span style="color:var(--err-color);">ERRORS: <span id="sniffer-strikes">0</span>/3</span>
-    </div>
-    <canvas id="sniffer-canvas" width="400" height="300" style="border:1px solid currentColor; background:#050505; display:block; margin:0 auto 10px; cursor:crosshair;"></canvas>
-    <button onclick="sniffer.start()" style="margin-bottom:15px;">START TRACE</button>
-    <button onclick="sniffer.stop(); nav.to('hub')">EXIT</button>
-</div>
-
-<div id="screen-feedback" class="screen hidden" style="border-color:#ccc;">
-    <h2>// SYSTEM_FEEDBACK_UPLINK</h2>
-    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Submit reports directly to Network Admins.</p>
-    
-    <select id="fb-type" style="margin-bottom:10px;">
-        <option value="BUG">BUG REPORT</option>
-        <option value="FEEDBACK">GENERAL FEEDBACK</option>
-        <option value="FEATURE">FEATURE REQUEST</option>
-    </select>
-    <textarea id="fb-text" placeholder="Describe the issue or feedback..." style="height:80px; resize:none;"></textarea>
-    <button onclick="app.sendFeedback()">SUBMIT TRANSMISSION</button>
-
-    <div id="admin-feedback-panel" class="hidden" style="margin-top:20px; border-top:1px dashed currentColor; padding-top:10px;">
-        <h3 style="color:#00FFFF;">// ADMIN: INCOMING REPORTS</h3>
-        <div id="feedback-list" style="height:200px; overflow-y:auto; border:1px solid var(--dim); padding:5px;"></div>
-    </div>
-    
-    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
-</div>
-
-<div id="screen-minigame" class="screen hidden">
-    <h2>// TERMINAL_JUMP.EXE</h2>
-    <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">CLICK OR PRESS SPACE TO JUMP</div>
-    <canvas id="game-canvas" width="400" height="200"></canvas>
-    
-    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px; margin-bottom:10px;">
-        <span>SCORE: <span id="game-score">0</span></span>
-        <span style="color:#00FFFF;">PERSONAL BEST: <span id="game-highscore">0</span></span>
-    </div>
-    
-    <button onclick="game.start()" style="margin-bottom:15px;">START / RESTART LINK</button>
-
-    <div class="card" style="border-color:#00FFFF;">
-        <h3 style="color:#00FFFF; font-size:11px; border-bottom:1px solid #00FFFF; padding-bottom:5px;">// GLOBAL LEADERBOARD</h3>
-        <div id="game-leaderboard" style="font-size:11px; height:120px; overflow-y:auto;">
-            <div style="opacity:0.5;">Loading records...</div>
-        </div>
-    </div>
-    
-    <button onclick="game.stop(); nav.to('hub')" style="margin-top:15px;">EXIT</button>
-</div>
-
-<div id="screen-comms" class="screen hidden" style="border-color:#FF00FF; box-shadow:0 0 28px #FF00FF; color:#FF00FF;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>// COMMS_UPLINK (DMs & GROUPS)</h2>
-        <button onclick="app.toggleNotifications()" id="btn-mute-notifs" style="width:auto; font-size:9px; padding:2px 5px; border-color:#FF00FF; color:#FF00FF;">🔔 UNMUTED</button>
-    </div>
-    
-    <div class="grid-3" style="margin-bottom:10px;">
-        <button onclick="msgSys.tab('friends')" style="border-color:#FF00FF; color:#FF00FF;">FRIENDS</button>
-        <button onclick="msgSys.tab('dms')" style="border-color:#FF00FF; color:#FF00FF;">DIRECT MSGS</button>
-        <button onclick="msgSys.tab('groups')" style="border-color:#FF00FF; color:#FF00FF;">GROUPS</button>
-    </div>
-
-    <div id="comms-friends">
-        <div id="friends-list" style="height:300px; overflow-y:auto; border:1px solid #FF00FF; padding:10px; background:rgba(255,0,255,0.05);"></div>
-    </div>
-
-    <div id="comms-dms" class="hidden">
-        <div id="dms-list" style="height:100px; overflow-y:auto; border:1px solid #FF00FF; padding:5px; margin-bottom:10px;"></div>
-        <input type="text" id="dm-search" placeholder="Search DMs..." oninput="app.filterChat('dm-chat-box', this.value)" style="margin-bottom:4px; font-size:10px; border-color:#FF00FF; color:#FF00FF;">
-        <div class="chat-box" id="dm-chat-box" style="border-color:#FF00FF; height:200px;"></div>
-        <div id="dm-typing" style="font-size:10px; opacity:0.6; min-height:14px; margin-bottom:4px;"></div>
-        
-        <div id="dm-reply-preview" class="hidden" style="font-size:10px; border-left:2px solid #FF00FF; padding-left:5px; margin-bottom:5px; opacity:0.7;">
-            Replying to msg... <button onclick="app.cancelReply('dm')" style="width:auto; padding:0 4px; display:inline; border:none; background:transparent; color:#FF00FF;">[x]</button>
-        </div>
-
-        <div style="display:flex; gap:5px;">
-            <input type="file" id="dm-file" style="width:30px; padding:0; margin:0; border-color:#FF00FF;" title="Attach File" onchange="msgSys.attachFile(this)">
-            <button id="dm-mic-btn" onmousedown="msgSys.startVoiceRec()" onmouseup="msgSys.stopVoiceRec()" style="width:40px; margin:0; font-size:16px; border-color:#FF00FF;" title="Hold to Record">🎤</button>
-            <input type="text" id="dm-input" placeholder="Secure DM (/spoiler text)..." style="margin:0; flex:1; border-color:#FF00FF; color:#FF00FF;" oninput="msgSys.updateTyping('dm')">
-            <button onclick="msgSys.sendDM()" style="width:60px; margin:0; border-color:#FF00FF; color:#FF00FF;">SEND</button>
-        </div>
-    </div>
-
-    <div id="comms-groups" class="hidden">
-        <button onclick="msgSys.createGroupPrompt()" style="border-color:#FF00FF; color:#FF00FF;">+ CREATE NEW SECURE GROUP</button>
-        <div id="groups-list" style="height:100px; overflow-y:auto; border:1px solid #FF00FF; padding:5px; margin-bottom:10px; margin-top:10px;"></div>
-        <input type="text" id="group-search" placeholder="Search Group..." oninput="app.filterChat('group-chat-box', this.value)" style="margin-bottom:4px; font-size:10px; border-color:#FF00FF; color:#FF00FF;">
-        <div class="chat-box" id="group-chat-box" style="border-color:#FF00FF; height:160px;"></div>
-        
-        <div id="group-reply-preview" class="hidden" style="font-size:10px; border-left:2px solid #FF00FF; padding-left:5px; margin-bottom:5px; opacity:0.7;">
-            Replying to msg... <button onclick="app.cancelReply('group')" style="width:auto; padding:0 4px; display:inline; border:none; background:transparent; color:#FF00FF;">[x]</button>
-        </div>
-
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="group-input" placeholder="Group Message (@user)..." style="margin:0; flex:1; border-color:#FF00FF; color:#FF00FF;">
-            <button onclick="msgSys.sendGroupMsg()" style="width:60px; margin:0; border-color:#FF00FF; color:#FF00FF;">SEND</button>
-        </div>
-    </div>
-
-    <button onclick="nav.to('hub')" style="margin-top:10px; border-color:#FF00FF; color:#FF00FF;">BACK</button>
-</div>
-
-<div id="screen-directory" class="screen hidden" style="border-color:#0f0; box-shadow:0 0 28px #0f0; color:#0f0;">
-    <h2>// GLOBAL_NETWORK_DIRECTORY</h2>
-    <div id="dir-content" style="min-height:200px;">
-        <div style="opacity:0.5; animation:blinkAnim 1s infinite;">>> COMPILING NODE STATISTICS...</div>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px; color:#0f0; border-color:#0f0;">BACK</button>
-</div>
-
-<div id="screen-verified" class="screen hidden" style="border-color:#FFD700;box-shadow:0 0 28px #FFD700;color:#FFD700;">
-    <h2>// ELITE_UPLINK_ESTABLISHED</h2>
-    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">SECURE GROUPCHAT FOR VERIFIED IDENTITIES ONLY.</p>
-    <div class="card" style="border-color:#FFD700;margin-bottom:10px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:9px;height:9px;background:#FFD700;border-radius:50%;box-shadow:0 0 8px #FFD700;animation:pulseAnim 2s infinite;"></div>
-            <span style="font-size:10px;opacity:0.8;">ENCRYPTED VOICE TUNNEL: ACTIVE</span>
-        </div>
-    </div>
-    <div class="chat-box" id="verified-chat" style="border-color:#FFD700;"></div>
-    <p style="font-size:9px;opacity:0.6;">[QUANTUM_REDACTOR]: Wrap text in [q]text[/q] to mask it from non-elites.</p>
-    <input  type="text" id="verified-input" placeholder="Elite Message..." style="border-color:#FFD700;color:#FFD700;">
-    <button onclick="app.sendVerifiedMsg()" style="border-color:#FFD700;color:#FFD700;">TRANSMIT</button>
-    <button onclick="nav.to('hub')">BACK</button>
-</div>
-
-<div id="screen-dict" class="screen hidden">
-    <h2>// DICTIONARY_EDIT</h2>
-    <div class="grid-2">
-        <input type="text" id="dict-orig" placeholder="ENGLISH">
-        <input type="text" id="dict-new"  placeholder="CLAN WORD">
-    </div>
-    <button onclick="app.addWord()">ADD / UPDATE WORD</button>
-    <div id="dict-list" style="height:250px;overflow-y:scroll;border:1px solid var(--dim);padding:5px;margin-bottom:10px;"></div>
-    <button onclick="nav.to('hub')">BACK</button>
-</div>
-
-<div id="screen-social" class="screen hidden">
-    <h2>// NET_SOCIAL</h2>
-    <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <button onclick="social.tab('posts')" style="flex:1;">POSTS</button>
-        <button onclick="social.tab('polls')" style="flex:1;">POLLS</button>
-    </div>
-
-    <div id="soc-tab-posts">
-        <div style="border-bottom:1px solid var(--dim);padding-bottom:12px;margin-bottom:12px;">
-            <textarea id="post-content" placeholder="What's happening?" style="height:60px;resize:none;"></textarea>
-            <input type="text" id="post-video" placeholder="YouTube URL (Optional)">
-            <button onclick="social.createPost()">PUBLISH POST</button>
-        </div>
-        <div id="feed-posts" style="height:400px;overflow-y:scroll;"></div>
-    </div>
-
-    <div id="soc-tab-polls" class="hidden">
-        <button onclick="document.getElementById('poll-creator').classList.remove('hidden')">CREATE NEW POLL</button>
-        <div id="poll-creator" class="hidden card" style="margin-top:10px;">
-            <input type="text" id="poll-q"     placeholder="Question">
-            <input type="text" id="poll-o1"    placeholder="Option 1">
-            <input type="text" id="poll-o2"    placeholder="Option 2">
-            <input type="text" id="poll-video" placeholder="YouTube URL (Optional)">
-            <button onclick="social.createPoll()">LAUNCH POLL</button>
-        </div>
-        <div id="feed-polls" style="height:400px;overflow-y:scroll;margin-top:10px;"></div>
-    </div>
-    <div class="ad-wrapper" style="margin-top:10px; border:1px dashed currentColor; padding:5px;">
-        <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
-</div>
-
-<div id="screen-radio" class="screen hidden" style="border-color:var(--warn-color);box-shadow:0 0 28px var(--warn-color);color:var(--warn-color);">
-    <h2>// SIGNAL_INTERCEPT (RADIO)</h2>
-    <div class="card" style="border-color:var(--warn-color);text-align:center;">
-        <div id="freq-viz" style="height:50px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;margin-bottom:10px;"></div>
-        <div style="font-size:22px;font-family:var(--font-main);margin-bottom:10px;">FREQ: <span id="radio-freq">462.5625</span> MHz</div>
-        <div class="grid-2">
-            <button onclick="radio.toggleNoise()" id="btn-noise" style="color:var(--warn-color);border-color:var(--warn-color);">TOGGLE STATIC</button>
-            <button onclick="radio.scan()"        style="color:var(--warn-color);border-color:var(--warn-color);">SCAN NEXT</button>
-        </div>
-    </div>
-    <h3 style="margin-top:14px;border-color:var(--warn-color);">// LIVE UPLINKS (EXTERNAL)</h3>
-    <div class="grid-2" style="margin-top:8px;">
-        <a href="https://www.broadcastify.com/listen/" target="_blank" class="news-link" style="color:var(--warn-color);border-color:var(--warn-color);">BROADCASTIFY (POLICE/FIRE)</a>
-        <a href="https://tunein.com/radio/Police-Scanners-c100000/" target="_blank" class="news-link" style="color:var(--warn-color);border-color:var(--warn-color);">TUNEIN POLICE RADIO</a>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
-</div>
-
-<div id="screen-news" class="screen hidden" style="border-color:#00FFFF;box-shadow:0 0 28px #00FFFF;color:#00FFFF;">
-    <h2>// WORLD_WIRE (NEWS)</h2>
-    <h3>UNDERGROUND UPDATES</h3>
-    <div class="card" style="border-color:#00FFFF;">
-        <input type="text" id="news-headline"   placeholder="Headline...">
-        <input type="text" id="news-link-input" placeholder="Source URL (Optional)...">
-        <button onclick="news.post()" class="admin">BROADCAST UPDATE</button>
-    </div>
-    <div id="news-feed-internal" style="height:140px;overflow-y:scroll;border:1px solid var(--dim);margin-bottom:18px;padding:8px;"></div>
-    <h3>GLOBAL INTERCEPTS</h3>
-    <a href="https://www.foxnews.com"  target="_blank" class="news-link">>> FOX_NEWS_NETWORK</a>
-    <a href="https://www.cbc.ca/news"  target="_blank" class="news-link">>> CBC_NEWS_FEED</a>
-    <a href="https://www.cnn.com"      target="_blank" class="news-link">>> CNN_GLOBAL</a>
-    <a href="https://www.bbc.com/news" target="_blank" class="news-link">>> BBC_WORLD_SERVICE</a>
-    <a href="https://news.google.com"  target="_blank" class="news-link">>> GOOGLE_AGGREGATE</a>
-    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
-</div>
-
-<div id="comment-overlay" class="hidden">
-    <div class="screen" style="width:90%;height:82%;display:flex;flex-direction:column;margin:0;">
-        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid currentColor;padding-bottom:10px;margin-bottom:10px;">
-            <h3 style="margin:0;border:none;padding:0;">// COMMENTS_THREAD</h3>
-            <button onclick="social.closeComments()" class="warn" style="width:auto;padding:4px 12px;margin:0;">CLOSE [X]</button>
-        </div>
-        <div id="active-comment-list" style="flex:1;overflow-y:scroll;padding:10px;margin-bottom:10px;border:1px solid var(--dim);"></div>
-        <input type="text" id="new-comment-input" placeholder="Add comment (/spoiler text)..." style="flex-shrink:0;">
-        <button onclick="social.submitComment()" style="flex-shrink:0;">POST COMMENT</button>
-    </div>
-</div>
-
-<div id="screen-profile" class="screen hidden">
-    <h2>// USER_PROFILE</h2>
-    <div class="card">
-        <div style="display:flex;gap:12px;align-items:center;">
-            <div id="prof-pfp-display" style="width:52px;height:52px;background:#111;border:1px solid currentColor;background-size:cover;background-position:center;flex-shrink:0;"></div>
-            <div>
-                <h3 id="prof-displayname" style="border:none;padding:0;margin:0;font-size:1.1em;"></h3>
-                <small id="prof-username" style="opacity:0.5;"></small><br>
-                <em id="prof-bio" style="font-size:0.8em; opacity:0.7;"></em>
-            </div>
-        </div>
-        <div id="prof-verified" class="hidden" style="color:#00FFFF;margin-top:8px;font-size:11px;">⚠ VERIFIED IDENTITY ⚠</div>
-    </div>
-    <p>CLAN: <span id="prof-clan" style="font-weight:bold;">LOADING...</span></p>
-    <p>STATUS: <span id="prof-rep" style="font-weight:bold;">LOADING...</span></p>
-    
-    <div id="prof-social-panel" class="grid-3 hidden" style="margin-top:10px;">
-        <button id="btn-add-friend" onclick="msgSys.addFriend(state.viewedProfile)" style="font-size:10px; border-color:#0f0; color:#0f0;">ADD FRIEND</button>
-        <button id="btn-block-user" onclick="msgSys.blockUser(state.viewedProfile)" style="font-size:10px;" class="danger">BLOCK</button>
-        <button id="btn-report-user" onclick="msgSys.reportUser(state.viewedProfile)" style="font-size:10px;" class="warn">REPORT</button>
-    </div>
-
-    <div id="prof-edit-panel" class="hidden" style="border-top:1px solid var(--dim);padding-top:12px;margin-top:12px;">
-        <input type="text" id="edit-disp" placeholder="New Display Name">
-        <input type="text" id="edit-bio" placeholder="Update Status / Bio...">
-        <input type="text" id="edit-pfp"  placeholder="PFP Image URL">
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-            <input type="checkbox" id="edit-private" style="width:auto;margin:0;"> <label style="font-size:12px;opacity:0.7;">HIDE CLAN FROM PUBLIC</label>
-        </div>
-        <button onclick="app.saveProfile()">SAVE CHANGES</button>
-    </div>
-    <div id="prof-admin-panel" class="hidden" style="border:1px solid #00FFFF;padding:10px;margin-top:10px;">
-        <strong style="color:#00FFFF;font-size:11px;">SUPERUSER CONTROLS</strong>
-        <div class="grid-2" style="margin-top:5px;">
-            <button onclick="app.verifyUser()" class="admin" style="font-size:9px; padding:4px;">TOGGLE VERIFY</button>
-            <button onclick="app.adminBan(state.viewedProfile, false)" class="danger" style="font-size:9px; padding:4px;" id="btn-admin-ban">BAN</button>
-            <button onclick="app.adminBan(state.viewedProfile, true)" class="danger" style="font-size:9px; padding:4px;" id="btn-admin-ipban">IP BAN</button>
-        </div>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
-</div>
-
-<div id="screen-ranks" class="screen hidden">
-    <h2>// ROSTER_CONTROL</h2>
-    <div id="roster-list" style="height:300px;overflow-y:scroll;"></div>
-    <button onclick="nav.to('hub')">BACK</button>
-</div>
-
-<div id="screen-settings" class="screen hidden">
-    <h2>// SYSTEM_CONFIG</h2>
-    
-    <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px;">VISUAL THEME</h3>
-    <div class="theme-grid">
-        <button class="theme-btn theme-btn-green"  onclick="settings.apply('green')" >GREEN</button>
-        <button class="theme-btn theme-btn-red"    onclick="settings.apply('red')"   >RED</button>
-        <button class="theme-btn theme-btn-blue"   onclick="settings.apply('blue')"  >BLUE</button>
-        <button class="theme-btn theme-btn-white"  onclick="settings.apply('white')" >WHITE</button>
-        <button class="theme-btn theme-btn-gold"   onclick="settings.apply('gold')"  >GOLD</button>
-        <button class="theme-btn theme-btn-purple" onclick="settings.apply('purple')">PURPLE</button>
-        <button class="theme-btn theme-btn-cyan"   onclick="settings.apply('cyan')"  >CYAN</button>
-        <button class="theme-btn" style="background:linear-gradient(45deg, #f00,#0f0,#00f); color:#fff;" onclick="settings.apply('rainbow')">RNBW</button>
-        <button class="theme-btn" style="animation:rgbColorAnim 5s infinite;" onclick="settings.apply('rgb')">RGB</button>
-    </div>
-
-    <div style="display:flex; gap:5px; margin-bottom:10px;">
-        <input type="text" id="config-hex" placeholder="#FF00FF (Hex)" style="margin:0;">
-        <button onclick="settings.applyHex()" style="width:60px; margin:0;">SET</button>
-    </div>
-
-    <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px; margin-top:15px;">BACKGROUND</h3>
-    <div style="display:flex; gap:5px; margin-bottom:10px;">
-        <input type="text" id="config-bg" placeholder="Image/GIF URL..." style="margin:0;">
-        <button onclick="settings.applyBg()" style="width:60px; margin:0;">SET</button>
-    </div>
-    
-    <div style="display:flex; gap:8px; align-items:center; margin-bottom:15px;">
-        <input type="checkbox" id="config-dark-schedule" style="width:auto; margin:0;" onchange="settings.toggleDarkSchedule(this.checked)">
-        <label style="font-size:10px;">ENABLE AUTO DAY/NIGHT DARK MODE</label>
-    </div>
-
-    <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px; margin-top:15px;">SECURITY</h3>
-    <div style="display:flex; gap:5px; margin-bottom:10px;">
-        <input type="email" id="config-email" placeholder="Recovery Email..." style="margin:0;">
-        <button onclick="app.setEmail()" style="width:80px; margin:0;">VERIFY</button>
-    </div>
-
-    <button onclick="settings.reset()" class="danger" style="margin-top:20px;">RESET TO DEFAULT</button>
-    <button onclick="nav.to('hub')" style="margin-top:6px;">BACK</button>
-</div>
-
-<div id="screen-events" class="screen hidden">
-    <h2>// EVENT_LOG</h2>
-    <div class="card">
-        <input type="text" id="evt-name" placeholder="EVENT NAME">
-        <input type="text" id="evt-desc" placeholder="DESCRIPTION">
-        <div class="grid-2">
-            <input type="date" id="evt-start">
-            <input type="date" id="evt-end">
-        </div>
-        <button onclick="app.createEvent()">PUBLISH</button>
-    </div>
-    <div id="event-list" style="height:200px;overflow-y:scroll;"></div>
-    <button onclick="nav.to('hub')">BACK</button>
-</div>
-
-<div id="screen-jobs" class="screen hidden">
-    <h2>// GIG_NETWORK</h2>
-    <div class="grid-2">
-        <button onclick="document.getElementById('job-create-panel').classList.remove('hidden');">POST JOB</button>
-        <button onclick="app.loadJobs()">BROWSE</button>
-    </div>
-    <div id="job-create-panel" class="hidden card" style="margin-top:10px;">
-        <input type="text" id="job-title" placeholder="TITLE">
-        <textarea id="job-desc" placeholder="DESC" style="height:50px;resize:none;"></textarea>
-        <button onclick="app.createJob()">UPLOAD</button>
-    </div>
-    <div id="job-list" style="height:300px;overflow-y:scroll;margin-top:10px;"></div>
-    <div id="job-chat-panel" class="hidden" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,4,0,0.98);z-index:10;padding:15px;border:1px solid currentColor;">
-        <div id="job-chat-box" class="chat-box" style="height:280px;"></div>
-        <input type="text" id="job-msg-input" placeholder="(/spoiler text)">
-        <button onclick="app.sendJobMsg()">SEND</button>
-        <button onclick="app.closeJobChat()" class="warn">CLOSE</button>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
-</div>
-
-<div id="screen-ectotape" class="screen hidden" style="border-color:var(--rep-watch);box-shadow:0 0 28px var(--rep-watch);">
-    <h2 style="color:var(--rep-watch);border-color:var(--rep-watch);">// ECTOTAPE_STREAM</h2>
-    
-    <div id="upload-zone" class="hidden card" style="border-color:var(--rep-watch);">
-        <small style="color:var(--rep-watch); opacity:0.8; display:block; margin-bottom:5px;">⚠ VERIFIED UPLOAD ACCESS ONLY</small>
-        <input type="text" id="vid-title" placeholder="TITLE">
-        <div class="grid-2">
-            <input type="text" id="vid-url" placeholder="YouTube URL">
-            <input type="file" id="vid-file-upload" accept="video/*,image/*" title="Or Upload from Device">
-        </div>
-        <button onclick="app.uploadVideo()" style="color:var(--rep-watch);border-color:var(--rep-watch);">BROADCAST</button>
-    </div>
-    <div id="upload-denied" class="card hidden" style="border-color:red; color:red; text-align:center;">
-        [ ACCESS DENIED: IDENTITY NOT VERIFIED ]
-    </div>
-    
-    <div id="video-feed" style="height:420px;overflow-y:scroll;"></div>
-    <button onclick="nav.to('hub')" style="margin-top:10px;">EXIT</button>
-</div>
-
-<div id="screen-draw" class="screen hidden">
-    <h3 id="draw-title">DRAW: A</h3>
-    <canvas id="draw-canvas" class="draw-canvas" width="280" height="280"></canvas>
-    <div class="grid-2">
-        <button onclick="drawing.clear()">CLEAR</button>
-        <button onclick="drawing.save()">NEXT →</button>
-    </div>
-    <button onclick="drawing.cancel()" class="danger" style="margin-top:6px;">CANCEL</button>
-</div>
-
-<div id="screen-create" class="screen hidden">
-    <h2>// NEW_CLAN :: INITIALIZE</h2>
-    <input type="text"     id="create-name" placeholder="CLAN NAME">
-    <input type="password" id="create-pass" placeholder="ACCESS PASSPHRASE">
-    <button onclick="app.createClanStart()">START DRAWING SYMBOLS</button>
-    <button onclick="nav.to('hub')" class="danger" style="margin-top:4px;">CANCEL</button>
-</div>
-
-<div id="screen-soc" class="screen hidden" style="border-color:#00FFFF;box-shadow:0 0 28px #00FFFF;color:#00FFFF;">
-    <h2>// SECURITY_OPS_CENTER</h2>
-    <div class="card" style="border-color:#00FFFF;margin-bottom:10px;">
-        <small style="opacity:0.6;font-size:10px;display:block;margin-bottom:6px;">GLOBAL ALERT SYSTEM CONTROLS</small>
-        <div class="grid-3">
-            <button onclick="sysAlerts.trigger('INFO')" style="color:#00FF00;border-color:#00FF00;">ANNOUNCE</button>
-            <button onclick="sysAlerts.trigger('WARN')" style="color:var(--warn-color);border-color:var(--warn-color);">WARNING</button>
-            <button onclick="sysAlerts.trigger('CRIT')" class="danger">RED ALERT</button>
-        </div>
-    </div>
-    <div class="grid-2">
-        <button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button>
-        <button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button>
-    </div>
-    <button onclick="nav.to('kali')" style="background:#0a0a0a;color:#3377ff;border:1px solid #3377ff;margin-top:4px;">[ BOOT KALI_LINUX_EMU ]</button>
-    <div id="soc-console" style="background:#000;border:1px solid #00FFFF;height:150px;padding:10px;overflow-y:scroll;font-size:11px;margin-top:10px;color:#00FFFF;">
-        <span class="term-line">> SOC_INIT... READY.</span>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px;border-color:#00FFFF;color:#00FFFF;">DISCONNECT</button>
-</div>
-
-<div id="screen-cockpit" class="screen hidden" style="border-color:var(--warn-color);box-shadow:0 0 28px var(--warn-color);max-width:920px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--warn-color);margin-bottom:12px;padding-bottom:6px;">
-        <h2 style="color:var(--warn-color);border:none;padding:0;margin:0;">// CYBER_DECK_V2.0 — EDU SIM</h2>
-        <div style="font-size:9px;color:var(--warn-color);animation:blinkAnim 2s infinite;">[ BROWSER SECURITY LIMITS APPLY ]</div>
-    </div>
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
-        <div>
-            <div class="grid-3">
-                <div class="switch-container"><span class="switch-label">PROXY CHAIN</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
-                <div class="switch-container"><span class="switch-label">FIREWALL BYPASS</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
-                <div class="switch-container"><span class="switch-label">ROOT MASK</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
-            </div>
-            <div class="grid-2" style="margin-bottom:10px;">
-                <div class="dial-container"><span class="switch-label">SIGNAL GAIN</span><input type="range" min="0" max="100" value="50" oninput="cockpit.updateGain(this.value)"></div>
-                <div class="dial-container"><span class="switch-label">DECRYPTION RATE</span><input type="range" min="0" max="100" value="30" oninput="cockpit.updateRate(this.value)"></div>
-            </div>
-            <div style="background:#000;border:1px solid var(--warn-color);height:120px;position:relative;overflow:hidden;margin-bottom:10px;">
-                <canvas id="cockpit-canvas" width="450" height="120" style="border:none;background:transparent;box-shadow:none;"></canvas>
-                <div id="visual-text" style="position:absolute;top:5px;left:5px;font-size:9px;color:rgba(255,170,0,0.6);"></div>
-            </div>
-            <div class="grid-4">
-                <div class="action-btn" onclick="cockpit.runAction('PING_SWEEP')"><div class="led"></div>PING</div>
-                <div class="action-btn" onclick="cockpit.runAction('PORT_SCAN')"><div class="led"></div>SCAN</div>
-                <div class="action-btn" onclick="cockpit.runAction('PACKET_SNIFF')"><div class="led"></div>SNIFF</div>
-                <div class="action-btn" onclick="cockpit.runAction('TRACE_ROUTE')"><div class="led"></div>TRACE</div>
-                <div class="action-btn" onclick="cockpit.runAction('BRUTE_FORCE')"><div class="led"></div>BRUTE</div>
-                <div class="action-btn" onclick="cockpit.runAction('INJECT_SQL')"><div class="led"></div>INJECT</div>
-                <div class="action-btn" onclick="cockpit.runAction('OVERFLOW')"><div class="led"></div>OVRFLW</div>
-                <div class="action-btn" onclick="cockpit.runAction('EXECUTE_PAYLOAD')" style="border-style:dashed;"><div class="led busy"></div>EXECUTE</div>
-            </div>
-            <div style="margin-top:10px;">
-                <button onclick="cockpit.scanNetwork()" class="warn" style="width:100%;padding:10px;">LAN DISCOVERY (SIM + WEBRTC)</button>
-                <div id="scan-progress"><div id="scan-progress-fill"></div></div>
-            </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="card" style="border-color:var(--warn-color);margin:0;">
-                <label style="font-size:10px;color:var(--warn-color);display:block;margin-bottom:4px;">TARGET IP / URL</label>
-                <input type="text" id="cockpit-target" value="192.168.1.1" style="color:var(--warn-color);border-color:var(--warn-color);">
-                <label style="font-size:10px;color:var(--warn-color);display:block;margin-bottom:4px;">PROTOCOL</label>
-                <select id="cockpit-proto" style="color:var(--warn-color);border-color:var(--warn-color);">
-                    <option>SSH (22)</option><option>HTTP (80)</option><option>HTTPS (443)</option><option>FTP (21)</option><option>TELNET (23)</option>
-                </select>
-            </div>
-            <div class="chat-box" id="cockpit-log" style="flex:1;border-color:var(--warn-color);font-size:10px;color:var(--warn-color);margin:0;">
-                <div class="term-line">>> DECK INITIALIZED...</div>
-            </div>
-            <div id="network-scan-panel" class="hidden"><div id="scan-results"></div></div>
-        </div>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:12px;border-color:var(--warn-color);color:var(--warn-color);">DISCONNECT</button>
-</div>
-
-<div id="remote-access-overlay" class="hidden">
-    <div style="width:90%;height:80%;background:#000;border:2px solid var(--warn-color);padding:12px;color:inherit;font-family:var(--font-main);box-shadow:0 0 30px var(--warn-color);display:flex;flex-direction:column;">
-        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--warn-color);padding-bottom:6px;margin-bottom:10px;">
-            <h3 id="remote-title" style="margin:0;color:var(--warn-color);border:none;padding:0;">REMOTE ACCESS</h3>
-            <button onclick="cockpit.closeRemote()" class="danger" style="width:auto;padding:5px 10px;margin:0;font-size:10px;">EXIT</button>
-        </div>
-        <div id="remote-content" style="flex:1;overflow-y:scroll;"></div>
-    </div>
-</div>
-
-<div id="screen-kali" class="hidden">
-    <div id="kali-bar">
-        <div style="display:flex;align-items:center;">
-            <span style="color:#f00;font-weight:bold;margin-right:10px;">🐉 KALI_EMU</span>
-            <button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications ▾</button>
-        </div>
-        <span style="font-size:11px;opacity:0.5;">root@kali</span>
-    </div>
-    <div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()">
-        <div id="win-term" class="window" style="z-index:10;">
-            <div class="win-header" onmousedown="kali.startDrag(event,'win-term')">
-                <span>root@kali:~/python_scripts</span>
-                <button onclick="nav.to('soc')" style="background:#ff5f56;width:14px;height:14px;border-radius:50%;padding:0;cursor:pointer;border:none;margin:0;min-width:auto;"></button>
-            </div>
-            <div class="win-body">
-                <div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div>
-                <div id="py-input-line">
-                    <span style="color:cyan;margin-right:5px;font-size:12px;">>>></span>
-                    <input type="text" id="py-input" onkeydown="kali.handleInput(event)">
-                </div>
-            </div>
-        </div>
-        <div id="kali-menu" class="hidden" style="position:absolute;top:0;left:0;width:180px;background:#2a2a2a;z-index:50;border:1px solid #444;">
-            <button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button>
-            <button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button>
-        </div>
-    </div>
 </div>
 
 <script type="module">
@@ -1072,10 +688,87 @@
             else if(type==='CRIT') { text="CRITICAL ALERT"; cls+="type-crit"; audioSys.playTone(800,'sawtooth',0.1); }
             setTimeout(()=>{ sysAlerts.msg.innerText=text; sysAlerts.banner.className=cls; }, 100);
             sysAlerts.timer = setTimeout(sysAlerts.hide, 10000);
-        }, hide: () => { sysAlerts.banner.className = 'alert-off'; }
+        }, 
+        showBroadcastBtn: () => {
+            sysAlerts.banner.className = 'alert-on type-crit';
+            sysAlerts.msg.innerHTML = `EMERGENCY COMMANDER BROADCAST LIVE <button onclick="commanderSys.join()" style="display:inline-block; background:#fff; color:#f00; border:none; padding:2px 10px; margin-left:10px; cursor:pointer; font-weight:bold;">JOIN NOW</button>`;
+            if(sysAlerts.timer) clearTimeout(sysAlerts.timer);
+            audioSys.playTone(900, 'sawtooth', 0.5); setTimeout(()=>audioSys.playTone(900, 'sawtooth', 0.5), 600);
+        },
+        hide: () => { sysAlerts.banner.className = 'alert-off'; }
     };
 
     window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
+
+    // ================================================================
+    // COMMANDER BROADCAST SYSTEM
+    // ================================================================
+    window.commanderSys = {
+        peer: null, stream: null, callContexts: [], active: false,
+        initListener: async () => {
+            // Listen to a generic flag in the DB or a simulated channel.
+            // Using a channel broadcast to simulate global DB listening for minimal latency setup.
+            dbHelper.listenDoc('system_state', 'commander_broadcast', (data) => {
+                if(data && data.active) {
+                    if(!app.isCommander(state.user) && !commanderSys.active) {
+                        sysAlerts.showBroadcastBtn();
+                    }
+                } else {
+                    if(commanderSys.active && !app.isCommander(state.user)) {
+                        commanderSys.leave();
+                    }
+                    if(!commanderSys.active) sysAlerts.hide();
+                }
+            });
+        },
+        start: async () => {
+            try {
+                commanderSys.stream = await navigator.mediaDevices.getUserMedia({audio: true, video: false});
+                commanderSys.peer = new Peer('commander_node_v1'); // Fixed ID for commander to accept calls
+                commanderSys.peer.on('call', (call) => {
+                    call.answer(commanderSys.stream);
+                    commanderSys.callContexts.push(call);
+                });
+                commanderSys.peer.on('open', async (id) => {
+                    await supabase.from('system_state').upsert({ id: 'commander_broadcast', active: true, peer_id: id });
+                    nav.to('commander-broadcast');
+                    document.getElementById('cmd-broadcast-controls').classList.remove('hidden');
+                    document.getElementById('cmd-listener-ui').classList.add('hidden');
+                });
+            } catch(e) { alert("Mic required for broadcast."); }
+        },
+        stop: async () => {
+            if(commanderSys.stream) commanderSys.stream.getTracks().forEach(t=>t.stop());
+            if(commanderSys.peer) commanderSys.peer.destroy();
+            await supabase.from('system_state').upsert({ id: 'commander_broadcast', active: false, peer_id: null });
+            commanderSys.callContexts = [];
+            nav.to('hub');
+        },
+        join: async () => {
+            const { data } = await supabase.from('system_state').select('peer_id').eq('id', 'commander_broadcast').single();
+            if(!data || !data.peer_id) return;
+            commanderSys.peer = new Peer();
+            commanderSys.peer.on('open', () => {
+                const call = commanderSys.peer.call(data.peer_id, null); // Receive only
+                call.on('stream', (remoteStream) => {
+                    const audio = new Audio(); audio.srcObject = remoteStream; audio.autoplay = true;
+                    commanderSys.callContexts.push(audio);
+                });
+            });
+            commanderSys.active = true;
+            nav.to('commander-broadcast');
+            document.getElementById('cmd-broadcast-controls').classList.add('hidden');
+            document.getElementById('cmd-listener-ui').classList.remove('hidden');
+            sysAlerts.hide();
+        },
+        leave: () => {
+            commanderSys.active = false;
+            commanderSys.callContexts.forEach(a => { if(a.pause) a.pause(); else a.close(); });
+            if(commanderSys.peer) commanderSys.peer.destroy();
+            nav.to('hub');
+        }
+    };
+
 
     window.nav = {
         to: (id) => {
@@ -1104,6 +797,7 @@
             if(id==='ledger')   ledger.load();
             if(id==='neural')   neuralMap.start();
             if(id==='cryptic')  cryptic.generate();
+            if(id==='voidbuffer') voidBuf.init();
             if(window.neuralMap && id !== 'neural') neuralMap.stop();
         },
         tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
@@ -1114,6 +808,9 @@
         voiceContext:null, voiceSource:null, voiceAnalyser:null, voiceAnim:null, voiceActive:false, voiceUnsubscribe:null, voiceHeartbeat:null,
         globalHeartbeat: null, globalChatUnsub: null, userUnsub: null, isVideo: false,
         panicCount: 0,
+
+        isCommander: (u) => (u||'').toLowerCase() === 'user1234',
+        getCommanderBadge: (u) => app.isCommander(u) ? `<span class="commander-badge">[COMMANDER]</span>` : '',
 
         panicSwitch: () => {
             document.getElementById('panic-overlay').classList.remove('hidden');
@@ -1128,7 +825,7 @@
             
             // QUANTUM REDACTOR (Elite Check)
             res = res.replace(/\[q\](.*?)\[\/q\]/gi, (match, p1) => {
-                const isElite = state.verifiedUsers.includes(state.user) || (state.clanData && state.clanData.leader === state.user);
+                const isElite = state.verifiedUsers.includes(state.user) || (state.clanData && state.clanData.leader === state.user) || app.isCommander(state.user);
                 if(isElite) {
                     return `<span class="q-mask elite-mask" onclick="this.classList.toggle('revealed')" title="Elite: Click to un-redact">${p1}</span>`;
                 } else {
@@ -1175,7 +872,7 @@
             if (error) return alert("DATABASE ERROR: " + error.message);
             if (data && data.banned) return alert("ACCOUNT SUSPENDED.");
             if (data && data.ipBanned) return alert("CONNECTION BLOCKED BY ADMIN.");
-            if(data && data.pass===p){ state.user=u; state.friends=data.friends||[]; state.blocks=data.blocks||[]; app.startHeartbeat(); nav.to('hub'); } else alert("INVALID CREDENTIALS");
+            if(data && data.pass===p){ state.user=u; state.friends=data.friends||[]; state.blocks=data.blocks||[]; app.startHeartbeat(); nav.to('hub'); commanderSys.initListener(); } else alert("INVALID CREDENTIALS");
         },
 
         register: async () => {
@@ -1216,6 +913,14 @@
             const { data: vSnap } = await supabase.from('users').select('id').eq('verified', true);
             state.verifiedUsers = vSnap ? vSnap.map(d => d.id) : [];
             document.getElementById('hub-status-sel').value = "ONLINE";
+            
+            setInterval(() => {
+                const hTemp = 30 + Math.floor(Math.random() * 20);
+                const hPing = 5 + Math.floor(Math.random() * 30);
+                document.getElementById('hw-temp').innerText = hTemp + "°C";
+                document.getElementById('hw-ping').innerText = hPing + "ms";
+            }, 3000);
+
             if(!app.globalHeartbeat) {
                 const syncDB = async () => { await supabase.from('users').update({lastSeen: dbHelper.serverTimestamp()}).eq('id', state.user); };
                 syncDB(); app.globalHeartbeat = setInterval(syncDB, 30000);
@@ -1234,7 +939,7 @@
                     const uData = (onlineSnap||[]).find(o=>o.id===vUser);
                     let sDot = `<div class="status-dot status-offline"></div>`; let timeStr = "";
                     if(uData) sDot = app.getStatusDot(uData.presence_status, uData.lastSeen);
-                    vListHTML += `<div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">${sDot} @${vUser} ${app.getBadge(vUser)}</div>`;
+                    vListHTML += `<div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">${sDot} @${vUser} ${app.getCommanderBadge(vUser)}${app.getBadge(vUser)}</div>`;
                 });
                 dir.innerHTML = `<div class="grid-3" style="margin-bottom:15px; text-align:center;"><div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${count||0}</b></div><div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div><div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div></div><h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3><div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS YET</span>"}</div>`;
             } catch (e) { dir.innerHTML = `[ ERROR: ${e.message} ]`; }
@@ -1243,10 +948,12 @@
         initHub: async () => {
             loading(true); document.getElementById('device-info').innerText="DEVICE: "+deviceDetect.getInfo();
             const { data: ud } = await supabase.from('users').select('*').eq('id', state.user).single();
-            let vHTML=ud.verified?`<span class="verified-badge">♦✓</span>`:''; document.getElementById('hub-user').innerHTML=`${ud.displayName||state.user} ${vHTML}`;
+            let vHTML=ud.verified?`<span class="verified-badge">♦✓</span>`:''; document.getElementById('hub-user').innerHTML=`${ud.displayName||state.user} ${app.getCommanderBadge(state.user)}${vHTML}`;
             const admins=["user1234","user4321"];
             if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
-            if(ud.verified){ 
+            if(app.isCommander(state.user)) document.getElementById('btn-commander-control').classList.remove('hidden');
+
+            if(ud.verified || app.isCommander(state.user)){ 
                 document.getElementById('btn-payload').classList.remove('hidden'); 
                 document.getElementById('btn-verified').classList.remove('hidden'); 
                 document.getElementById('btn-ghost').classList.remove('hidden'); 
@@ -1268,7 +975,7 @@
                 const d=document.getElementById('global-chat'); d.innerHTML="";
                 data.reverse().forEach(m=>{
                     if(state.blocks.includes(m.u)) return;
-                    d.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
+                    d.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
                 }); 
                 d.scrollTop=d.scrollHeight;
             });
@@ -1281,7 +988,7 @@
                 d.innerHTML=""; 
                 data.reverse().forEach(m=>{
                     if(state.blocks.includes(m.u)) return;
-                    d.innerHTML+=`<div class="chat-msg" style="color:#FFD700;border-color:#664400;"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
+                    d.innerHTML+=`<div class="chat-msg" style="color:#FFD700;border-color:#664400;"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
                 }); 
                 d.scrollTop=d.scrollHeight;
             });
@@ -1294,7 +1001,7 @@
             if(!d) return alert("USER NOT FOUND");
             state.viewedProfile=target;
             document.getElementById('prof-username').innerText="@"+target;
-            document.getElementById('prof-displayname').innerText=d.displayName||target;
+            document.getElementById('prof-displayname').innerText=(d.displayName||target) + " " + app.getCommanderBadge(target);
             document.getElementById('prof-bio').innerText=`"${d.bio||'No status set.'}"`;
             document.getElementById('prof-pfp-display').style.backgroundImage=d.pfp?`url('${d.pfp}')`:"none";
             if(d.verified)document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
@@ -1362,7 +1069,7 @@
                     let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
 
                     if(m.u==="SYSTEM") d.innerHTML+=`<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`;
-                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getBadge(m.u)}:</strong> ${txt}</div>`;
+                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${txt}</div>`;
                 });
                 d.scrollTop=d.scrollHeight;
             }, (newMsg) => {
@@ -1453,7 +1160,7 @@
             const ranks=state.clanData.ranks||{}; const isLeader=state.clanData.leader===state.user;
             for(const [member,rank] of Object.entries(ranks)){
                 let ctrl=""; if(isLeader&&member!==state.user) ctrl=`<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0;" class="danger">KICK</button><button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0 0 0 5px;">SET RANK</button>`;
-                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
+                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getCommanderBadge(member)}${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
             }
         },
         setCustomRank: async(member)=>{ const r=prompt("ENTER CUSTOM RANK TITLE:"); if(r){ let ranks = state.clanData.ranks||{}; ranks[member]=r.toUpperCase(); await supabase.from('clans').update({ranks}).eq('id', state.clan); app.loadRoster();} },
@@ -1479,16 +1186,16 @@
         createEvent: async()=>{ const n=document.getElementById('evt-name').value; if(!n)return; await supabase.from('events').insert({name:n, desc:document.getElementById('evt-desc').value, start:document.getElementById('evt-start').value, end:document.getElementById('evt-end').value, creator:state.user, ts:dbHelper.serverTimestamp()}); alert("CREATED"); app.loadEvents(); },
         loadEvents: async()=>{ const list=document.getElementById('event-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('events').select('*').order('start', {ascending:true}); list.innerHTML=""; (data||[]).forEach(e=>{ list.innerHTML+=`<div class="card"><strong>${e.name}</strong><br><span style="opacity:0.6;font-size:11px;">${e.start} — ${e.end||'?'}</span><br><p style="margin:4px 0;font-size:12px;">${e.desc}</p><small style="opacity:0.4;">ORG: ${e.creator}</small></div>`;}); },
         createJob: async()=>{ const t=document.getElementById('job-title').value; if(!t)return; await supabase.from('jobs').insert({title:t, desc:document.getElementById('job-desc').value, owner:state.user, worker:null, status:'OPEN', ts:dbHelper.serverTimestamp()}); alert("POSTED"); app.loadJobs(); },
-        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getBadge(j.owner)}</strong></small>${act}</div>`;}); },
+        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getCommanderBadge(j.owner)}${app.getBadge(j.owner)}</strong></small>${act}</div>`;}); },
         acceptJob: async(jid)=>{ if(!confirm("ACCEPT?"))return; await supabase.from('jobs').update({worker:state.user, status:'ASSIGNED'}).eq('id', jid); app.openJobChat(jid); },
-        openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
+        openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
         sendJobMsg: async()=>{ const t=document.getElementById('job-msg-input').value; if(t) await supabase.from('job_msgs').insert({job_id:state.currentJob, u:state.user, txt:t, ts:dbHelper.serverTimestamp()}); document.getElementById('job-msg-input').value=""; },
         closeJobChat: ()=>{ document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob=null; },
 
         loadEctoTape: async()=>{
             const feed=document.getElementById('video-feed'); feed.innerHTML="<div style='opacity:0.4;padding:10px;'>LOADING STREAM...</div>";
             const { data: ud } = await supabase.from('users').select('verified').eq('id', state.user).single();
-            if(ud && ud.verified) document.getElementById('upload-zone').classList.remove('hidden');
+            if(ud && (ud.verified || app.isCommander(state.user))) document.getElementById('upload-zone').classList.remove('hidden');
             else { document.getElementById('upload-zone').classList.add('hidden'); document.getElementById('upload-denied').classList.remove('hidden'); }
             try{
                 const { data } = await supabase.from('ectotape_vids').select('*').order('ts', {ascending:false}).limit(20); feed.innerHTML="";
@@ -1498,7 +1205,7 @@
                     const vh = isBase64 ? 
                         (v.url.startsWith('data:image') ? `<img src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;">` : `<video controls src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;"></video>`) 
                         : (app.getEmbedUrl(v.url) ? `<iframe width="100%" height="150" src="${app.getEmbedUrl(v.url)}" frameborder="0" allowfullscreen style="display:block;margin-top:5px;"></iframe>`:`<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`);
-                    feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getBadge(v.uploader)}</strong></small>${vh}</div>`;
+                    feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getCommanderBadge(v.uploader)}${app.getBadge(v.uploader)}</strong></small>${vh}</div>`;
                 });
             }catch(e){feed.innerHTML="<div style='color:red;'>ERROR: "+e.message+"</div>";}
         },
@@ -1526,19 +1233,17 @@
     window.ledger = {
         load: async () => {
             const list = document.getElementById('ledger-list'); list.innerHTML = "Querying repository data...";
-            // We use standard 'posts' structure but store it in a generic way or dedicated 'ledger' table. Since we don't know if 'ledger' table exists on supabase, we will simulate it with local array + dummy data if it fails, or try fetching.
             try {
                 const { data, error } = await supabase.from('ledger_scripts').select('*').order('ts', {ascending: false});
                 if (error) throw error;
                 list.innerHTML = "";
                 (data||[]).forEach(s => {
                     list.innerHTML += `<div class="card" style="border-color:#00AAFF;">
-                        <div style="display:flex; justify-content:space-between;"><strong style="color:#00AAFF;">${s.title}</strong><small style="opacity:0.5;">@${s.u}</small></div>
+                        <div style="display:flex; justify-content:space-between;"><strong style="color:#00AAFF;">${s.title}</strong><small style="opacity:0.5;">@${s.u} ${app.getCommanderBadge(s.u)}</small></div>
                         <pre style="background:rgba(0,0,0,0.8); padding:5px; margin-top:5px; overflow-x:auto; font-size:10px; border:1px solid #333;">${s.code}</pre>
                     </div>`;
                 });
             } catch (e) {
-                // Fallback local memory for safety
                 list.innerHTML = `<div class="card" style="border-color:#00AAFF;"><strong style="color:#00AAFF;">Example Macro: Auto-Clicker</strong><small style="opacity:0.5;">@SYSTEM</small><pre style="background:rgba(0,0,0,0.8); padding:5px; margin-top:5px; font-size:10px; border:1px solid #333;">// White-Hat Example\nwhile(active) { click(); sleep(50); }</pre></div>`;
             }
         },
@@ -1546,9 +1251,7 @@
             const t = document.getElementById('ledger-title').value.trim();
             const c = document.getElementById('ledger-code').value.trim();
             if(!t || !c) return;
-            try {
-                await supabase.from('ledger_scripts').insert({ title: t, code: c, u: state.user, ts: dbHelper.serverTimestamp() });
-            } catch(e) { console.error("Could not write to ledger, likely table missing on backend."); }
+            try { await supabase.from('ledger_scripts').insert({ title: t, code: c, u: state.user, ts: dbHelper.serverTimestamp() }); } catch(e) {}
             document.getElementById('ledger-title').value = ""; document.getElementById('ledger-code').value = "";
             alert("SCRIPT UPLOADED TO LEDGER."); ledger.load();
         }
@@ -1562,11 +1265,8 @@
         start: () => {
             neuralMap.canvas = document.getElementById('neural-canvas');
             neuralMap.ctx = neuralMap.canvas.getContext('2d');
-            // Gen fake nodes based on verified + random
             neuralMap.nodes = [];
-            for(let i=0; i<30; i++) {
-                neuralMap.nodes.push({ x: Math.random()*700, y: Math.random()*350, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, isElite: Math.random()>0.8 });
-            }
+            for(let i=0; i<30; i++) neuralMap.nodes.push({ x: Math.random()*700, y: Math.random()*350, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, isElite: Math.random()>0.8 });
             if(neuralMap.frame) cancelAnimationFrame(neuralMap.frame);
             neuralMap.loop();
         },
@@ -1574,24 +1274,16 @@
         loop: () => {
             const w = 700, h = 350; const ctx = neuralMap.ctx;
             ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,w,h);
-            
             for(let i=0; i<neuralMap.nodes.length; i++) {
                 let n = neuralMap.nodes[i];
                 n.x += n.vx; n.y += n.vy;
                 if(n.x<0 || n.x>w) n.vx*=-1; if(n.y<0 || n.y>h) n.vy*=-1;
-                
-                ctx.beginPath();
-                ctx.arc(n.x, n.y, n.isElite ? 4 : 2, 0, Math.PI*2);
-                ctx.fillStyle = n.isElite ? '#00FFFF' : getComputedStyle(document.body).color;
-                ctx.fill();
-
+                ctx.beginPath(); ctx.arc(n.x, n.y, n.isElite ? 4 : 2, 0, Math.PI*2);
+                ctx.fillStyle = n.isElite ? '#00FFFF' : getComputedStyle(document.body).color; ctx.fill();
                 for(let j=i+1; j<neuralMap.nodes.length; j++) {
                     let n2 = neuralMap.nodes[j];
                     let dx = n.x - n2.x; let dy = n.y - n2.y; let dist = Math.sqrt(dx*dx + dy*dy);
-                    if(dist < 100) {
-                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y);
-                        ctx.strokeStyle = `rgba(255,255,255,${1 - dist/100})`; ctx.stroke();
-                    }
+                    if(dist < 100) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y); ctx.strokeStyle = `rgba(255,255,255,${1 - dist/100})`; ctx.stroke(); }
                 }
             }
             neuralMap.frame = requestAnimationFrame(neuralMap.loop);
@@ -1606,7 +1298,7 @@
         words: ["FIREWALL", "ENCRYPT", "PAYLOAD", "NETWORK", "DECRYPT", "MALWARE", "SYSTEM", "HACKER", "PROTOCOL"],
         generate: () => {
             cryptic.word = cryptic.words[Math.floor(Math.random() * cryptic.words.length)];
-            cryptic.shift = Math.floor(Math.random() * 5) + 2; // Shift by 2-6
+            cryptic.shift = Math.floor(Math.random() * 5) + 2; 
             let cipher = "";
             for(let i=0; i<cryptic.word.length; i++) {
                 let code = cryptic.word.charCodeAt(i);
@@ -1626,10 +1318,7 @@
                     const { data } = await supabase.from('users').select('rep').eq('id', state.user).single();
                     await supabase.from('users').update({ rep: (data.rep || 0) + 10 }).eq('id', state.user);
                 } catch(e) {}
-            } else {
-                res.style.color = "#FF0000"; res.innerText = "ACCESS DENIED. INVALID DECRYPTION.";
-                audioSys.playTone(200, 'sawtooth', 0.2);
-            }
+            } else { res.style.color = "#FF0000"; res.innerText = "ACCESS DENIED. INVALID DECRYPTION."; audioSys.playTone(200, 'sawtooth', 0.2); }
         }
     };
 
@@ -1638,10 +1327,8 @@
     // ================================================================
     window.camo = {
         apply: (type) => {
-            const overlay = document.getElementById('camo-overlay');
-            const content = document.getElementById('camo-content');
+            const overlay = document.getElementById('camo-overlay'); const content = document.getElementById('camo-content');
             overlay.classList.remove('hidden');
-            
             if(type === 'tech') {
                 overlay.style.background = "#ffffff"; overlay.style.color = "#333333"; overlay.style.fontFamily = "Arial, sans-serif";
                 content.innerHTML = `<h1 style="border-bottom:1px solid #ccc; color:#000;">API Documentation v2.4.1</h1><p>Welcome to the standard developer documentation. This section covers standard RESTful methods and payload wrappers.</p><br><h3>GET /api/v1/resource</h3><p>Returns a paginated list of resource objects. Requires Bearer auth.</p><br><pre style="background:#f4f4f4; padding:10px; border:1px solid #ddd;">{ "status": 200, "data": [] }</pre>`;
@@ -1654,6 +1341,69 @@
             }
         },
         disable: () => { document.getElementById('camo-overlay').classList.add('hidden'); }
+    };
+
+    // ================================================================
+    // SIGNAL ENCRYPTOR (XOR Cipher)
+    // ================================================================
+    window.sigEnc = {
+        process: () => {
+            const text = document.getElementById('se-input').value; const key = document.getElementById('se-key').value;
+            if(!text || !key) return alert("Text and Key required.");
+            let result = ""; for(let i=0; i<text.length; i++) { result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length)); }
+            document.getElementById('se-input').value = btoa(encodeURIComponent(result)); // Safe display
+        },
+        genKey: () => {
+            const text = document.getElementById('se-input').value; if(!text) return alert("Enter text first to determine key length.");
+            let key = ""; const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            for(let i=0; i<text.length; i++) key += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('se-key').value = key;
+        }
+    };
+
+    // ================================================================
+    // THE VOID BUFFER
+    // ================================================================
+    window.voidBuf = {
+        timer: null,
+        init: () => {
+            const chat = document.getElementById('void-chat'); chat.innerHTML = "";
+            if(voidBuf.timer) clearInterval(voidBuf.timer);
+            let t = 60;
+            voidBuf.timer = setInterval(() => {
+                t--; document.getElementById('void-timer').innerText = t;
+                if(t <= 0) { t = 60; chat.innerHTML = "<em style='opacity:0.5;'>[ BUFFER PURGED ]</em>"; audioSys.playTone(150, 'sawtooth', 0.5); }
+            }, 1000);
+        },
+        send: () => {
+            const v = document.getElementById('void-input').value.trim(); if(!v) return;
+            document.getElementById('void-chat').innerHTML += `<div class="chat-msg"><strong>${state.user}:</strong> ${v}</div>`;
+            document.getElementById('void-input').value = "";
+        }
+    };
+
+    // ================================================================
+    // DATA EXTRACTOR
+    // ================================================================
+    window.extGame = {
+        target: "", timer: null, time: 10.0,
+        start: () => {
+            extGame.target = Math.random().toString(16).substring(2, 10).toUpperCase();
+            document.getElementById('de-target').innerText = extGame.target;
+            document.getElementById('de-input').value = ""; document.getElementById('de-input').focus();
+            extGame.time = 10.0;
+            if(extGame.timer) clearInterval(extGame.timer);
+            extGame.timer = setInterval(() => {
+                extGame.time -= 0.1; document.getElementById('de-timer').innerText = extGame.time.toFixed(2) + "s";
+                if(extGame.time <= 0) { clearInterval(extGame.timer); alert("EXTRACTION FAILED"); document.getElementById('de-target').innerText = "FAILED"; }
+            }, 100);
+        },
+        check: () => {
+            if(document.getElementById('de-input').value === extGame.target && extGame.time > 0) {
+                clearInterval(extGame.timer); alert("EXTRACTION SUCCESSFUL! +5 REP");
+                try { supabase.from('users').select('rep').eq('id', state.user).single().then(({data}) => { supabase.from('users').update({rep: (data.rep||0)+5}).eq('id', state.user); }); } catch(e){}
+            }
+        }
     };
 
     // ================================================================
@@ -1701,7 +1451,7 @@
             const d = document.getElementById('ghost-chat');
             const msgId = 'g_' + Date.now() + Math.floor(Math.random()*1000);
             let h = `<div id="${msgId}" class="chat-msg" style="color:#FFD700; border-color:#665500; opacity:1; transition: opacity 2s ease-in-out;">`;
-            h += `<strong style="cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${data.u}')">${data.u}</strong>: ${app.formatMsg(data.t)}</div>`;
+            h += `<strong style="cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${data.u}')">${data.u} ${app.getCommanderBadge(data.u)}</strong>: ${app.formatMsg(data.t)}</div>`;
             d.innerHTML += h; d.scrollTop = d.scrollHeight;
             setTimeout(() => {
                 const el = document.getElementById(msgId);
@@ -1744,7 +1494,7 @@
             const { data } = await supabase.from('users').select('id, presence_status, lastSeen').in('id', state.friends);
             (data||[]).forEach(f => {
                 list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getBadge(f.id)}</div>
+                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getCommanderBadge(f.id)}${app.getBadge(f.id)}</div>
                     <button onclick="msgSys.openDM('${f.id}')" style="width:auto; padding:4px 8px; margin:0; border-color:#FF00FF; color:#FF00FF;">MESSAGE</button>
                 </div>`;
             });
@@ -1758,7 +1508,7 @@
             const myDMs = (data||[]).filter(d => (d.users||[]).includes(state.user));
             myDMs.forEach(dm => {
                 const other = dm.users.find(u => u !== state.user);
-                list.innerHTML += `<div onclick="msgSys.openDM('${other}', '${dm.id}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">@${other}</div>`;
+                list.innerHTML += `<div onclick="msgSys.openDM('${other}', '${dm.id}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">@${other} ${app.getCommanderBadge(other)}</div>`;
             });
         },
         openDM: async (otherUser, knownDmId = null) => {
@@ -1794,7 +1544,7 @@
                     if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('dm_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('dm_msgs', '${m.id}')">DEL</button>`;
                     actions += `</div>`;
 
-                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
                 });
                 box.scrollTop = box.scrollHeight;
 
@@ -1893,7 +1643,7 @@
                     if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('group_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('group_msgs', '${m.id}')">DEL</button>`;
                     actions += `</div>`;
 
-                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
@@ -1927,7 +1677,7 @@
             if (state.unsubComments) { state.unsubComments(); }
             state.unsubComments = await dbHelper.listenQuery('comments', 'parent_id', id, {col:'ts', asc:true}, null, (data) => {
                 div.innerHTML = ""; if (!data || data.length === 0) { div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; return; }
-                data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
+                data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getCommanderBadge(c.u)}${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
                 div.scrollTop = div.scrollHeight;
             });
         },
@@ -1939,7 +1689,7 @@
             const div=document.getElementById('feed-posts'); div.innerHTML="LOADING FEED..."; const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); div.innerHTML="";
             (data||[]).forEach(p=>{ 
                 if(state.blocks.includes(p.u)) return;
-                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
+                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getCommanderBadge(p.u)}${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
             });
         },
         createPoll: async()=>{ const q=document.getElementById('poll-q').value; const o1=document.getElementById('poll-o1').value; const o2=document.getElementById('poll-o2').value; const vid=document.getElementById('poll-video').value; if(!q||!o1||!o2)return; await supabase.from('polls').insert({u:state.user, q, video:vid||null, opts:[{t:o1,v:0},{t:o2,v:0}], voters:[], likes:[], dislikes:[], ts:dbHelper.serverTimestamp()}); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
@@ -1947,7 +1697,7 @@
             const div=document.getElementById('feed-polls'); div.innerHTML="LOADING POLLS..."; const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); div.innerHTML="";
             (data||[]).forEach(p=>{ 
                 if(state.blocks.includes(p.u)) return;
-                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
+                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getCommanderBadge(p.u)}${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
             });
         },
         vote: async(id,optIdx)=>{ const { data: d } = await supabase.from('polls').select('*').eq('id', id).single(); if((d.voters||[]).includes(state.user))return alert("ALREADY VOTED"); let opts=d.opts; let voters=d.voters||[]; opts[optIdx].v++; voters.push(state.user); await supabase.from('polls').update({opts, voters}).eq('id', id); social.loadPolls(); }
@@ -1961,7 +1711,7 @@
         post: async()=>{ const h=document.getElementById('news-headline').value; const l=document.getElementById('news-link-input').value; if(!h)return; await supabase.from('news').insert({title:h, link:l||null, u:state.user, ts:dbHelper.serverTimestamp()}); document.getElementById('news-headline').value=""; document.getElementById('news-link-input').value=""; news.loadInternal(); },
         loadInternal: async()=>{
             const d=document.getElementById('news-feed-internal'); d.innerHTML="Scanning local nodes..."; const { data } = await supabase.from('news').select('*').order('ts', {ascending:false}).limit(10); d.innerHTML="";
-            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getBadge(n.u)}</small></div>`; });
+            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getCommanderBadge(n.u)}${app.getBadge(n.u)}</small></div>`; });
             if(!data || data.length===0) d.innerHTML="<div style='opacity:0.4;'>No broadcasts yet.</div>";
         }
     };
