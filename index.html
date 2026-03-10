@@ -1345,8 +1345,11 @@
         },
 
         start: async () => {
-            // Instantly open the broadcast screen
-            document.getElementById('screen-commander-broadcast').classList.remove('hidden');
+            // Instantly open the broadcast screen and forcefully override any stuck inline styles
+            const broadcastScreen = document.getElementById('screen-commander-broadcast');
+            broadcastScreen.classList.remove('hidden');
+            broadcastScreen.style.display = 'flex'; 
+            
             document.getElementById('cmd-broadcast-controls').classList.remove('hidden');
             document.getElementById('cmd-listener-ui').classList.add('hidden');
 
@@ -1406,30 +1409,43 @@
         },
 
         stop: () => {
-            // 1. Hardware & Peer Cleanup
-            if (commanderSys.stream) {
-                commanderSys.stream.getTracks().forEach(t => t.stop());
-            }
-            if (commanderSys.peer) {
-                commanderSys.peer.destroy();
-            }
-            if (commanderSys.channel) {
-                commanderSys.channel.send({ type: 'broadcast', event: 'cmd_state', payload: { active: false } });
+            // 1. Hardware & Peer Cleanup wrapped in try/catch so errors don't freeze the UI
+            try {
+                if (commanderSys.stream) {
+                    commanderSys.stream.getTracks().forEach(t => t.stop());
+                }
+                if (commanderSys.peer) {
+                    commanderSys.peer.destroy();
+                }
+                if (commanderSys.channel) {
+                    commanderSys.channel.send({ type: 'broadcast', event: 'cmd_state', payload: { active: false } });
+                }
+            } catch (err) {
+                console.warn("Minor error during peer cleanup, bypassing:", err);
             }
             
-            // 2. Stop audio elements from playing in the background
-            commanderSys.callContexts.forEach(item => {
-                if (item.pause) item.pause(); // for Audio objects
-                if (item.close) item.close(); // for PeerJS Call objects
-            });
+            // 2. Stop audio elements/calls safely
+            try {
+                commanderSys.callContexts.forEach(item => {
+                    if (item && typeof item.pause === 'function') item.pause(); // for Audio objects
+                    if (item && typeof item.close === 'function') item.close(); // for PeerJS Call objects
+                });
+            } catch (err) {
+                console.warn("Minor error during stream cleanup, bypassing:", err);
+            }
 
+            // Reset state
             commanderSys.callContexts = [];
             commanderSys.active = false;
 
-            // 3. UI FIX: Explicitly target the broadcast overlay ID, not just the classes
-            document.getElementById('screen-commander-broadcast').classList.add('hidden');
-            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            // 3. UI FIX: Nuke the broadcast overlay from orbit using both class and inline style
+            const broadcastScreen = document.getElementById('screen-commander-broadcast');
+            if (broadcastScreen) {
+                broadcastScreen.classList.add('hidden');
+                broadcastScreen.style.display = 'none'; // Absolutely forces it to vanish
+            }
             
+            // Send Commander back to Hub
             nav.to('hub');
         },
 
@@ -2808,6 +2824,7 @@
 </script>
 </body>
 </html>
+
 
 
 
