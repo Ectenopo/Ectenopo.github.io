@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLAN_NET // SYSTEM_V3.3</title>
+    <title>CLAN_NET // SYSTEM_V3.2</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4002392683798426" crossorigin="anonymous"></script>
     <style>
@@ -189,21 +189,13 @@
         .theme-btn-green  { color: #00FF00; border-color: #00FF00; } .theme-btn-red    { color: #FF3333; border-color: #FF3333; } .theme-btn-blue   { color: #00AAFF; border-color: #00AAFF; } .theme-btn-white  { color: #EEEEEE; border-color: #EEEEEE; } .theme-btn-gold   { color: #FFD700; border-color: #FFD700; } .theme-btn-purple { color: #CC44FF; border-color: #CC44FF; } .theme-btn-cyan   { color: #00FFFF; border-color: #00FFFF; }
 
         #cockpit-canvas { border: none !important; background: transparent !important; }
+        
         #game-canvas { border: 1px solid currentColor; background: #000; display: block; margin: 0 auto 10px; cursor: pointer;}
         
         /* Panic Overlay Styles */
         #panic-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ffffff; color: #333; z-index: 9999999; padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; overflow-y: auto; }
         #panic-overlay h1 { font-family: 'Georgia', serif; font-size: 2em; border-bottom: 1px solid #ccc; color: #000; padding-bottom: 10px; margin-bottom: 20px; }
         #panic-overlay p { font-size: 1em; line-height: 1.6; margin-bottom: 15px; }
-
-        /* Camouflage Engine Persistent Styles */
-        body.camo-mode { background: #f4f6f8 !important; color: #333 !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important; padding-top: 10px; }
-        body.camo-mode .screen { background: #ffffff !important; border: 1px solid #ddd !important; box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important; color: #333 !important; border-radius: 6px !important; }
-        body.camo-mode button, body.camo-mode input, body.camo-mode select, body.camo-mode textarea { background: #fff !important; color: #333 !important; border: 1px solid #ccc !important; font-family: inherit !important; border-radius: 4px; }
-        body.camo-mode h1, body.camo-mode h2, body.camo-mode h3 { border-bottom: 1px solid #eee !important; color: #111 !important; font-family: inherit !important; }
-        body.camo-mode canvas { filter: invert(1); border: 1px solid #ccc !important; }
-        body.camo-mode .card { background: #fafafa !important; border-color: #eee !important; }
-        body.camo-mode #matrix-canvas, body.camo-mode .led { display: none !important; }
     </style>
 </head>
 
@@ -253,13 +245,17 @@
     <div style="margin-top:10px; text-align:center; font-size:10px;">
         <a href="#" onclick="app.recoverPassword()" style="color:currentColor; opacity:0.6;">FORGOT PASSWORD? (Requires verified email)</a>
     </div>
+
+    <div class="ad-wrapper" style="margin-top:20px; border:1px dashed currentColor; padding:5px;">
+        <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
+    </div>
 </div>
 
 <div id="screen-emergency" class="screen hidden" style="border-color:var(--err-color);box-shadow:0 0 28px var(--err-color);color:var(--err-color);">
     <h2>// GLOBAL_EMERGENCY_INTERCEPT</h2>
     <div class="card" style="border-color:var(--warn-color); margin-bottom:15px;">
         <h3 style="color:var(--warn-color); border-bottom:1px solid var(--warn-color); margin-bottom:8px;">>> LOCAL_AREA_SCAN</h3>
-        <button onclick="window.emergency.scanLocal()" style="color:var(--warn-color); border-color:var(--warn-color); font-weight:bold;">INITIATE LOCAL THREAT SCAN</button>
+        <button onclick="emergency.scanLocal()" style="color:var(--warn-color); border-color:var(--warn-color); font-weight:bold;">INITIATE LOCAL THREAT SCAN</button>
         <div id="local-alert-feed" style="margin-top:10px; font-size:11px; min-height:20px;">
             <span style="opacity:0.5;">WAITING FOR SCAN COMMAND...</span>
         </div>
@@ -291,7 +287,7 @@
     </div>
 
     <div style="margin-bottom:10px;font-size:11px;opacity:0.7;">
-        <span id="hub-rep">REP: <span id="hub-rep-score">0</span></span> &nbsp;|&nbsp;
+        <span id="hub-rep">REP: 0</span> &nbsp;|&nbsp;
         <span id="device-info">DEVICE: DETECTING...</span>
     </div>
 
@@ -310,17 +306,11 @@
         <button onclick="nav.to('news')"  style="color:#00FFFF;border-color:#00FFFF;">[ WORLD_WIRE ]</button>
         <button onclick="nav.to('radio')" style="color:var(--warn-color);border-color:var(--warn-color);">[ SIGNAL_INTERCEPT ]</button>
         
-        <button onclick="nav.to('ledger')" style="color:#0f0; border-color:#0f0;">[ THE_LEDGER ]</button>
-        <button onclick="nav.to('neural')" style="color:#0f0; border-color:#0f0;">[ NEURAL_MAP ]</button>
         <button onclick="nav.to('vault')">[ THE_VAULT ]</button>
-        <button onclick="nav.to('cryptic')">[ CRYPTIC_CHALLENGE ]</button>
-        
-        <button onclick="nav.to('camo')" style="border-style:dashed;">[ CAMO_ENGINE ]</button>
         <button onclick="app.panicSwitch()" style="background:var(--err-color); color:#000; font-weight:bold; border-color:var(--err-color);">[ PANIC_SWITCH ]</button>
         
         <button onclick="nav.to('verified')" id="btn-verified" class="hidden" style="color:#FFD700;border-color:#FFD700;">[ ELITE_UPLINK ]</button>
         <button onclick="nav.to('ghost')"    id="btn-ghost"    class="hidden" style="color:#FFD700;border-color:#FFD700; border-style:dashed;">[ GHOST_PROTOCOL ]</button>
-        <button onclick="nav.to('redactor')" id="btn-redactor" class="hidden" style="color:#FFD700;border-color:#FFD700; border-style:double; grid-column:span 2;">[ QUANTUM_REDACTOR ]</button>
         
         <button onclick="nav.to('ectotape')" style="color:var(--rep-watch);border-color:var(--rep-watch); grid-column:span 2;">[ ECTOTAPE ]</button>
         
@@ -330,11 +320,11 @@
         <button onclick="nav.to('emergency')" style="color:var(--err-color);border-color:var(--err-color);grid-column:span 2;">[ LIVE_EMERGENCY_FEED ]</button>
         <button onclick="app.loadNetworkDirectory()" style="color:#0f0; border-color:#0f0; grid-column:span 2;">[ NETWORK_DIRECTORY ]</button>
         
-        <button onclick="nav.to('minigame')" style="grid-column:span 2; border-style:dotted;">[ MINIGAME: TERMINAL JUMP ]</button>
-        <button onclick="nav.to('maze')" style="grid-column:span 2; border-style:dotted;">[ MINIGAME: DARK MAZE ]</button>
-        <button onclick="nav.to('sniffer')" style="grid-column:span 2; border-style:dotted;">[ MINIGAME: PACKET SNIFFER ]</button>
+        <button onclick="nav.to('minigame')" style="grid-column:span 2;">[ MINIGAME: TERMINAL JUMP ]</button>
+        <button onclick="nav.to('maze')" style="grid-column:span 2;">[ MINIGAME: DARK MAZE ]</button>
+        <button onclick="nav.to('sniffer')" style="grid-column:span 2;">[ MINIGAME: PACKET SNIFFER ]</button>
         
-        <button onclick="nav.to('feedback')" style="grid-column:span 2;">[ FEEDBACK & BUGS ]</button>
+        <button onclick="nav.to('feedback')" style="border-style:dashed; grid-column:span 2;">[ FEEDBACK & BUGS ]</button>
     </div>
 
     <div id="tab-clans">
@@ -366,6 +356,7 @@
                     <button onclick="app.toggleVoice(true)" id="btn-video-conn" style="font-size:10px;margin:0;">VIDEO</button>
                     <button onclick="app.muteVoice()"   id="btn-voice-mute" style="font-size:10px;margin:0;" disabled>MUTE</button>
                 </div>
+                <small style="font-size:8px;opacity:0.4;display:block;margin-top:4px;">⚠ WebRTC P2P detection only.</small>
             </div>
 
             <input type="text" id="clan-search" placeholder="Search clan chat..." oninput="app.filterChat('clan-chat', this.value)" style="margin-bottom:4px; font-size:10px;">
@@ -394,7 +385,7 @@
             <div class="grid-2" style="margin-top:10px;">
                 <button onclick="nav.to('dict')">DICTIONARY</button>
                 <button onclick="app.loadRoster()">ROSTER / RANKS</button>
-                <button onclick="window.drawing.startSymbolEdit()">EDIT SYMBOLS</button>
+                <button onclick="app.startSymbolEdit()">EDIT SYMBOLS</button>
                 <button onclick="app.leaveClan()" class="danger">LEAVE</button>
                 <button onclick="app.deleteClan()" id="btn-delete-clan" class="danger hidden" style="grid-column:span 2;border-style:double;">// DELETE CLAN //</button>
             </div>
@@ -412,86 +403,14 @@
     <button onclick="location.reload()" style="margin-top:20px;border:none;opacity:0.35;font-size:11px;">LOGOUT</button>
 </div>
 
-<!-- ==============================================
-     NEW HUB SCREENS (V3.3)
-     ============================================== -->
-
-<!-- CAMO ENGINE -->
-<div id="screen-camo" class="screen hidden">
-    <h2>// CAMOUFLAGE_ENGINE</h2>
-    <p style="font-size:10px;opacity:0.6;margin-bottom:15px;">Mask the terminal interface for safe browsing in exposed environments.</p>
-    <div class="grid-2">
-        <button onclick="window.camo.apply('school')" style="border-color:#aaa; color:#aaa;">APPLY "SCHOOL PORTAL" MASK</button>
-        <button onclick="window.camo.apply('docs')" style="border-color:#aaa; color:#aaa;">APPLY "TEXT DOCUMENT" MASK</button>
-    </div>
-    <button onclick="window.camo.remove()" class="warn" style="margin-top:15px;">DISABLE CAMOUFLAGE</button>
-    <button onclick="nav.to('hub')" style="margin-top:5px;">BACK</button>
-</div>
-
-<!-- QUANTUM REDACTOR -->
-<div id="screen-redactor" class="screen hidden" style="border-color:#FFD700; color:#FFD700; box-shadow:0 0 28px #FFD700;">
-    <h2>// QUANTUM_REDACTOR (ELITE)</h2>
-    <p style="font-size:10px;opacity:0.8;margin-bottom:10px; color:#fff;">Inject target keywords with visual obfuscation. Only verified identities can parse the payload.</p>
-    <input type="text" id="redact-msg" placeholder="Full Transmission Text..." style="border-color:#FFD700; color:#FFD700;">
-    <input type="text" id="redact-word" placeholder="Word or phrase to mask..." style="border-color:#FFD700; color:#FFD700;">
-    <div class="grid-2" style="margin-top:10px;">
-        <button onclick="window.redactor.send('global')" style="border-color:#FFD700; color:#FFD700;">SEND TO GLOBAL</button>
-        <button onclick="window.redactor.send('clan')" style="border-color:#FFD700; color:#FFD700;">SEND TO CLAN</button>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px; border-color:#FFD700; color:#FFD700;">BACK</button>
-</div>
-
-<!-- THE LEDGER -->
-<div id="screen-ledger" class="screen hidden" style="border-color:#0f0;">
-    <h2 style="color:#0f0; border-color:#0f0;">// THE_LEDGER</h2>
-    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Community repository for syntax, server commands, and automation scripts.</p>
-    <div class="card" style="border-color:#0f0;">
-        <input type="text" id="ledger-title" placeholder="Script Name / Purpose...">
-        <select id="ledger-type">
-            <option value="MC_COMMAND">Minecraft Command</option>
-            <option value="SCRIPT">JS/Python Script</option>
-            <option value="MACRO">Gaming Macro</option>
-        </select>
-        <textarea id="ledger-code" placeholder="Paste syntax here..." style="height:80px; font-family:monospace;"></textarea>
-        <button onclick="window.ledger.post()" style="color:#0f0; border-color:#0f0;">PUBLISH TO LEDGER</button>
-    </div>
-    <div id="ledger-feed" style="height:300px; overflow-y:scroll; border:1px solid #0f0; padding:10px;"></div>
-    <button onclick="nav.to('hub')" style="margin-top:10px; border-color:#0f0; color:#0f0;">BACK</button>
-</div>
-
-<!-- NEURAL MAP -->
-<div id="screen-neural" class="screen hidden">
-    <h2>// NEURAL_MAP (TOPOLOGY)</h2>
-    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Live rendering of active network connections and nodes.</p>
-    <canvas id="neural-canvas" width="600" height="300" style="border:1px solid currentColor; background:#050505; display:block; margin:0 auto 10px; width:100%; max-width:600px;"></canvas>
-    <button onclick="window.neuralMap.start()">INITIALIZE SCAN</button>
-    <button onclick="window.neuralMap.stop(); nav.to('hub')" style="margin-top:5px;">EXIT</button>
-</div>
-
-<!-- CRYPTIC CHALLENGE -->
-<div id="screen-cryptic" class="screen hidden">
-    <h2>// CRYPTIC_CHALLENGE</h2>
-    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Solve the daily cipher to earn Reputation (REP).</p>
-    <div class="card" style="text-align:center; padding:20px;">
-        <div style="font-size:11px; opacity:0.5; margin-bottom:10px;">SHIFT CIPHER DETECTED.</div>
-        <div id="cryptic-cipher" style="font-size:1.5em; font-family:monospace; letter-spacing:2px; margin-bottom:20px; color:#00FFFF;">LOADING...</div>
-        <input type="text" id="cryptic-answer" placeholder="ENTER DECRYPTED TEXT HERE">
-        <button onclick="window.cryptic.submit()">SUBMIT DECRYPTION</button>
-    </div>
-    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
-</div>
-
-<!-- ==============================================
-     EXISTING SCREENS (CONT.)
-     ============================================== -->
-
 <!-- VAULT SCREEN -->
 <div id="screen-vault" class="screen hidden" style="border-color:#aaa;">
     <h2>// THE_VAULT (LOCAL ENCRYPTION)</h2>
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Data stored here never leaves your device. It is encrypted strictly to local storage.</p>
     <textarea id="vault-text" style="height:300px; font-family:var(--font-main); background:rgba(0,0,0,0.8); color:inherit; border:1px solid #aaa; padding:10px;" placeholder="Enter classified data or codes..."></textarea>
     <div class="grid-2" style="margin-top:10px;">
-        <button onclick="window.vault.save()" style="border-color:#0f0; color:#0f0;">ENCRYPT & SAVE</button>
-        <button onclick="window.vault.clear()" class="danger">PURGE DATA</button>
+        <button onclick="vault.save()" style="border-color:#0f0; color:#0f0;">ENCRYPT & SAVE</button>
+        <button onclick="vault.clear()" class="danger">PURGE DATA</button>
     </div>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
@@ -499,34 +418,132 @@
 <!-- GHOST PROTOCOL SCREEN -->
 <div id="screen-ghost" class="screen hidden" style="border-color:#FFD700; box-shadow:0 0 28px #FFD700; color:#FFD700;">
     <h2>// GHOST_PROTOCOL</h2>
+    <p style="font-size:10px;opacity:0.8;margin-bottom:10px; color:#fff;">EPHEMERAL COMMS. NO DB STORAGE. TRACES WIPED AFTER 10 SECONDS.</p>
     <div class="chat-box" id="ghost-chat" style="border-color:#FFD700; height:300px; background:rgba(255,215,0,0.05);"></div>
     <input type="text" id="ghost-input" placeholder="Whisper into the void..." style="border-color:#FFD700; color:#FFD700;">
-    <button onclick="window.ghost.send()" style="border-color:#FFD700; color:#FFD700; font-weight:bold;">TRANSMIT</button>
-    <button onclick="window.ghost.stop(); nav.to('hub')" style="margin-top:10px;">DISCONNECT</button>
+    <button onclick="ghost.send()" style="border-color:#FFD700; color:#FFD700; font-weight:bold;">TRANSMIT</button>
+    <button onclick="ghost.stop(); nav.to('hub')" style="margin-top:10px;">DISCONNECT</button>
 </div>
 
 <!-- DARK MAZE MINIGAME -->
 <div id="screen-maze" class="screen hidden">
     <h2>// DARK_MAZE.SIM</h2>
+    <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">W/S: Move | A/D: Turn. AVOID WALLS.</div>
     <canvas id="maze-canvas" width="400" height="400" style="border:1px solid currentColor; background:#000; display:block; margin:0 auto 10px;"></canvas>
-    <button onclick="window.maze.start()" style="margin-bottom:15px;">INITIALIZE SIM</button>
-    <button onclick="window.maze.stop(); nav.to('hub')">EXIT</button>
+    <button onclick="maze.start()" style="margin-bottom:15px;">INITIALIZE SIM</button>
+    <button onclick="maze.stop(); nav.to('hub')">EXIT</button>
 </div>
 
 <!-- PACKET SNIFFER MINIGAME -->
 <div id="screen-sniffer" class="screen hidden">
     <h2>// PACKET_SNIFFER.EXE</h2>
+    <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">INTERCEPT MATCHING PACKETS. AVOID OTHERS.</div>
     <div style="text-align:center; margin-bottom:10px; font-weight:bold;">TARGET HASH: <span id="sniffer-target" style="display:inline-block; width:20px; height:20px; vertical-align:middle; border:1px solid #fff;"></span></div>
     <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-weight:bold;">
         <span>PACKETS: <span id="sniffer-score">0</span></span>
         <span style="color:var(--err-color);">ERRORS: <span id="sniffer-strikes">0</span>/3</span>
     </div>
     <canvas id="sniffer-canvas" width="400" height="300" style="border:1px solid currentColor; background:#050505; display:block; margin:0 auto 10px; cursor:crosshair;"></canvas>
-    <button onclick="window.sniffer.start()" style="margin-bottom:15px;">START TRACE</button>
-    <button onclick="window.sniffer.stop(); nav.to('hub')">EXIT</button>
+    <button onclick="sniffer.start()" style="margin-bottom:15px;">START TRACE</button>
+    <button onclick="sniffer.stop(); nav.to('hub')">EXIT</button>
 </div>
 
-<!-- DIRECTORY -->
+<!-- OTHER EXISTING SCREENS... -->
+<div id="screen-feedback" class="screen hidden" style="border-color:#ccc;">
+    <h2>// SYSTEM_FEEDBACK_UPLINK</h2>
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Submit reports directly to Network Admins.</p>
+    
+    <select id="fb-type" style="margin-bottom:10px;">
+        <option value="BUG">BUG REPORT</option>
+        <option value="FEEDBACK">GENERAL FEEDBACK</option>
+        <option value="FEATURE">FEATURE REQUEST</option>
+    </select>
+    <textarea id="fb-text" placeholder="Describe the issue or feedback..." style="height:80px; resize:none;"></textarea>
+    <button onclick="app.sendFeedback()">SUBMIT TRANSMISSION</button>
+
+    <div id="admin-feedback-panel" class="hidden" style="margin-top:20px; border-top:1px dashed currentColor; padding-top:10px;">
+        <h3 style="color:#00FFFF;">// ADMIN: INCOMING REPORTS</h3>
+        <div id="feedback-list" style="height:200px; overflow-y:auto; border:1px solid var(--dim); padding:5px;"></div>
+    </div>
+    
+    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
+</div>
+
+<div id="screen-minigame" class="screen hidden">
+    <h2>// TERMINAL_JUMP.EXE</h2>
+    <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">CLICK OR PRESS SPACE TO JUMP</div>
+    <canvas id="game-canvas" width="400" height="200"></canvas>
+    
+    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px; margin-bottom:10px;">
+        <span>SCORE: <span id="game-score">0</span></span>
+        <span style="color:#00FFFF;">PERSONAL BEST: <span id="game-highscore">0</span></span>
+    </div>
+    
+    <button onclick="game.start()" style="margin-bottom:15px;">START / RESTART LINK</button>
+
+    <div class="card" style="border-color:#00FFFF;">
+        <h3 style="color:#00FFFF; font-size:11px; border-bottom:1px solid #00FFFF; padding-bottom:5px;">// GLOBAL LEADERBOARD</h3>
+        <div id="game-leaderboard" style="font-size:11px; height:120px; overflow-y:auto;">
+            <div style="opacity:0.5;">Loading records...</div>
+        </div>
+    </div>
+    
+    <button onclick="game.stop(); nav.to('hub')" style="margin-top:15px;">EXIT</button>
+</div>
+
+<div id="screen-comms" class="screen hidden" style="border-color:#FF00FF; box-shadow:0 0 28px #FF00FF; color:#FF00FF;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>// COMMS_UPLINK (DMs & GROUPS)</h2>
+        <button onclick="app.toggleNotifications()" id="btn-mute-notifs" style="width:auto; font-size:9px; padding:2px 5px; border-color:#FF00FF; color:#FF00FF;">🔔 UNMUTED</button>
+    </div>
+    
+    <div class="grid-3" style="margin-bottom:10px;">
+        <button onclick="msgSys.tab('friends')" style="border-color:#FF00FF; color:#FF00FF;">FRIENDS</button>
+        <button onclick="msgSys.tab('dms')" style="border-color:#FF00FF; color:#FF00FF;">DIRECT MSGS</button>
+        <button onclick="msgSys.tab('groups')" style="border-color:#FF00FF; color:#FF00FF;">GROUPS</button>
+    </div>
+
+    <div id="comms-friends">
+        <div id="friends-list" style="height:300px; overflow-y:auto; border:1px solid #FF00FF; padding:10px; background:rgba(255,0,255,0.05);"></div>
+    </div>
+
+    <div id="comms-dms" class="hidden">
+        <div id="dms-list" style="height:100px; overflow-y:auto; border:1px solid #FF00FF; padding:5px; margin-bottom:10px;"></div>
+        <input type="text" id="dm-search" placeholder="Search DMs..." oninput="app.filterChat('dm-chat-box', this.value)" style="margin-bottom:4px; font-size:10px; border-color:#FF00FF; color:#FF00FF;">
+        <div class="chat-box" id="dm-chat-box" style="border-color:#FF00FF; height:200px;"></div>
+        <div id="dm-typing" style="font-size:10px; opacity:0.6; min-height:14px; margin-bottom:4px;"></div>
+        
+        <div id="dm-reply-preview" class="hidden" style="font-size:10px; border-left:2px solid #FF00FF; padding-left:5px; margin-bottom:5px; opacity:0.7;">
+            Replying to msg... <button onclick="app.cancelReply('dm')" style="width:auto; padding:0 4px; display:inline; border:none; background:transparent; color:#FF00FF;">[x]</button>
+        </div>
+
+        <div style="display:flex; gap:5px;">
+            <input type="file" id="dm-file" style="width:30px; padding:0; margin:0; border-color:#FF00FF;" title="Attach File" onchange="msgSys.attachFile(this)">
+            <button id="dm-mic-btn" onmousedown="msgSys.startVoiceRec()" onmouseup="msgSys.stopVoiceRec()" style="width:40px; margin:0; font-size:16px; border-color:#FF00FF;" title="Hold to Record">🎤</button>
+            <input type="text" id="dm-input" placeholder="Secure DM (/spoiler text)..." style="margin:0; flex:1; border-color:#FF00FF; color:#FF00FF;" oninput="msgSys.updateTyping('dm')">
+            <button onclick="msgSys.sendDM()" style="width:60px; margin:0; border-color:#FF00FF; color:#FF00FF;">SEND</button>
+        </div>
+    </div>
+
+    <div id="comms-groups" class="hidden">
+        <button onclick="msgSys.createGroupPrompt()" style="border-color:#FF00FF; color:#FF00FF;">+ CREATE NEW SECURE GROUP</button>
+        <div id="groups-list" style="height:100px; overflow-y:auto; border:1px solid #FF00FF; padding:5px; margin-bottom:10px; margin-top:10px;"></div>
+        <input type="text" id="group-search" placeholder="Search Group..." oninput="app.filterChat('group-chat-box', this.value)" style="margin-bottom:4px; font-size:10px; border-color:#FF00FF; color:#FF00FF;">
+        <div class="chat-box" id="group-chat-box" style="border-color:#FF00FF; height:160px;"></div>
+        
+        <div id="group-reply-preview" class="hidden" style="font-size:10px; border-left:2px solid #FF00FF; padding-left:5px; margin-bottom:5px; opacity:0.7;">
+            Replying to msg... <button onclick="app.cancelReply('group')" style="width:auto; padding:0 4px; display:inline; border:none; background:transparent; color:#FF00FF;">[x]</button>
+        </div>
+
+        <div style="display:flex; gap:5px;">
+            <input type="text" id="group-input" placeholder="Group Message (@user)..." style="margin:0; flex:1; border-color:#FF00FF; color:#FF00FF;">
+            <button onclick="msgSys.sendGroupMsg()" style="width:60px; margin:0; border-color:#FF00FF; color:#FF00FF;">SEND</button>
+        </div>
+    </div>
+
+    <button onclick="nav.to('hub')" style="margin-top:10px; border-color:#FF00FF; color:#FF00FF;">BACK</button>
+</div>
+
 <div id="screen-directory" class="screen hidden" style="border-color:#0f0; box-shadow:0 0 28px #0f0; color:#0f0;">
     <h2>// GLOBAL_NETWORK_DIRECTORY</h2>
     <div id="dir-content" style="min-height:200px;">
@@ -537,6 +554,13 @@
 
 <div id="screen-verified" class="screen hidden" style="border-color:#FFD700;box-shadow:0 0 28px #FFD700;color:#FFD700;">
     <h2>// ELITE_UPLINK_ESTABLISHED</h2>
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">SECURE GROUPCHAT FOR VERIFIED IDENTITIES ONLY.</p>
+    <div class="card" style="border-color:#FFD700;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:9px;height:9px;background:#FFD700;border-radius:50%;box-shadow:0 0 8px #FFD700;animation:pulseAnim 2s infinite;"></div>
+            <span style="font-size:10px;opacity:0.8;">ENCRYPTED VOICE TUNNEL: ACTIVE</span>
+        </div>
+    </div>
     <div class="chat-box" id="verified-chat" style="border-color:#FFD700;"></div>
     <input  type="text" id="verified-input" placeholder="Elite Message..." style="border-color:#FFD700;color:#FFD700;">
     <button onclick="app.sendVerifiedMsg()" style="border-color:#FFD700;color:#FFD700;">TRANSMIT</button>
@@ -564,6 +588,7 @@
     <div id="soc-tab-posts">
         <div style="border-bottom:1px solid var(--dim);padding-bottom:12px;margin-bottom:12px;">
             <textarea id="post-content" placeholder="What's happening?" style="height:60px;resize:none;"></textarea>
+            <input type="text" id="post-video" placeholder="YouTube URL (Optional)">
             <button onclick="social.createPost()">PUBLISH POST</button>
         </div>
         <div id="feed-posts" style="height:400px;overflow-y:scroll;"></div>
@@ -575,9 +600,13 @@
             <input type="text" id="poll-q"     placeholder="Question">
             <input type="text" id="poll-o1"    placeholder="Option 1">
             <input type="text" id="poll-o2"    placeholder="Option 2">
+            <input type="text" id="poll-video" placeholder="YouTube URL (Optional)">
             <button onclick="social.createPoll()">LAUNCH POLL</button>
         </div>
         <div id="feed-polls" style="height:400px;overflow-y:scroll;margin-top:10px;"></div>
+    </div>
+    <div class="ad-wrapper" style="margin-top:10px; border:1px dashed currentColor; padding:5px;">
+        <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
     </div>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
@@ -587,93 +616,324 @@
     <div class="card" style="border-color:var(--warn-color);text-align:center;">
         <div id="freq-viz" style="height:50px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;margin-bottom:10px;"></div>
         <div style="font-size:22px;font-family:var(--font-main);margin-bottom:10px;">FREQ: <span id="radio-freq">462.5625</span> MHz</div>
-        <button onclick="window.radio.scan()" style="color:var(--warn-color);border-color:var(--warn-color);">SCAN NEXT</button>
+        <div class="grid-2">
+            <button onclick="radio.toggleNoise()" id="btn-noise" style="color:var(--warn-color);border-color:var(--warn-color);">TOGGLE STATIC</button>
+            <button onclick="radio.scan()"        style="color:var(--warn-color);border-color:var(--warn-color);">SCAN NEXT</button>
+        </div>
+    </div>
+    <h3 style="margin-top:14px;border-color:var(--warn-color);">// LIVE UPLINKS (EXTERNAL)</h3>
+    <div class="grid-2" style="margin-top:8px;">
+        <a href="https://www.broadcastify.com/listen/" target="_blank" class="news-link" style="color:var(--warn-color);border-color:var(--warn-color);">BROADCASTIFY (POLICE/FIRE)</a>
+        <a href="https://tunein.com/radio/Police-Scanners-c100000/" target="_blank" class="news-link" style="color:var(--warn-color);border-color:var(--warn-color);">TUNEIN POLICE RADIO</a>
     </div>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
 <div id="screen-news" class="screen hidden" style="border-color:#00FFFF;box-shadow:0 0 28px #00FFFF;color:#00FFFF;">
     <h2>// WORLD_WIRE (NEWS)</h2>
+    <h3>UNDERGROUND UPDATES</h3>
     <div class="card" style="border-color:#00FFFF;">
         <input type="text" id="news-headline"   placeholder="Headline...">
-        <button onclick="window.news.post()" class="admin">BROADCAST UPDATE</button>
+        <input type="text" id="news-link-input" placeholder="Source URL (Optional)...">
+        <button onclick="news.post()" class="admin">BROADCAST UPDATE</button>
     </div>
     <div id="news-feed-internal" style="height:140px;overflow-y:scroll;border:1px solid var(--dim);margin-bottom:18px;padding:8px;"></div>
+    <h3>GLOBAL INTERCEPTS</h3>
+    <a href="https://www.foxnews.com"  target="_blank" class="news-link">>> FOX_NEWS_NETWORK</a>
+    <a href="https://www.cbc.ca/news"  target="_blank" class="news-link">>> CBC_NEWS_FEED</a>
+    <a href="https://www.cnn.com"      target="_blank" class="news-link">>> CNN_GLOBAL</a>
+    <a href="https://www.bbc.com/news" target="_blank" class="news-link">>> BBC_WORLD_SERVICE</a>
+    <a href="https://news.google.com"  target="_blank" class="news-link">>> GOOGLE_AGGREGATE</a>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
 <div id="comment-overlay" class="hidden">
     <div class="screen" style="width:90%;height:82%;display:flex;flex-direction:column;margin:0;">
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid currentColor;padding-bottom:10px;margin-bottom:10px;">
-            <h3 style="margin:0;border:none;padding:0;">// COMMENTS</h3>
-            <button onclick="window.social.closeComments()" class="warn" style="width:auto;padding:4px 12px;margin:0;">CLOSE [X]</button>
+            <h3 style="margin:0;border:none;padding:0;">// COMMENTS_THREAD</h3>
+            <button onclick="social.closeComments()" class="warn" style="width:auto;padding:4px 12px;margin:0;">CLOSE [X]</button>
         </div>
         <div id="active-comment-list" style="flex:1;overflow-y:scroll;padding:10px;margin-bottom:10px;border:1px solid var(--dim);"></div>
-        <input type="text" id="new-comment-input" placeholder="Add comment...">
-        <button onclick="window.social.submitComment()">POST</button>
+        <input type="text" id="new-comment-input" placeholder="Add comment (/spoiler text)..." style="flex-shrink:0;">
+        <button onclick="social.submitComment()" style="flex-shrink:0;">POST COMMENT</button>
     </div>
 </div>
 
 <div id="screen-profile" class="screen hidden">
     <h2>// USER_PROFILE</h2>
     <div class="card">
-        <h3 id="prof-displayname" style="border:none;padding:0;margin:0;font-size:1.1em;"></h3>
-        <small id="prof-username" style="opacity:0.5;"></small><br>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <div id="prof-pfp-display" style="width:52px;height:52px;background:#111;border:1px solid currentColor;background-size:cover;background-position:center;flex-shrink:0;"></div>
+            <div>
+                <h3 id="prof-displayname" style="border:none;padding:0;margin:0;font-size:1.1em;"></h3>
+                <small id="prof-username" style="opacity:0.5;"></small><br>
+                <em id="prof-bio" style="font-size:0.8em; opacity:0.7;"></em>
+            </div>
+        </div>
         <div id="prof-verified" class="hidden" style="color:#00FFFF;margin-top:8px;font-size:11px;">⚠ VERIFIED IDENTITY ⚠</div>
     </div>
     <p>CLAN: <span id="prof-clan" style="font-weight:bold;">LOADING...</span></p>
-    <div id="prof-social-panel" class="grid-3 hidden" style="margin-top:10px;"><button id="btn-add-friend" onclick="window.msgSys.addFriend(state.viewedProfile)">ADD FRIEND</button></div>
+    <p>STATUS: <span id="prof-rep" style="font-weight:bold;">LOADING...</span></p>
+    
+    <div id="prof-social-panel" class="grid-3 hidden" style="margin-top:10px;">
+        <button id="btn-add-friend" onclick="msgSys.addFriend(state.viewedProfile)" style="font-size:10px; border-color:#0f0; color:#0f0;">ADD FRIEND</button>
+        <button id="btn-block-user" onclick="msgSys.blockUser(state.viewedProfile)" style="font-size:10px;" class="danger">BLOCK</button>
+        <button id="btn-report-user" onclick="msgSys.reportUser(state.viewedProfile)" style="font-size:10px;" class="warn">REPORT</button>
+    </div>
+
+    <div id="prof-edit-panel" class="hidden" style="border-top:1px solid var(--dim);padding-top:12px;margin-top:12px;">
+        <input type="text" id="edit-disp" placeholder="New Display Name">
+        <input type="text" id="edit-bio" placeholder="Update Status / Bio...">
+        <input type="text" id="edit-pfp"  placeholder="PFP Image URL">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+            <input type="checkbox" id="edit-private" style="width:auto;margin:0;"> <label style="font-size:12px;opacity:0.7;">HIDE CLAN FROM PUBLIC</label>
+        </div>
+        <button onclick="app.saveProfile()">SAVE CHANGES</button>
+    </div>
+    <div id="prof-admin-panel" class="hidden" style="border:1px solid #00FFFF;padding:10px;margin-top:10px;">
+        <strong style="color:#00FFFF;font-size:11px;">SUPERUSER CONTROLS</strong>
+        <div class="grid-2" style="margin-top:5px;">
+            <button onclick="app.verifyUser()" class="admin" style="font-size:9px; padding:4px;">TOGGLE VERIFY</button>
+            <button onclick="app.adminBan(state.viewedProfile, false)" class="danger" style="font-size:9px; padding:4px;" id="btn-admin-ban">BAN</button>
+            <button onclick="app.adminBan(state.viewedProfile, true)" class="danger" style="font-size:9px; padding:4px;" id="btn-admin-ipban">IP BAN</button>
+        </div>
+    </div>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
 <div id="screen-ranks" class="screen hidden">
-    <h2>// ROSTER_CONTROL</h2><div id="roster-list" style="height:300px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">BACK</button>
+    <h2>// ROSTER_CONTROL</h2>
+    <div id="roster-list" style="height:300px;overflow-y:scroll;"></div>
+    <button onclick="nav.to('hub')">BACK</button>
 </div>
 
 <div id="screen-settings" class="screen hidden">
     <h2>// SYSTEM_CONFIG</h2>
+    
     <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px;">VISUAL THEME</h3>
     <div class="theme-grid">
-        <button class="theme-btn theme-btn-green" onclick="window.settingsSystem.apply('green')">GREEN</button>
-        <button class="theme-btn theme-btn-red" onclick="window.settingsSystem.apply('red')">RED</button>
-        <button class="theme-btn theme-btn-cyan" onclick="window.settingsSystem.apply('cyan')">CYAN</button>
+        <button class="theme-btn theme-btn-green"  onclick="settings.apply('green')" >GREEN</button>
+        <button class="theme-btn theme-btn-red"    onclick="settings.apply('red')"   >RED</button>
+        <button class="theme-btn theme-btn-blue"   onclick="settings.apply('blue')"  >BLUE</button>
+        <button class="theme-btn theme-btn-white"  onclick="settings.apply('white')" >WHITE</button>
+        <button class="theme-btn theme-btn-gold"   onclick="settings.apply('gold')"  >GOLD</button>
+        <button class="theme-btn theme-btn-purple" onclick="settings.apply('purple')">PURPLE</button>
+        <button class="theme-btn theme-btn-cyan"   onclick="settings.apply('cyan')"  >CYAN</button>
+        <button class="theme-btn" style="background:linear-gradient(45deg, #f00,#0f0,#00f); color:#fff;" onclick="settings.apply('rainbow')">RNBW</button>
+        <button class="theme-btn" style="animation:rgbColorAnim 5s infinite;" onclick="settings.apply('rgb')">RGB</button>
     </div>
-    <button onclick="window.settingsSystem.reset()" class="danger" style="margin-top:20px;">RESET TO DEFAULT</button>
+
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <input type="text" id="config-hex" placeholder="#FF00FF (Hex)" style="margin:0;">
+        <button onclick="settings.applyHex()" style="width:60px; margin:0;">SET</button>
+    </div>
+
+    <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px; margin-top:15px;">BACKGROUND</h3>
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <input type="text" id="config-bg" placeholder="Image/GIF URL..." style="margin:0;">
+        <button onclick="settings.applyBg()" style="width:60px; margin:0;">SET</button>
+    </div>
+    
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:15px;">
+        <input type="checkbox" id="config-dark-schedule" style="width:auto; margin:0;" onchange="settings.toggleDarkSchedule(this.checked)">
+        <label style="font-size:10px;">ENABLE AUTO DAY/NIGHT DARK MODE</label>
+    </div>
+
+    <h3 style="font-size:11px;opacity:0.6;margin-bottom:6px; margin-top:15px;">SECURITY</h3>
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <input type="email" id="config-email" placeholder="Recovery Email..." style="margin:0;">
+        <button onclick="app.setEmail()" style="width:80px; margin:0;">VERIFY</button>
+    </div>
+
+    <button onclick="settings.reset()" class="danger" style="margin-top:20px;">RESET TO DEFAULT</button>
     <button onclick="nav.to('hub')" style="margin-top:6px;">BACK</button>
 </div>
 
 <div id="screen-events" class="screen hidden">
     <h2>// EVENT_LOG</h2>
-    <div class="card"><input type="text" id="evt-name" placeholder="EVENT NAME"><button onclick="app.createEvent()">PUBLISH</button></div>
-    <div id="event-list" style="height:200px;overflow-y:scroll;"></div><button onclick="nav.to('hub')">BACK</button>
+    <div class="card">
+        <input type="text" id="evt-name" placeholder="EVENT NAME">
+        <input type="text" id="evt-desc" placeholder="DESCRIPTION">
+        <div class="grid-2">
+            <input type="date" id="evt-start">
+            <input type="date" id="evt-end">
+        </div>
+        <button onclick="app.createEvent()">PUBLISH</button>
+    </div>
+    <div id="event-list" style="height:200px;overflow-y:scroll;"></div>
+    <button onclick="nav.to('hub')">BACK</button>
 </div>
 
 <div id="screen-jobs" class="screen hidden">
     <h2>// GIG_NETWORK</h2>
+    <div class="grid-2">
+        <button onclick="document.getElementById('job-create-panel').classList.remove('hidden');">POST JOB</button>
+        <button onclick="app.loadJobs()">BROWSE</button>
+    </div>
+    <div id="job-create-panel" class="hidden card" style="margin-top:10px;">
+        <input type="text" id="job-title" placeholder="TITLE">
+        <textarea id="job-desc" placeholder="DESC" style="height:50px;resize:none;"></textarea>
+        <button onclick="app.createJob()">UPLOAD</button>
+    </div>
     <div id="job-list" style="height:300px;overflow-y:scroll;margin-top:10px;"></div>
+    <div id="job-chat-panel" class="hidden" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,4,0,0.98);z-index:10;padding:15px;border:1px solid currentColor;">
+        <div id="job-chat-box" class="chat-box" style="height:280px;"></div>
+        <input type="text" id="job-msg-input" placeholder="(/spoiler text)">
+        <button onclick="app.sendJobMsg()">SEND</button>
+        <button onclick="app.closeJobChat()" class="warn">CLOSE</button>
+    </div>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
 <div id="screen-ectotape" class="screen hidden" style="border-color:var(--rep-watch);box-shadow:0 0 28px var(--rep-watch);">
     <h2 style="color:var(--rep-watch);border-color:var(--rep-watch);">// ECTOTAPE_STREAM</h2>
-    <div id="video-feed" style="height:420px;overflow-y:scroll;"></div><button onclick="nav.to('hub')" style="margin-top:10px;">EXIT</button>
+    
+    <div id="upload-zone" class="hidden card" style="border-color:var(--rep-watch);">
+        <small style="color:var(--rep-watch); opacity:0.8; display:block; margin-bottom:5px;">⚠ VERIFIED UPLOAD ACCESS ONLY</small>
+        <input type="text" id="vid-title" placeholder="TITLE">
+        <div class="grid-2">
+            <input type="text" id="vid-url" placeholder="YouTube URL">
+            <input type="file" id="vid-file-upload" accept="video/*,image/*" title="Or Upload from Device">
+        </div>
+        <button onclick="app.uploadVideo()" style="color:var(--rep-watch);border-color:var(--rep-watch);">BROADCAST</button>
+    </div>
+    <div id="upload-denied" class="card hidden" style="border-color:red; color:red; text-align:center;">
+        [ ACCESS DENIED: IDENTITY NOT VERIFIED ]
+    </div>
+    
+    <div id="video-feed" style="height:420px;overflow-y:scroll;"></div>
+    <button onclick="nav.to('hub')" style="margin-top:10px;">EXIT</button>
 </div>
 
 <div id="screen-draw" class="screen hidden">
-    <h3 id="draw-title">DRAW: A</h3><canvas id="draw-canvas" class="draw-canvas" width="280" height="280"></canvas>
-    <button onclick="window.drawing.save()">NEXT →</button><button onclick="window.drawing.cancel()" class="danger" style="margin-top:6px;">CANCEL</button>
+    <h3 id="draw-title">DRAW: A</h3>
+    <canvas id="draw-canvas" class="draw-canvas" width="280" height="280"></canvas>
+    <div class="grid-2">
+        <button onclick="drawing.clear()">CLEAR</button>
+        <button onclick="drawing.save()">NEXT →</button>
+    </div>
+    <button onclick="drawing.cancel()" class="danger" style="margin-top:6px;">CANCEL</button>
 </div>
 
-<div id="screen-minigame" class="screen hidden">
-    <h2>// TERMINAL_JUMP.EXE</h2>
-    <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">CLICK OR PRESS SPACE TO JUMP</div>
-    <canvas id="game-canvas" width="400" height="200"></canvas>
-    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px; margin-bottom:10px;">
-        <span>SCORE: <span id="game-score">0</span></span>
-        <span style="color:#00FFFF;">PERSONAL BEST: <span id="game-highscore">0</span></span>
+<div id="screen-create" class="screen hidden">
+    <h2>// NEW_CLAN :: INITIALIZE</h2>
+    <input type="text"     id="create-name" placeholder="CLAN NAME">
+    <input type="password" id="create-pass" placeholder="ACCESS PASSPHRASE">
+    <button onclick="app.createClanStart()">START DRAWING SYMBOLS</button>
+    <button onclick="nav.to('hub')" class="danger" style="margin-top:4px;">CANCEL</button>
+</div>
+
+<div id="screen-soc" class="screen hidden" style="border-color:#00FFFF;box-shadow:0 0 28px #00FFFF;color:#00FFFF;">
+    <h2>// SECURITY_OPS_CENTER</h2>
+    <div class="card" style="border-color:#00FFFF;margin-bottom:10px;">
+        <small style="opacity:0.6;font-size:10px;display:block;margin-bottom:6px;">GLOBAL ALERT SYSTEM CONTROLS</small>
+        <div class="grid-3">
+            <button onclick="sysAlerts.trigger('INFO')" style="color:#00FF00;border-color:#00FF00;">ANNOUNCE</button>
+            <button onclick="sysAlerts.trigger('WARN')" style="color:var(--warn-color);border-color:var(--warn-color);">WARNING</button>
+            <button onclick="sysAlerts.trigger('CRIT')" class="danger">RED ALERT</button>
+        </div>
     </div>
-    <button onclick="window.game.start()">START LINK</button>
-    <button onclick="window.game.stop(); nav.to('hub')">EXIT</button>
+    <div class="grid-2">
+        <button class="admin" onclick="app.runSecurityScan('TRAFFIC')">ANALYZE TRAFFIC</button>
+        <button class="admin" onclick="app.runSecurityScan('VULN')">VULNERABILITY SCAN</button>
+    </div>
+    <button onclick="nav.to('kali')" style="background:#0a0a0a;color:#3377ff;border:1px solid #3377ff;margin-top:4px;">[ BOOT KALI_LINUX_EMU ]</button>
+    <div id="soc-console" style="background:#000;border:1px solid #00FFFF;height:150px;padding:10px;overflow-y:scroll;font-size:11px;margin-top:10px;color:#00FFFF;">
+        <span class="term-line">> SOC_INIT... READY.</span>
+    </div>
+    <button onclick="nav.to('hub')" style="margin-top:10px;border-color:#00FFFF;color:#00FFFF;">DISCONNECT</button>
+</div>
+
+<div id="screen-cockpit" class="screen hidden" style="border-color:var(--warn-color);box-shadow:0 0 28px var(--warn-color);max-width:920px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--warn-color);margin-bottom:12px;padding-bottom:6px;">
+        <h2 style="color:var(--warn-color);border:none;padding:0;margin:0;">// CYBER_DECK_V2.0 — EDU SIM</h2>
+        <div style="font-size:9px;color:var(--warn-color);animation:blinkAnim 2s infinite;">[ BROWSER SECURITY LIMITS APPLY ]</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
+        <div>
+            <div class="grid-3">
+                <div class="switch-container"><span class="switch-label">PROXY CHAIN</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
+                <div class="switch-container"><span class="switch-label">FIREWALL BYPASS</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
+                <div class="switch-container"><span class="switch-label">ROOT MASK</span><div class="toggle-switch" onclick="cockpit.toggle(this)"></div></div>
+            </div>
+            <div class="grid-2" style="margin-bottom:10px;">
+                <div class="dial-container"><span class="switch-label">SIGNAL GAIN</span><input type="range" min="0" max="100" value="50" oninput="cockpit.updateGain(this.value)"></div>
+                <div class="dial-container"><span class="switch-label">DECRYPTION RATE</span><input type="range" min="0" max="100" value="30" oninput="cockpit.updateRate(this.value)"></div>
+            </div>
+            <div style="background:#000;border:1px solid var(--warn-color);height:120px;position:relative;overflow:hidden;margin-bottom:10px;">
+                <canvas id="cockpit-canvas" width="450" height="120" style="border:none;background:transparent;box-shadow:none;"></canvas>
+                <div id="visual-text" style="position:absolute;top:5px;left:5px;font-size:9px;color:rgba(255,170,0,0.6);"></div>
+            </div>
+            <div class="grid-4">
+                <div class="action-btn" onclick="cockpit.runAction('PING_SWEEP')"><div class="led"></div>PING</div>
+                <div class="action-btn" onclick="cockpit.runAction('PORT_SCAN')"><div class="led"></div>SCAN</div>
+                <div class="action-btn" onclick="cockpit.runAction('PACKET_SNIFF')"><div class="led"></div>SNIFF</div>
+                <div class="action-btn" onclick="cockpit.runAction('TRACE_ROUTE')"><div class="led"></div>TRACE</div>
+                <div class="action-btn" onclick="cockpit.runAction('BRUTE_FORCE')"><div class="led"></div>BRUTE</div>
+                <div class="action-btn" onclick="cockpit.runAction('INJECT_SQL')"><div class="led"></div>INJECT</div>
+                <div class="action-btn" onclick="cockpit.runAction('OVERFLOW')"><div class="led"></div>OVRFLW</div>
+                <div class="action-btn" onclick="cockpit.runAction('EXECUTE_PAYLOAD')" style="border-style:dashed;"><div class="led busy"></div>EXECUTE</div>
+            </div>
+            <div style="margin-top:10px;">
+                <button onclick="cockpit.scanNetwork()" class="warn" style="width:100%;padding:10px;">LAN DISCOVERY (SIM + WEBRTC)</button>
+                <div id="scan-progress"><div id="scan-progress-fill"></div></div>
+            </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="card" style="border-color:var(--warn-color);margin:0;">
+                <label style="font-size:10px;color:var(--warn-color);display:block;margin-bottom:4px;">TARGET IP / URL</label>
+                <input type="text" id="cockpit-target" value="192.168.1.1" style="color:var(--warn-color);border-color:var(--warn-color);">
+                <label style="font-size:10px;color:var(--warn-color);display:block;margin-bottom:4px;">PROTOCOL</label>
+                <select id="cockpit-proto" style="color:var(--warn-color);border-color:var(--warn-color);">
+                    <option>SSH (22)</option><option>HTTP (80)</option><option>HTTPS (443)</option><option>FTP (21)</option><option>TELNET (23)</option>
+                </select>
+            </div>
+            <div class="chat-box" id="cockpit-log" style="flex:1;border-color:var(--warn-color);font-size:10px;color:var(--warn-color);margin:0;">
+                <div class="term-line">>> DECK INITIALIZED...</div>
+            </div>
+            <div id="network-scan-panel" class="hidden"><div id="scan-results"></div></div>
+        </div>
+    </div>
+    <button onclick="nav.to('hub')" style="margin-top:12px;border-color:var(--warn-color);color:var(--warn-color);">DISCONNECT</button>
+</div>
+
+<div id="remote-access-overlay" class="hidden">
+    <div style="width:90%;height:80%;background:#000;border:2px solid var(--warn-color);padding:12px;color:inherit;font-family:var(--font-main);box-shadow:0 0 30px var(--warn-color);display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--warn-color);padding-bottom:6px;margin-bottom:10px;">
+            <h3 id="remote-title" style="margin:0;color:var(--warn-color);border:none;padding:0;">REMOTE ACCESS</h3>
+            <button onclick="cockpit.closeRemote()" class="danger" style="width:auto;padding:5px 10px;margin:0;font-size:10px;">EXIT</button>
+        </div>
+        <div id="remote-content" style="flex:1;overflow-y:scroll;"></div>
+    </div>
+</div>
+
+<div id="screen-kali" class="hidden">
+    <div id="kali-bar">
+        <div style="display:flex;align-items:center;">
+            <span style="color:#f00;font-weight:bold;margin-right:10px;">🐉 KALI_EMU</span>
+            <button class="kali-btn" onclick="document.getElementById('kali-menu').classList.toggle('hidden')">Applications ▾</button>
+        </div>
+        <span style="font-size:11px;opacity:0.5;">root@kali</span>
+    </div>
+    <div id="kali-desktop" onmousemove="kali.drag(event)" onmouseup="kali.stopDrag()">
+        <div id="win-term" class="window" style="z-index:10;">
+            <div class="win-header" onmousedown="kali.startDrag(event,'win-term')">
+                <span>root@kali:~/python_scripts</span>
+                <button onclick="nav.to('soc')" style="background:#ff5f56;width:14px;height:14px;border-radius:50%;padding:0;cursor:pointer;border:none;margin:0;min-width:auto;"></button>
+            </div>
+            <div class="win-body">
+                <div id="py-console"><span class="term-info">Kali GNU/Linux Rolling</span></div>
+                <div id="py-input-line">
+                    <span style="color:cyan;margin-right:5px;font-size:12px;">>>></span>
+                    <input type="text" id="py-input" onkeydown="kali.handleInput(event)">
+                </div>
+            </div>
+        </div>
+        <div id="kali-menu" class="hidden" style="position:absolute;top:0;left:0;width:180px;background:#2a2a2a;z-index:50;border:1px solid #444;">
+            <button class="kali-btn" style="width:100%;text-align:left;" onclick="kali.openApp('nmap')">Nmap</button>
+            <button class="kali-btn" style="width:100%;text-align:left;" onclick="nav.to('soc')">Logout</button>
+        </div>
+    </div>
 </div>
 
 <script type="module">
@@ -753,7 +1013,7 @@
         }, hide: () => { sysAlerts.banner.className = 'alert-off'; }
     };
 
-    window.state = { user:null, isVerified: false, rep: 0, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
+    window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
 
     window.nav = {
         to: (id) => {
@@ -762,26 +1022,23 @@
             if(id === 'auth' || id === 'social') { try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { } }
             if(id==='hub')      app.initHub();
             if(id==='jobs')     app.loadJobs();
-            if(id==='social')   window.social.loadPosts();
-            if(id==='settings') window.settingsSystem.loadUI();
+            if(id==='social')   social.loadPosts();
+            if(id==='settings') settings.loadUI();
             if(id==='dict')     app.renderDict();
-            if(id==='cockpit')  window.cockpit.init();
-            if(id==='radio')    window.radio.init();
-            if(id==='news')     window.news.init();
+            if(id==='cockpit')  cockpit.init();
+            if(id==='radio')    radio.init();
+            if(id==='news')     news.init();
             if(id==='verified') app.initVerifiedChat();
             if(id==='ectotape') app.loadEctoTape();
             if(id==='events')   app.loadEvents();
-            if(id==='emergency') window.emergency.init();
-            if(id==='comms')    window.msgSys.init();
-            if(id==='vault')    window.vault.load();
-            if(id==='ghost')    window.ghost.init();
-            if(id==='ledger')   window.ledger.init();
-            if(id==='neural')   window.neuralMap.start();
-            if(id==='cryptic')  window.cryptic.init();
+            if(id==='emergency') emergency.init();
+            if(id==='comms')    msgSys.init();
+            if(id==='vault')    vault.load();
+            if(id==='ghost')    ghost.init();
             if(id==='feedback'){ if(["user1234","user4321"].includes(state.user?.toLowerCase())) document.getElementById('admin-feedback-panel').classList.remove('hidden'); app.loadFeedback(); }
-            if(id==='minigame') window.game.init();
-            if(id==='maze')     window.maze.init(); 
-            if(id==='sniffer')  window.sniffer.init();
+            if(id==='minigame') game.init();
+            if(id==='maze')     maze.init(); // Setup keys
+            if(id==='sniffer')  sniffer.init();
         },
         tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
     };
@@ -800,10 +1057,6 @@
         formatMsg: (txt) => {
             if(!txt) return "";
             let res = app.translate(txt);
-            res = res.replace(/\[REDACTED:(.*?)\]/g, (match, p1) => {
-                if(state.isVerified) return `<span class="spoiler revealed" style="color:#FFD700; border:1px dashed #FFD700; background:rgba(255,215,0,0.1); padding:0 4px;" title="QUANTUM DECRYPTED">${p1}</span>`;
-                return `<span style="background:var(--dim); color:var(--dim); user-select:none; letter-spacing:1px;" title="ENCRYPTED PAYLOAD">██████</span>`;
-            });
             res = res.replace(/\/spoiler \((.*?)\)/g, `<span class="spoiler" onclick="this.classList.add('revealed')">$1</span>`);
             res = res.replace(/@(\w+)/g, `<span class="mention">@$1</span>`);
             const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -902,72 +1155,37 @@
                 let vListHTML = "";
                 state.verifiedUsers.forEach(vUser => {
                     const uData = (onlineSnap||[]).find(o=>o.id===vUser);
-                    let sDot = `<div class="status-dot status-offline"></div>`; 
+                    let sDot = `<div class="status-dot status-offline"></div>`; let timeStr = "";
                     if(uData) sDot = app.getStatusDot(uData.presence_status, uData.lastSeen);
-                    vListHTML += `<div style="border-bottom:1px solid rgba(0,255,255,0.2); padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">${sDot} @${vUser} ${app.getBadge(vUser)}</div>`;
+                    vListHTML += `<div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">${sDot} @${vUser} ${app.getBadge(vUser)}</div>`;
                 });
-
-                let friendsOnlineHTML = "";
-                let onlineFriendsCount = 0;
-                if(state.friends && state.friends.length > 0) {
-                    state.friends.forEach(f => {
-                        const fData = (onlineSnap||[]).find(o=>o.id===f);
-                        if(fData && fData.presence_status !== 'OFFLINE') {
-                            let sDot = app.getStatusDot(fData.presence_status, fData.lastSeen);
-                            friendsOnlineHTML += `<div style="border-bottom:1px solid rgba(0,255,0,0.2); padding:4px 0; cursor:pointer;" onclick="app.openProfile('${f}')">${sDot} @${f} ${app.getBadge(f)}</div>`;
-                            onlineFriendsCount++;
-                        }
-                    });
-                }
-
-                dir.innerHTML = `
-                    <div class="grid-3" style="margin-bottom:15px; text-align:center;">
-                        <div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${count||0}</b></div>
-                        <div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div>
-                        <div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div>
-                    </div>
-                    <div class="grid-2">
-                        <div>
-                            <h3 style="border-color:#0f0; color:#0f0;">// ONLINE_FRIENDS (${onlineFriendsCount})</h3>
-                            <div class="card" style="max-height:180px; overflow-y:auto; border-color:#0f0;">${friendsOnlineHTML || "<span style='opacity:0.5;'>NO FRIENDS ACTIVE</span>"}</div>
-                        </div>
-                        <div>
-                            <h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3>
-                            <div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS</span>"}</div>
-                        </div>
-                    </div>`;
+                dir.innerHTML = `<div class="grid-3" style="margin-bottom:15px; text-align:center;"><div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${count||0}</b></div><div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div><div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div></div><h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3><div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS YET</span>"}</div>`;
             } catch (e) { dir.innerHTML = `[ ERROR: ${e.message} ]`; }
         },
 
         initHub: async () => {
             loading(true); document.getElementById('device-info').innerText="DEVICE: "+deviceDetect.getInfo();
             const { data: ud } = await supabase.from('users').select('*').eq('id', state.user).single();
-            state.isVerified = ud.verified;
-            state.rep = ud.rep || 0;
-            document.getElementById('hub-rep-score').innerText = state.rep;
-            let vHTML=state.isVerified?`<span class="verified-badge">♦✓</span>`:''; document.getElementById('hub-user').innerHTML=`${ud.displayName||state.user} ${vHTML}`;
+            let vHTML=ud.verified?`<span class="verified-badge">♦✓</span>`:''; document.getElementById('hub-user').innerHTML=`${ud.displayName||state.user} ${vHTML}`;
             const admins=["user1234","user4321"];
             if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
-            if(state.isVerified){ 
+            if(ud.verified){ 
                 document.getElementById('btn-payload').classList.remove('hidden'); 
                 document.getElementById('btn-verified').classList.remove('hidden'); 
-                document.getElementById('btn-ghost').classList.remove('hidden');
-                document.getElementById('btn-redactor').classList.remove('hidden');
+                document.getElementById('btn-ghost').classList.remove('hidden'); 
             } else { 
                 document.getElementById('btn-payload').classList.add('hidden'); 
                 document.getElementById('btn-verified').classList.add('hidden'); 
-                document.getElementById('btn-ghost').classList.add('hidden');
-                document.getElementById('btn-redactor').classList.add('hidden');
+                document.getElementById('btn-ghost').classList.add('hidden'); 
             }
             const setupClan=(data)=>{
                 state.friends = data.friends||[]; state.blocks = data.blocks||[];
                 if(data.clan){ state.clan=data.clan; if(app.clanUnsub)app.clanUnsub(); app.listenToClan(data.clan); document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); }
                 else{ state.clan=null; document.getElementById('panel-no-clan').classList.remove('hidden'); document.getElementById('panel-in-clan').classList.add('hidden'); }
+                document.getElementById('hub-rep').innerText="REP: "+(data.rep||0);
             };
             setupClan(ud);
-            if(app.userUnsub) app.userUnsub(); 
-            app.userUnsub = await dbHelper.listenDoc('users', state.user, (u) => { setupClan(u); state.rep = u.rep || 0; document.getElementById('hub-rep-score').innerText = state.rep; }); 
-            loading(false);
+            if(app.userUnsub) app.userUnsub(); app.userUnsub = await dbHelper.listenDoc('users', state.user, setupClan); loading(false);
             if(app.globalChatUnsub) app.globalChatUnsub();
             app.globalChatUnsub = await dbHelper.listenQuery('global_chat', null, null, {col:'ts', asc:false}, 50, (data) => {
                 const d=document.getElementById('global-chat'); d.innerHTML="";
@@ -1014,6 +1232,12 @@
                 if(state.friends.includes(target)) { addBtn.innerText="REMOVE FRIEND"; addBtn.className="danger"; } else { addBtn.innerText="ADD FRIEND"; addBtn.className=""; }
                 if(state.blocks.includes(target)) { blkBtn.innerText="UNBLOCK"; } else { blkBtn.innerText="BLOCK"; }
             }
+            const admins=["user1234","user4321"];
+            if(admins.includes(state.user.toLowerCase())&&target!==state.user){
+                document.getElementById('prof-admin-panel').classList.remove('hidden');
+                document.getElementById('btn-admin-ban').innerText = d.banned ? "UNBAN" : "BAN";
+                document.getElementById('btn-admin-ipban').innerText = d.ipBanned ? "UN-IP BAN" : "IP BAN";
+            } else document.getElementById('prof-admin-panel').classList.add('hidden');
             nav.to('profile');
         },
         saveProfile: async()=>{ const dn=document.getElementById('edit-disp').value.trim(); const bio=document.getElementById('edit-bio').value.trim(); const pf=document.getElementById('edit-pfp').value.trim(); const priv=document.getElementById('edit-private').checked; await supabase.from('users').update({displayName:dn, bio:bio, pfp:pf, private:priv}).eq('id', state.user); alert("SAVED"); app.openProfile(state.user); },
@@ -1078,6 +1302,7 @@
         triggerClanRedAlert: (msg)=>{ document.getElementById('clan-alert-msg').innerText=msg; document.getElementById('clan-alert-overlay').classList.remove('hidden'); if(app.alertInterval)clearInterval(app.alertInterval); const ctx=audioSys.ctx; app.alertInterval=setInterval(()=>{ if(ctx.state==='suspended')ctx.resume(); const osc=ctx.createOscillator(); const g=ctx.createGain(); osc.connect(g); g.connect(ctx.destination); osc.type='sawtooth'; const now=ctx.currentTime; osc.frequency.setValueAtTime(600,now); osc.frequency.linearRampToValueAtTime(1200,now+0.5); osc.frequency.linearRampToValueAtTime(600,now+1.0); g.gain.setValueAtTime(0.2,now); osc.start(now); osc.stop(now+1.0); },1000); },
         ackAlert: ()=>{ document.getElementById('clan-alert-overlay').classList.add('hidden'); if(app.alertInterval)clearInterval(app.alertInterval); },
 
+
         listenToVoiceUsers: async ()=>{
             if(!state.clan)return; if(app.voiceUnsubscribe)app.voiceUnsubscribe();
             app.voiceUnsubscribe = await dbHelper.listenQuery('clan_voice_users', 'clan_id', state.clan, {col:'joinedAt', asc:false}, null, (data) => {
@@ -1114,10 +1339,12 @@
             } else {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({audio:true, video: videoMode}); app.localStream = stream;
+                    
                     if(videoMode) {
                         const myVid = document.createElement('video'); myVid.srcObject = stream; myVid.autoplay = true; myVid.muted = true; myVid.style.width="100%"; myVid.style.border="1px solid currentColor";
                         document.getElementById('video-grid').appendChild(myVid);
                     }
+
                     app.voiceContext=new(window.AudioContext||window.webkitAudioContext)(); app.voiceAnalyser=app.voiceContext.createAnalyser(); app.voiceAnalyser.fftSize=64;
                     app.voiceSource=app.voiceContext.createMediaStreamSource(stream); app.voiceSource.connect(app.voiceAnalyser);
                     const bufLen=app.voiceAnalyser.frequencyBinCount; const dataArr=new Uint8Array(bufLen); viz.innerHTML="";
@@ -1149,7 +1376,7 @@
             const ranks=state.clanData.ranks||{}; const isLeader=state.clanData.leader===state.user;
             for(const [member,rank] of Object.entries(ranks)){
                 let ctrl=""; if(isLeader&&member!==state.user) ctrl=`<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0;" class="danger">KICK</button><button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0 0 0 5px;">SET RANK</button>`;
-                list.innerHTML+=`<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
+                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
             }
         },
         setCustomRank: async(member)=>{ const r=prompt("ENTER CUSTOM RANK TITLE:"); if(r){ let ranks = state.clanData.ranks||{}; ranks[member]=r.toUpperCase(); await supabase.from('clans').update({ranks}).eq('id', state.clan); app.loadRoster();} },
@@ -1211,131 +1438,9 @@
             document.getElementById('vid-title').value=""; document.getElementById('vid-url').value=""; fileInput.value="";
         },
 
-        createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; window.drawing.mode="create"; window.drawing.tempData={name:n,pass:p,syms:{}}; window.drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); window.drawing.idx=0; nav.to('draw'); }, 
+        createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
         runSecurityScan: (type)=>{ const c=document.getElementById('soc-console'); c.innerHTML+=`<div class="term-line">> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div class="term-line">> COMPLETE. CLEAN.</div>`,1500); },
         getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; }
-    };
-
-    // ================================================================
-    // NEW SYSTEM 1: QUANTUM REDACTOR (Elite Only)
-    // ================================================================
-    window.redactor = {
-        send: async (dest) => {
-            const msg = document.getElementById('redact-msg').value;
-            const word = document.getElementById('redact-word').value;
-            if(!msg || !word) return alert("Requires full transmission and target keyword.");
-            const regex = new RegExp(`(${word})`, 'gi');
-            const finalTxt = msg.replace(regex, `[REDACTED:$1]`);
-            if(dest === 'global') {
-                await supabase.from('global_chat').insert({u:state.user,txt:finalTxt,ts:dbHelper.serverTimestamp()});
-            } else if (dest === 'clan' && state.clan) {
-                await supabase.from('clan_msgs').insert({clan_id:state.clan, u:state.user, txt:finalTxt, ts:dbHelper.serverTimestamp()});
-            } else { alert("Not in a clan."); return; }
-            document.getElementById('redact-msg').value = ""; document.getElementById('redact-word').value = ""; nav.to('hub');
-        }
-    };
-
-    // ================================================================
-    // NEW SYSTEM 2: THE LEDGER (Scripts Repository)
-    // ================================================================
-    window.ledger = {
-        init: async () => {
-            const feed = document.getElementById('ledger-feed'); feed.innerHTML = "Pulling records...";
-            try {
-                const { data } = await supabase.from('ledger_posts').select('*').order('ts', {ascending: false}).limit(20);
-                feed.innerHTML = "";
-                if(!data || data.length === 0) feed.innerHTML = "<div style='opacity:0.5;'>Ledger is empty.</div>";
-                data.forEach(p => {
-                    feed.innerHTML += `<div class="card" style="border-color:#0f0;">
-                        <strong style="color:#0f0;">[${p.type}] ${p.title}</strong><br>
-                        <small style="opacity:0.5;">AUTHOR: @${p.u}</small>
-                        <div style="background:#000; padding:5px; font-family:monospace; font-size:10px; border:1px dashed #0f0; margin-top:5px; white-space:pre-wrap;">${p.code}</div>
-                    </div>`;
-                });
-            } catch(e) { feed.innerHTML = "<div style='opacity:0.5;'>Ledger Offline. Connection pending.</div>"; }
-        },
-        post: async () => {
-            const t = document.getElementById('ledger-title').value.trim();
-            const typ = document.getElementById('ledger-type').value;
-            const code = document.getElementById('ledger-code').value.trim();
-            if(!t || !code) return;
-            try { await supabase.from('ledger_posts').insert({u: state.user, title: t, type: typ, code: code, ts: dbHelper.serverTimestamp()}); window.ledger.init(); document.getElementById('ledger-title').value = ""; document.getElementById('ledger-code').value = ""; } catch (e) { alert("Post Failed."); }
-        }
-    };
-
-    // ================================================================
-    // NEW SYSTEM 3: NEURAL MAP
-    // ================================================================
-    window.neuralMap = {
-        ctx: null, frame: null, running: false, nodes: [],
-        start: async () => {
-            if(!window.neuralMap.ctx) window.neuralMap.ctx = document.getElementById('neural-canvas').getContext('2d');
-            window.neuralMap.running = true;
-            document.getElementById('neural-canvas').width = document.getElementById('screen-neural').clientWidth - 40;
-            window.neuralMap.nodes = [];
-            const w = window.neuralMap.ctx.canvas.width; const h = window.neuralMap.ctx.canvas.height;
-            for(let i=0; i<20; i++) { window.neuralMap.nodes.push({ x: Math.random()*w, y: Math.random()*h, vx: (Math.random()-0.5), vy: (Math.random()-0.5), id: Math.random().toString(36).substr(2,4) }); }
-            if(window.neuralMap.frame) cancelAnimationFrame(window.neuralMap.frame);
-            window.neuralMap.loop();
-        },
-        stop: () => { window.neuralMap.running = false; if(window.neuralMap.frame) cancelAnimationFrame(window.neuralMap.frame); },
-        loop: () => {
-            if(!window.neuralMap.running) return;
-            const w = window.neuralMap.ctx.canvas.width; const h = window.neuralMap.ctx.canvas.height;
-            window.neuralMap.ctx.fillStyle = "rgba(5, 5, 5, 0.2)"; window.neuralMap.ctx.fillRect(0,0,w,h);
-            const color = getComputedStyle(document.body).color;
-            window.neuralMap.nodes.forEach(n => {
-                n.x += n.vx; n.y += n.vy;
-                if(n.x<0 || n.x>w) n.vx *= -1; if(n.y<0 || n.y>h) n.vy *= -1;
-                window.neuralMap.ctx.fillStyle = color;
-                window.neuralMap.ctx.beginPath(); window.neuralMap.ctx.arc(n.x, n.y, 2, 0, Math.PI*2); window.neuralMap.ctx.fill();
-            });
-            window.neuralMap.ctx.strokeStyle = color;
-            for(let i=0; i<window.neuralMap.nodes.length; i++) {
-                for(let j=i+1; j<window.neuralMap.nodes.length; j++) {
-                    const dist = Math.sqrt((window.neuralMap.nodes[i].x - window.neuralMap.nodes[j].x)**2 + (window.neuralMap.nodes[i].y - window.neuralMap.nodes[j].y)**2);
-                    if(dist < 80) { window.neuralMap.ctx.globalAlpha = 1 - (dist/80); window.neuralMap.ctx.beginPath(); window.neuralMap.ctx.moveTo(window.neuralMap.nodes[i].x, window.neuralMap.nodes[i].y); window.neuralMap.ctx.lineTo(window.neuralMap.nodes[j].x, window.neuralMap.nodes[j].y); window.neuralMap.ctx.stroke(); }
-                }
-            }
-            window.neuralMap.ctx.globalAlpha = 1.0; window.neuralMap.frame = requestAnimationFrame(window.neuralMap.loop);
-        }
-    };
-
-    // ================================================================
-    // NEW SYSTEM 4: CRYPTIC CHALLENGE
-    // ================================================================
-    window.cryptic = {
-        phrases: ["BYPASS FIREWALL", "ESTABLISH LINK", "ACCESS GRANTED"],
-        currentAns: "", currentShift: 0,
-        init: () => {
-            const base = window.cryptic.phrases[Math.floor(Math.random() * window.cryptic.phrases.length)];
-            window.cryptic.currentAns = base; window.cryptic.currentShift = 3;
-            let shifted = "";
-            for(let i=0; i<base.length; i++) {
-                let charCode = base.charCodeAt(i);
-                if(charCode >= 65 && charCode <= 90) shifted += String.fromCharCode(((charCode - 65 + 3) % 26) + 65);
-                else shifted += base[i];
-            }
-            document.getElementById('cryptic-cipher').innerText = shifted; document.getElementById('cryptic-answer').value = "";
-        },
-        submit: async () => {
-            const guess = document.getElementById('cryptic-answer').value.trim().toUpperCase();
-            if(guess === window.cryptic.currentAns) { audioSys.playTone(800, 'square', 0.2); alert("SUCCESS. REP +10."); nav.to('hub'); }
-            else { audioSys.playTone(300, 'sawtooth', 0.3); alert("FAILED."); }
-        }
-    };
-
-    // ================================================================
-    // NEW SYSTEM 5: CAMOUFLAGE ENGINE
-    // ================================================================
-    window.camo = {
-        apply: (type) => {
-            document.body.classList.add('camo-mode');
-            if(type === 'school') document.title = "Student Portal Login";
-            else document.title = "Classified.docx";
-            localStorage.setItem('camoActive', type); nav.to('hub');
-        },
-        remove: () => { document.body.classList.remove('camo-mode'); document.title = "CLAN_NET // SYSTEM_V3.3"; localStorage.removeItem('camoActive'); nav.to('hub'); }
     };
 
     // ================================================================
@@ -1344,7 +1449,7 @@
     window.vault = {
         save: () => {
             const txt = document.getElementById('vault-text').value;
-            const enc = btoa(encodeURIComponent(txt)); 
+            const enc = btoa(encodeURIComponent(txt)); // Simple client-side encode
             localStorage.setItem('clanNetVault_' + state.user, enc);
             alert("SECURED IN LOCAL VAULT.");
         },
@@ -1368,15 +1473,15 @@
         channel: null,
         init: () => {
             const d = document.getElementById('ghost-chat'); d.innerHTML="<div style='opacity:0.5;'>Establishing ephemeral relay...</div>";
-            if(window.ghost.channel) return; 
-            window.ghost.channel = supabase.channel('ghost_room')
-                .on('broadcast', { event: 'msg' }, payload => { window.ghost.receive(payload.payload); })
-                .subscribe(status => { if(status === 'SUBSCRIBED') d.innerHTML="<div style='color:#FFD700; font-weight:bold;'>[ RELAY SECURED ]</div>"; });
+            if(ghost.channel) return; 
+            ghost.channel = supabase.channel('ghost_room')
+                .on('broadcast', { event: 'msg' }, payload => { ghost.receive(payload.payload); })
+                .subscribe(status => { if(status === 'SUBSCRIBED') d.innerHTML="<div style='color:#FFD700; font-weight:bold;'>[ RELAY SECURED. WAITING FOR TRANSMISSIONS ]</div>"; });
         },
         send: () => {
             const t = document.getElementById('ghost-input').value.trim(); if(!t) return;
-            window.ghost.channel.send({ type: 'broadcast', event: 'msg', payload: { u: state.user, t: t } });
-            window.ghost.receive({ u: state.user, t: t }); 
+            ghost.channel.send({ type: 'broadcast', event: 'msg', payload: { u: state.user, t: t } });
+            ghost.receive({ u: state.user, t: t }); 
             document.getElementById('ghost-input').value = "";
         },
         receive: (data) => {
@@ -1388,78 +1493,515 @@
             setTimeout(() => {
                 const el = document.getElementById(msgId);
                 if(el) { el.style.opacity = '0'; setTimeout(()=> { if(el) el.remove(); }, 2000); }
-            }, 10000); 
+            }, 10000); // 10 second burn time
         },
-        stop: () => { if(window.ghost.channel) { supabase.removeChannel(window.ghost.channel); window.ghost.channel = null; } }
+        stop: () => { if(ghost.channel) { supabase.removeChannel(ghost.channel); ghost.channel = null; } }
     };
 
     // ================================================================
-    // GAME 1: Terminal Jump (Refined Physics)
+    // MESSAGING SYSTEM (DMs, Friends, Groups)
+    // ================================================================
+    window.msgSys = {
+        activeDM: null, activeGroup: null, unsubMsg: null, unsubGroup: null, dmTypingTimer: null, rec: null, audioChunks: [],
+        
+        tab: (t) => {
+            ['friends', 'dms', 'groups'].forEach(id => document.getElementById('comms-'+id).classList.add('hidden'));
+            document.getElementById('comms-'+t).classList.remove('hidden');
+            if(t==='friends') msgSys.loadFriends();
+            if(t==='groups') msgSys.loadGroups();
+            if(t==='dms') msgSys.loadDMList();
+        },
+        init: () => { msgSys.tab('friends'); },
+
+        addFriend: async (u) => {
+            if(state.friends.includes(u)) state.friends = state.friends.filter(f=>f!==u); else state.friends.push(u);
+            await supabase.from('users').update({friends: state.friends}).eq('id', state.user); app.openProfile(u);
+        },
+        blockUser: async (u) => {
+            if(state.blocks.includes(u)) state.blocks = state.blocks.filter(b=>b!==u); else state.blocks.push(u);
+            await supabase.from('users').update({blocks: state.blocks}).eq('id', state.user); app.openProfile(u);
+        },
+        reportUser: async (u) => {
+            const reason = prompt(`REPORTING ${u}. REASON:`); if(!reason)return;
+            await supabase.from('reports').insert({reporter: state.user, reported: u, reason, ts: dbHelper.serverTimestamp()}); alert("REPORT LOGGED TO DB ADMINS.");
+        },
+        loadFriends: async () => {
+            const list = document.getElementById('friends-list'); list.innerHTML = "";
+            if(state.friends.length===0) return list.innerHTML = "<div style='opacity:0.5;'>NO FRIENDS IN DATABASE.</div>";
+            const { data } = await supabase.from('users').select('id, presence_status, lastSeen').in('id', state.friends);
+            (data||[]).forEach(f => {
+                list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getBadge(f.id)}</div>
+                    <button onclick="msgSys.openDM('${f.id}')" style="width:auto; padding:4px 8px; margin:0; border-color:#FF00FF; color:#FF00FF;">MESSAGE</button>
+                </div>`;
+            });
+        },
+
+        // DMs
+        loadDMList: async () => {
+            const list = document.getElementById('dms-list'); list.innerHTML="Loading active links...";
+            const { data } = await supabase.from('dms').select('*');
+            list.innerHTML = "";
+            const myDMs = (data||[]).filter(d => (d.users||[]).includes(state.user));
+            myDMs.forEach(dm => {
+                const other = dm.users.find(u => u !== state.user);
+                list.innerHTML += `<div onclick="msgSys.openDM('${other}', '${dm.id}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">@${other}</div>`;
+            });
+        },
+        openDM: async (otherUser, knownDmId = null) => {
+            msgSys.tab('dms');
+            const dmId = knownDmId || [state.user, otherUser].sort().join('_');
+            msgSys.activeDM = { id: dmId, other: otherUser };
+            
+            await supabase.from('dms').upsert({ id: dmId, users: [state.user, otherUser] });
+            const box = document.getElementById('dm-chat-box'); box.innerHTML = `Establishing P2P link with ${otherUser}...`;
+            
+            if(msgSys.unsubMsg) msgSys.unsubMsg();
+            msgSys.unsubMsg = await dbHelper.listenQuery('dm_msgs', 'dm_id', dmId, {col:'ts', asc:true}, 100, async (data) => {
+                box.innerHTML = "";
+                let unreadIds = [];
+                data.forEach(m => {
+                    if(state.blocks.includes(m.u)) return;
+                    const isMe = m.u === state.user;
+                    if(!isMe && !(m.read_by||[]).includes(state.user)) unreadIds.push(m.id);
+                    
+                    let content = m.is_deleted ? `<em style="opacity:0.5">[DATA EXPUNGED]</em>` : app.formatMsg(m.txt);
+                    if(m.file) content += `<br><img src="${m.file}" style="max-width:100%; max-height:150px; border:1px solid currentColor; margin-top:4px;">`;
+                    if(m.audio) content += `<br><audio controls src="${m.audio}" style="height:30px; margin-top:4px;"></audio>`;
+                    
+                    const readStatus = (isMe && (m.read_by||[]).includes(otherUser)) ? `<span style="font-size:10px; color:#0f0;">👀</span>` : '';
+                    const editedFlag = m.is_edited && !m.is_deleted ? `<span style="font-size:8px; opacity:0.5;"> (edited)</span>` : '';
+                    const pinnedFlag = state.localPins.includes(m.id) ? `📌 ` : '';
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
+                    
+                    let rxHTML = "";
+                    if(m.reactions) { for(const [rx, users] of Object.entries(m.reactions)) { if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('dm_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`; } }
+
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'dm')">REPLY</button><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('dm_msgs', '${m.id}', '💀')">💀</button>`;
+                    if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('dm_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('dm_msgs', '${m.id}')">DEL</button>`;
+                    actions += `</div>`;
+
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+
+                if(unreadIds.length > 0) {
+                    for(let uid of unreadIds) {
+                        const { data: dRow } = await supabase.from('dm_msgs').select('read_by').eq('id', uid).single();
+                        let rb = dRow.read_by || []; rb.push(state.user);
+                        await supabase.from('dm_msgs').update({read_by: rb}).eq('id', uid);
+                    }
+                }
+            });
+
+            dbHelper.listenDoc('dms', dmId, (dmData) => {
+                const typing = (dmData.typing||[]).filter(t => t !== state.user);
+                const tDiv = document.getElementById('dm-typing');
+                if(typing.length === 0) tDiv.innerText = "";
+                else if(typing.length <= 3) tDiv.innerText = typing.join(', ') + " is typing...";
+                else tDiv.innerText = `${typing[0]}, ${typing[1]} and ${typing.length - 2} others are typing...`;
+            });
+        },
+        updateTyping: async (type) => {
+            if(type==='dm' && msgSys.activeDM) {
+                const dmId = msgSys.activeDM.id;
+                const { data } = await supabase.from('dms').select('typing').eq('id', dmId).single();
+                let typing = data?.typing || [];
+                if(!typing.includes(state.user)) { typing.push(state.user); await supabase.from('dms').update({typing}).eq('id', dmId); }
+                if(msgSys.dmTypingTimer) clearTimeout(msgSys.dmTypingTimer);
+                msgSys.dmTypingTimer = setTimeout(async () => {
+                    const { data: d2 } = await supabase.from('dms').select('typing').eq('id', dmId).single();
+                    let typ2 = (d2?.typing || []).filter(u => u !== state.user);
+                    await supabase.from('dms').update({typing: typ2}).eq('id', dmId);
+                }, 2000);
+            }
+        },
+        attachFile: (input) => { if(input.files.length > 0 && input.files[0].size > 1000000) { alert("FILE TOO LARGE (Max 1MB via Base64)."); input.value=""; } },
+        sendDM: async () => {
+            const inp = document.getElementById('dm-input'); const txt = inp.value.trim(); const fInp = document.getElementById('dm-file');
+            if(!txt && fInp.files.length===0) return;
+            let fileB64 = null;
+            if(fInp.files.length > 0) { const reader = new FileReader(); reader.readAsDataURL(fInp.files[0]); await new Promise(r => reader.onload = () => { fileB64 = reader.result; r(); }); }
+            
+            const { error } = await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: txt, file: fileB64, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
+            if (error) alert("DM ERROR: " + error.message);
+            else { inp.value = ""; fInp.value = ""; app.cancelReply('dm'); msgSys.updateTyping('dm'); }
+        },
+
+        startVoiceRec: async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                msgSys.rec = new MediaRecorder(stream); msgSys.audioChunks = [];
+                msgSys.rec.ondataavailable = e => msgSys.audioChunks.push(e.data);
+                msgSys.rec.onstop = async () => {
+                    const blob = new Blob(msgSys.audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader(); reader.readAsDataURL(blob);
+                    reader.onloadend = async () => { await supabase.from('dm_msgs').insert({dm_id: msgSys.activeDM.id, u: state.user, txt: "[VOICE MEMO]", audio: reader.result, ts: dbHelper.serverTimestamp()}); }
+                };
+                msgSys.rec.start(); document.getElementById('dm-mic-btn').style.background = "red";
+            } catch(e) { alert("MIC DENIED"); }
+        },
+        stopVoiceRec: () => { if(msgSys.rec) { msgSys.rec.stop(); document.getElementById('dm-mic-btn').style.background = "transparent"; } },
+
+        // Groups
+        createGroupPrompt: async () => {
+            const name = prompt("GROUP NAME:"); if(!name) return;
+            const memStr = prompt(`ENTER USERNAMES (COMMA SEPARATED). \nYOUR FRIENDS: ${state.friends.join(', ')}`); if(!memStr) return;
+            let members = memStr.split(',').map(s=>s.trim()); members.push(state.user);
+            const gid = 'GRP_'+Date.now(); await supabase.from('group_chats').insert({id: gid, name, leader: state.user, members}); msgSys.loadGroups();
+        },
+        loadGroups: async () => {
+            const list = document.getElementById('groups-list'); list.innerHTML="Loading groups...";
+            const { data } = await supabase.from('group_chats').select('*'); list.innerHTML = "";
+            const myGroups = (data||[]).filter(g => (g.members||[]).includes(state.user));
+            myGroups.forEach(g => { list.innerHTML += `<div onclick="msgSys.openGroup('${g.id}', '${g.name}', '${g.leader}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">[GRP] ${g.name}</div>`; });
+        },
+        openGroup: async (gId, gName, gLeader) => {
+            msgSys.activeGroup = { id: gId, leader: gLeader };
+            const box = document.getElementById('group-chat-box'); box.innerHTML = `Joining ${gName}...`;
+            if(msgSys.unsubGroup) msgSys.unsubGroup();
+            msgSys.unsubGroup = await dbHelper.listenQuery('group_msgs', 'group_id', gId, {col:'ts', asc:true}, 100, (data) => {
+                box.innerHTML = "";
+                data.forEach(m => {
+                    if(state.blocks.includes(m.u)) return;
+                    const isMe = m.u === state.user; const isLeader = state.user === gLeader;
+                    let content = m.is_deleted ? `<em style="opacity:0.5">[DATA EXPUNGED]</em>` : app.formatMsg(m.txt);
+                    
+                    const editedFlag = m.is_edited && !m.is_deleted ? `<span style="font-size:8px; opacity:0.5;"> (edited)</span>` : '';
+                    let pinnedFlag = m.pinned ? `<strong style="color:#FF00FF;">[PUBLIC PIN] 📌 </strong>` : '';
+                    if(state.localPins.includes(m.id)) pinnedFlag += `📌 `;
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
+
+                    let rxHTML = "";
+                    if(m.reactions) { for(const [rx, users] of Object.entries(m.reactions)) { if(users.length > 0) rxHTML += `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px; border-radius:2px; margin-right:2px; cursor:pointer;" onclick="msgSys.react('group_msgs', '${m.id}', '${rx}')">${rx} ${users.length}</span>`; } }
+
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'group')">REPLY</button><button class="msg-btn" onclick="msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '🔥')">🔥</button><button class="msg-btn" onclick="msgSys.react('group_msgs', '${m.id}', '💀')">💀</button>`;
+                    if(isLeader) actions += `<button class="msg-btn" onclick="msgSys.pinPublic('${m.id}')">PUB-PIN</button>`;
+                    if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('group_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('group_msgs', '${m.id}')">DEL</button>`;
+                    actions += `</div>`;
+
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        },
+        sendGroupMsg: async () => {
+            const inp = document.getElementById('group-input'); const txt = inp.value.trim(); if(!txt) return;
+            const { error } = await supabase.from('group_msgs').insert({group_id: msgSys.activeGroup.id, u: state.user, txt: txt, thread_parent: state.replyTarget, ts: dbHelper.serverTimestamp()});
+            if (error) alert("GROUP COMMS ERROR: " + error.message);
+            else { inp.value = ""; app.cancelReply('group'); }
+        },
+
+        react: async (table, id, emoji) => { const { data } = await supabase.from(table).select('reactions').eq('id', id).single(); let rx = data.reactions || {}; if(!rx[emoji]) rx[emoji] = []; if(rx[emoji].includes(state.user)) rx[emoji] = rx[emoji].filter(u=>u!==state.user); else rx[emoji].push(state.user); await supabase.from(table).update({reactions: rx}).eq('id', id); },
+        editMsg: async (table, id, oldTxt) => { const nTxt = prompt("EDIT MESSAGE:", oldTxt); if(!nTxt || nTxt===oldTxt) return; await supabase.from(table).update({txt: nTxt, is_edited: true}).eq('id', id); },
+        delMsg: async (table, id) => { if(confirm("DELETE MESSAGE?")) await supabase.from(table).update({txt: "", is_deleted: true, file: null, audio: null}).eq('id', id); },
+        pinLocal: (id) => { if(state.localPins.includes(id)) state.localPins = state.localPins.filter(p=>p!==id); else state.localPins.push(id); localStorage.setItem('localPins', JSON.stringify(state.localPins)); if(msgSys.activeDM) msgSys.openDM(msgSys.activeDM.other, msgSys.activeDM.id); if(msgSys.activeGroup) msgSys.openGroup(msgSys.activeGroup.id, document.getElementById('group-chat-box').innerHTML.split(' ')[1], msgSys.activeGroup.leader); },
+        pinPublic: async (id) => { const { data } = await supabase.from('group_msgs').select('pinned').eq('id', id).single(); await supabase.from('group_msgs').update({pinned: !data.pinned}).eq('id', id); }
+    };
+
+    // ================================================================
+    // SOCIAL
+    // ================================================================
+    window.social = {
+        tab: (t)=>{ document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-'+t).classList.remove('hidden'); if(t==='posts')social.loadPosts(); if(t==='polls')social.loadPolls(); },
+        like: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); else{ likes.push(state.user); if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
+        dislike: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); else{ dislikes.push(state.user); if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
+
+        openComments: async (id, type) => {
+            document.querySelector('#comment-overlay .screen').classList.remove('hidden'); state.activeCommentId = id; state.activeCommentType = type;
+            const overlay = document.getElementById('comment-overlay'); overlay.classList.remove('hidden'); 
+            const div = document.getElementById('active-comment-list'); div.innerHTML = "<div style='opacity:0.4;'>>> ACCESSING ENCRYPTED THREAD...</div>";
+            if (state.unsubComments) { state.unsubComments(); }
+            state.unsubComments = await dbHelper.listenQuery('comments', 'parent_id', id, {col:'ts', asc:true}, null, (data) => {
+                div.innerHTML = ""; if (!data || data.length === 0) { div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; return; }
+                data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
+                div.scrollTop = div.scrollHeight;
+            });
+        },
+        closeComments: () => { document.getElementById('comment-overlay').classList.add('hidden'); if (state.unsubComments) { state.unsubComments(); state.unsubComments = null; } state.activeCommentId = null; state.activeCommentType = null; },
+        submitComment: async()=>{ const txt=document.getElementById('new-comment-input').value.trim(); if(!txt||!state.activeCommentId)return; const btn=document.querySelector('#comment-overlay button:last-child'); if(btn)btn.disabled=true; await supabase.from('comments').insert({parent_type: state.activeCommentType, parent_id: state.activeCommentId, u: state.user, txt, ts: dbHelper.serverTimestamp()}); document.getElementById('new-comment-input').value=""; if(btn)btn.disabled=false; },
+
+        createPost: async()=>{ const txt=document.getElementById('post-content').value; const vid=document.getElementById('post-video').value; if(!txt)return; await supabase.from('posts').insert({u:state.user, txt, video:vid||null, ts:dbHelper.serverTimestamp(), likes:[], dislikes:[]}); document.getElementById('post-content').value=""; document.getElementById('post-video').value=""; social.loadPosts(); },
+        loadPosts: async()=>{
+            const div=document.getElementById('feed-posts'); div.innerHTML="LOADING FEED..."; const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); div.innerHTML="";
+            (data||[]).forEach(p=>{ 
+                if(state.blocks.includes(p.u)) return;
+                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
+            });
+        },
+        createPoll: async()=>{ const q=document.getElementById('poll-q').value; const o1=document.getElementById('poll-o1').value; const o2=document.getElementById('poll-o2').value; const vid=document.getElementById('poll-video').value; if(!q||!o1||!o2)return; await supabase.from('polls').insert({u:state.user, q, video:vid||null, opts:[{t:o1,v:0},{t:o2,v:0}], voters:[], likes:[], dislikes:[], ts:dbHelper.serverTimestamp()}); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
+        loadPolls: async()=>{
+            const div=document.getElementById('feed-polls'); div.innerHTML="LOADING POLLS..."; const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); div.innerHTML="";
+            (data||[]).forEach(p=>{ 
+                if(state.blocks.includes(p.u)) return;
+                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
+            });
+        },
+        vote: async(id,optIdx)=>{ const { data: d } = await supabase.from('polls').select('*').eq('id', id).single(); if((d.voters||[]).includes(state.user))return alert("ALREADY VOTED"); let opts=d.opts; let voters=d.voters||[]; opts[optIdx].v++; voters.push(state.user); await supabase.from('polls').update({opts, voters}).eq('id', id); social.loadPolls(); }
+    };
+
+    // ================================================================
+    // NEWS
+    // ================================================================
+    window.news = {
+        init: async()=>{ news.loadInternal(); },
+        post: async()=>{ const h=document.getElementById('news-headline').value; const l=document.getElementById('news-link-input').value; if(!h)return; await supabase.from('news').insert({title:h, link:l||null, u:state.user, ts:dbHelper.serverTimestamp()}); document.getElementById('news-headline').value=""; document.getElementById('news-link-input').value=""; news.loadInternal(); },
+        loadInternal: async()=>{
+            const d=document.getElementById('news-feed-internal'); d.innerHTML="Scanning local nodes..."; const { data } = await supabase.from('news').select('*').order('ts', {ascending:false}).limit(10); d.innerHTML="";
+            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getBadge(n.u)}</small></div>`; });
+            if(!data || data.length===0) d.innerHTML="<div style='opacity:0.4;'>No broadcasts yet.</div>";
+        }
+    };
+
+    // ================================================================
+    // RADIO
+    // ================================================================
+    window.radio = {
+        interval:null, noiseNode:null,
+        init: ()=>{ const viz=document.getElementById('freq-viz'); viz.innerHTML=""; for(let i=0;i<24;i++)viz.innerHTML+=`<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*48}px"></div>`; if(radio.interval)clearInterval(radio.interval); radio.interval=setInterval(()=>{ for(let i=0;i<24;i++){const el=document.getElementById(`fb-${i}`);if(el)el.style.height=(Math.random()*44+4)+"px";} },90); },
+        scan: ()=>{ audioSys.playTone(800,'sawtooth',0.1); document.getElementById('radio-freq').innerText=(400+Math.random()*100).toFixed(4); },
+        toggleNoise: ()=>{ if(radio.noiseNode){radio.noiseNode.disconnect();radio.noiseNode=null;document.getElementById('btn-noise').style.cssText="";} else{ const ctx=audioSys.ctx; if(ctx.state==='suspended')ctx.resume(); const wn=ctx.createScriptProcessor(4096,1,1); wn.onaudioprocess=(e)=>{const out=e.outputBuffer.getChannelData(0);for(let i=0;i<4096;i++)out[i]=Math.random()*0.08-0.04;}; wn.connect(ctx.destination); radio.noiseNode=wn; document.getElementById('btn-noise').style.cssText="background:var(--warn-color);color:#000;"; } }
+    };
+
+    // ================================================================
+    // COCKPIT
+    // ================================================================
+    window.cockpit = {
+        running:false, ctx:null, canvas:null, gain:50, rate:30, currentDevices:[], currentRemote:null,
+        init: ()=>{ cockpit.canvas=document.getElementById('cockpit-canvas'); cockpit.ctx=cockpit.canvas.getContext('2d'); cockpit.running=true; cockpit.animate(); cockpit.detectLocalIP(); },
+        toggle: (el)=>{ el.classList.toggle('toggle-active'); audioSys.playTone(600,'square',0.05); }, updateGain: (v)=>cockpit.gain=v, updateRate: (v)=>cockpit.rate=v, log: (txt)=>{ const l=document.getElementById('cockpit-log'); l.innerHTML+=`<div class="term-line">${txt}</div>`; l.scrollTop=l.scrollHeight; },
+        runAction: (action)=>{ audioSys.playTone(200,'sawtooth',0.1); const t=document.getElementById('cockpit-target').value; const p=document.getElementById('cockpit-proto').value; const led=event.currentTarget.querySelector('.led'); led.classList.add('on'); cockpit.log(`>> EXEC: ${action} ON ${t} (${p})...`); setTimeout(()=>{ if(action==='PING_SWEEP')cockpit.log(`>> REPLY: BYTES=32 TIME=${Math.floor(Math.random()*50)}ms TTL=54`); else if(action==='PORT_SCAN')cockpit.log(`>> PORT ${Math.floor(Math.random()*65535)} [OPEN]`); else if(action==='BRUTE_FORCE')cockpit.log(`>> CREDENTIALS... [FAIL]`); else if(action==='EXECUTE_PAYLOAD'){cockpit.log(`>> UPLOADING... [||||||||||] 100%`);cockpit.log(`>> ROOT ACCESS GRANTED`);audioSys.playTone(1000,'square',0.5);} else cockpit.log(`>> PROCESS COMPLETE.`); setTimeout(()=>led.classList.remove('on'),200); },1000+Math.random()*2000); },
+        detectLocalIP: ()=>{ const rtc=new RTCPeerConnection({iceServers:[]}); rtc.createDataChannel(''); rtc.createOffer().then(o=>rtc.setLocalDescription(o)); rtc.onicecandidate=(e)=>{ if(e.candidate){const ip=/([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate)?.[1];if(ip)cockpit.log(`>> LOCAL IP: ${ip}`);} }; setTimeout(()=>rtc.close(),1000); },
+        scanNetwork: ()=>{ cockpit.log(`>> INITIATING LAN DISCOVERY...`); audioSys.playTone(400,'sawtooth',0.2); const pf=document.getElementById('scan-progress-fill'); let prog=0; const iv=setInterval(()=>{prog+=Math.random()*10;if(prog>100)prog=100;pf.style.width=prog+'%';},100); setTimeout(()=>{ clearInterval(iv); pf.style.width='100%'; cockpit.currentDevices=[ {ip:'192.168.1.1',mac:'00:11:22:33:44:55',os:'Router (Firmware v2.1)',ports:'80,443',vuln:'Low',type:'Router'}, {ip:'192.168.1.10',mac:'AA:BB:CC:DD:EE:FF',os:'Windows 10',ports:'3389,445',vuln:'Medium',type:'PC'}, {ip:'192.168.1.15',mac:'11:22:33:44:55:66',os:'iOS 17',ports:'5353',vuln:'Low',type:'Mobile'}, {ip:'192.168.1.20',mac:'FF:EE:DD:CC:BB:AA',os:'Linux Ubuntu 22.04',ports:'22,80',vuln:'High',type:'Server'}, {ip:'192.168.1.50',mac:'77:88:99:00:11:22',os:'Nintendo Wii (v4.3)',ports:'80',vuln:'High',type:'Console'}, {ip:'192.168.1.100',mac:'33:44:55:66:77:88',os:'Smart TV (Android)',ports:'8080',vuln:'Medium',type:'IoT'} ]; const rd=document.getElementById('scan-results'); rd.innerHTML='<div style="color:#00FFFF;font-weight:bold;margin-bottom:5px;">DISCOVERED: 6 DEVICES (SIM)</div>'; cockpit.currentDevices.forEach(dev=>{rd.innerHTML+=`<div class="device-card" onclick="cockpit.showDeviceDetails('${dev.ip}')"><div class="device-info"><span>IP: ${dev.ip} | ${dev.type}</span><span>OS: ${dev.os}</span><span>PORTS: ${dev.ports}</span><span>VULN: <span style="color:${dev.vuln==='High'?'red':dev.vuln==='Medium'?'orange':'#0f0'}">${dev.vuln}</span></span></div></div>`;}); document.getElementById('network-scan-panel').classList.remove('hidden'); cockpit.log(`>> SCAN COMPLETE: ${cockpit.currentDevices.length} DEVICES`); },3000); },
+        showDeviceDetails: (ip)=>{ const dev=cockpit.currentDevices.find(d=>d.ip===ip); if(!dev)return; document.getElementById('remote-title').innerText=`DETAILS: ${dev.ip} (${dev.type})`; document.getElementById('remote-content').innerHTML=`<div style="font-size:11px;"><strong>OS:</strong> ${dev.os}<br><strong>Ports:</strong> ${dev.ports}<br><strong>Vulnerability:</strong> ${dev.vuln}<br><br><button onclick="cockpit.remoteInto('${ip}')" style="font-size:10px;padding:5px;margin:2px;">REMOTE (SIM)</button><button onclick="cockpit.hackDevice('${ip}','${dev.vuln}')" style="font-size:10px;padding:5px;margin:2px;background:red;color:#000;border-color:red;">HACK/DEFEND (SIM)</button></div>`; document.getElementById('remote-access-overlay').classList.remove('hidden'); audioSys.playTone(500,'square',0.1); },
+        remoteInto: (ip)=>{ const dev=cockpit.currentDevices.find(d=>d.ip===ip); cockpit.currentRemote=ip; let gui=`<h4 style="color:var(--warn-color);">REMOTE: ${dev.os} (${ip}) SIM</h4>`; if(dev.type==='Console')gui+=`<div style="background:#111;padding:20px;text-align:center;color:#ff6b35;"><p>Wii Dashboard Sim</p><button onclick="alert('SIM: Homebrew!')" style="background:#ff6b35;color:#000;padding:5px;">INSTALL HOMEBREW (SIM)</button></div>`; else gui+=`<div style="height:200px;background:#000;color:#555;display:flex;align-items:center;justify-content:center;font-size:11px;">Device GUI Sim — ${dev.type}</div>`; document.getElementById('remote-content').innerHTML=gui; },
+        closeRemote: ()=>{ document.getElementById('remote-access-overlay').classList.add('hidden'); cockpit.currentRemote=null; },
+        hackDevice: (ip,vuln)=>{ cockpit.log(`>> SIM HACK/DEFEND ${ip} (${vuln}):`); setTimeout(()=>{ if(vuln==='Low')cockpit.log(`>> DEFEND: Patched.`); else if(vuln==='Medium')cockpit.log(`>> PARTIAL: Run updates.`); else cockpit.log(`>> BREACH SIM. DEFEND: Change defaults.`); },1000); audioSys.playTone(300,'sawtooth',0.2); },
+        animate: ()=>{ if(!cockpit.running||document.getElementById('screen-cockpit').classList.contains('hidden'))return; const w=cockpit.canvas.width; const h=cockpit.canvas.height; const ctx=cockpit.ctx; ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(0,0,w,h); ctx.lineWidth=2; ctx.strokeStyle=`rgba(255,170,0,${cockpit.gain/100})`; ctx.beginPath(); for(let i=0;i<w;i+=5){const y=h/2+Math.sin(i*0.05+Date.now()*(cockpit.rate*0.001))*(h/3);ctx.lineTo(i,y);} ctx.stroke(); if(Math.random()>0.8)document.getElementById('visual-text').innerText="HEX_DUMP: "+Math.random().toString(16).substr(2,8).toUpperCase(); requestAnimationFrame(cockpit.animate); }
+    };
+
+    // ================================================================
+    // DRAWING
+    // ================================================================
+    window.drawing = {
+        canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing:false, mode:'create', letters:[], idx:0, tempData:{},
+        init: ()=>{ drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle=getComputedStyle(document.body).color; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; },
+        clear: ()=>drawing.ctx.clearRect(0,0,280,280), cancel: ()=>nav.to('hub'),
+        save: async()=>{ const char=drawing.letters[drawing.idx]; drawing.tempData.syms[char]=drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx<drawing.letters.length){drawing.clear();document.getElementById('draw-title').innerText="DRAW: "+drawing.letters[drawing.idx];} else{ loading(true); if(drawing.mode==='create'){ await supabase.from('clans').insert({id: drawing.tempData.name, pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: {[state.user]: 'leader'}}); await supabase.from('users').update({clan: drawing.tempData.name}).eq('id', state.user); } else if(drawing.mode==='edit'){ await supabase.from('clans').update({symbols: drawing.tempData.syms}).eq('id', state.clan); } loading(false); nav.to('hub'); } }
+    };
+    drawing.init();
+
+    // ================================================================
+    // KALI
+    // ================================================================
+    window.kali = { dragTarget:null, offsetX:0, offsetY:0, openApp: (a)=>{ const c=document.getElementById('py-console'); c.innerHTML+=`\n<span class="term-info">root@kali:~# start ${a}</span>\n`; setTimeout(()=>c.scrollTop=c.scrollHeight,100); }, handleInput: (e)=>{ if(e.key==='Enter'){ const inp=document.getElementById('py-input'); const cmd=inp.value.trim(); const con=document.getElementById('py-console'); con.innerHTML+=`\n<span style="color:#ddd">>>> ${cmd}</span>\n`; inp.value=""; con.scrollTop=con.scrollHeight; audioSys.playTone(600,'sine',0.1); } else audioSys.playTone(800,'sine',0.05); }, startDrag: (e,id)=>{ kali.dragTarget=document.getElementById(id); const r=kali.dragTarget.getBoundingClientRect(); kali.offsetX=e.clientX-r.left; kali.offsetY=e.clientY-r.top; }, drag: (e)=>{ if(kali.dragTarget){kali.dragTarget.style.left=(e.clientX-kali.offsetX)+'px';kali.dragTarget.style.top=(e.clientY-kali.offsetY)+'px';} }, stopDrag: ()=>{ kali.dragTarget=null; } };
+
+    // ================================================================
+    // GAME 1: Terminal Jump
     // ================================================================
     window.game = {
-        ctx: null, player: {y: 100, v: 0}, obs: [], score: 0, frame: null, frameCount: 0, highScore: 0,
-        JUMP_VELOCITY: -3.5, 
+        ctx: document.getElementById('game-canvas').getContext('2d'),
+        player: {y: 10, v: 0}, obs: [], score: 0, frame: null, frameCount: 0, highScore: 0,
+        JUMP_VELOCITY: -3.5, // Standardized Jump Height
         init: () => { 
-            if(!window.game.ctx) window.game.ctx = document.getElementById('game-canvas').getContext('2d');
-            document.getElementById('game-canvas').onclick = () => { if(window.game.frame) window.game.player.v = window.game.JUMP_VELOCITY; }; 
-            window.game.highScore = parseInt(localStorage.getItem('terminalJumpHS') || 0);
-            document.getElementById('game-highscore').innerText = window.game.highScore;
+            document.getElementById('game-canvas').onclick = () => { if(game.frame) game.player.v = game.JUMP_VELOCITY; }; 
+            game.highScore = parseInt(localStorage.getItem('terminalJumpHS') || 0);
+            document.getElementById('game-highscore').innerText = game.highScore;
+            game.loadLeaderboard();
         },
-        submitScore: async () => { if(window.game.score > 0) { try { await supabase.from('game_scores').insert({u: state.user, score: window.game.score, ts: dbHelper.serverTimestamp()}); } catch(e){} } },
+        loadLeaderboard: async () => {
+            const lb = document.getElementById('game-leaderboard');
+            const { data } = await supabase.from('game_scores').select('*').order('score', {ascending: false}).limit(10);
+            lb.innerHTML = "";
+            if(!data || data.length === 0) { lb.innerHTML = "<div style='opacity:0.5;'>NO SCORES YET</div>"; return; }
+            data.forEach((entry, i) => {
+                lb.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(0,255,255,0.2); padding:4px 0;"><span>${i+1}. @${entry.u}</span><span style="color:#00FFFF;">${entry.score}</span></div>`;
+            });
+        },
+        submitScore: async () => {
+            if(game.score > 0) {
+                await supabase.from('game_scores').insert({u: state.user, score: game.score, ts: dbHelper.serverTimestamp()});
+                game.loadLeaderboard();
+            }
+        },
         start: () => {
-            if(window.game.frame) cancelAnimationFrame(window.game.frame);
-            window.game.player = {y: 100, v: 0}; window.game.obs = []; window.game.score = 0;
+            if(game.frame) cancelAnimationFrame(game.frame);
+            game.player = {y: 100, v: 0}; game.obs = []; game.score = 0; game.frameCount = 0;
+            document.getElementById('game-score').innerText = game.score;
+            
             const loop = () => {
-                window.game.ctx.clearRect(0,0,400,200); window.game.player.v += 0.2; window.game.player.y += window.game.player.v;
-                window.game.ctx.fillStyle = getComputedStyle(document.body).color; window.game.ctx.fillRect(50, window.game.player.y, 10, 10);
-                window.game.frameCount++;
-                if(window.game.frameCount % 110 === 0) {
-                    const gapY = Math.random() * 100 + 20; 
-                    window.game.obs.push({x: 400, y: 0, w: 20, h: gapY, isTop: true}); window.game.obs.push({x: 400, y: gapY + 75, w: 20, h: 200, isTop: false});
+                game.ctx.clearRect(0,0,400,200);
+                game.player.v += 0.2; // Gravity
+                game.player.y += game.player.v;
+                game.ctx.fillStyle = getComputedStyle(document.body).color;
+                game.ctx.fillRect(50, game.player.y, 10, 10);
+                
+                game.frameCount++;
+                
+                if(game.frameCount % 110 === 0) {
+                    const gapSize = 75; 
+                    const gapY = Math.random() * (200 - gapSize - 40) + 20; 
+                    game.obs.push({x: 400, y: 0, w: 20, h: gapY, passed: false, isTop: true}); 
+                    game.obs.push({x: 400, y: gapY + gapSize, w: 20, h: 200 - (gapY + gapSize), passed: false, isTop: false}); 
                 }
-                for(let i=window.game.obs.length-1; i>=0; i--) {
-                    let o = window.game.obs[i]; o.x -= 4; window.game.ctx.fillRect(o.x, o.y, o.w, o.h);
-                    if(o.isTop && o.x === 50) { window.game.score++; document.getElementById('game-score').innerText = window.game.score; }
-                    if(o.x < -20) window.game.obs.splice(i, 1);
-                    if (50 < o.x + 20 && 60 > o.x && window.game.player.y < o.y + o.h && window.game.player.y + 10 > o.y) { window.game.over(); return; }
+                
+                let collision = false;
+                for(let i=game.obs.length-1; i>=0; i--) {
+                    let o = game.obs[i]; 
+                    o.x -= 4; 
+                    game.ctx.fillRect(o.x, o.y, o.w, o.h);
+                    
+                    if(o.isTop && o.x + o.w < 50 && !o.passed) {
+                        o.passed = true; game.score++; document.getElementById('game-score').innerText = game.score;
+                        if(game.score > game.highScore) {
+                            game.highScore = game.score;
+                            localStorage.setItem('terminalJumpHS', game.highScore);
+                            document.getElementById('game-highscore').innerText = game.highScore;
+                        }
+                    }
+                    
+                    if(o.x < -20) { game.obs.splice(i, 1); }
+                    if (50 < o.x + o.w && 50 + 10 > o.x && game.player.y < o.y + o.h && game.player.y + 10 > o.y) collision = true;
                 }
-                if(window.game.player.y > 200 || window.game.player.y < 0) { window.game.over(); return; }
-                window.game.frame = requestAnimationFrame(loop);
-            }; loop();
+                
+                if(game.player.y > 200 || game.player.y < 0 || collision) {
+                    audioSys.playTone(300, 'sawtooth', 0.5);
+                    alert("SYSTEM FAILURE! Final Score: " + game.score);
+                    game.frame = null; 
+                    game.submitScore(); 
+                    return;
+                }
+                game.frame = requestAnimationFrame(loop);
+            };
+            loop();
         },
-        over: () => { audioSys.playTone(300, 'sawtooth', 0.5); alert("CRASH."); window.game.submitScore(); window.game.frame = null; },
-        stop: () => { if(window.game.frame) cancelAnimationFrame(window.game.frame); window.game.frame = null; }
+        stop: () => { if(game.frame) cancelAnimationFrame(game.frame); game.frame = null; }
     };
 
     // ================================================================
-    // GAME 2: Dark Maze (Procedural)
+    // GAME 2: Dark Maze SIM
     // ================================================================
     window.maze = {
-        ctx: null, frame: null, running: false, p: {x: 20, y: 20, a: 0, r: 6}, walls: [],
+        ctx: document.getElementById('maze-canvas').getContext('2d'),
+        frame: null, running: false,
+        p: {x: 20, y: 20, a: 0, v: 0, r: 6},
+        walls: [], cols: 10, cellW: 40,
         keys: {w:false, a:false, s:false, d:false},
-        init: () => { if(!window.maze.ctx) window.maze.ctx = document.getElementById('maze-canvas').getContext('2d'); },
+        init: () => {},
         start: () => {
-            window.maze.generate(); window.maze.p = {x: 20, y: 20, a: 0, r: 6};
-            window.maze.running = true; window.maze.loop();
+            maze.generate();
+            maze.p = {x: maze.cellW/2, y: maze.cellW/2, a: 0, v: 0, r: 6};
+            maze.running = true;
+            if(maze.frame) cancelAnimationFrame(maze.frame);
+            maze.loop();
         },
-        stop: () => { window.maze.running = false; if(window.maze.frame) cancelAnimationFrame(window.maze.frame); },
+        stop: () => { maze.running = false; if(maze.frame) cancelAnimationFrame(maze.frame); },
         generate: () => {
-            window.maze.walls = []; 
-            for(let i=0; i<15; i++) window.maze.walls.push([Math.random()*400, Math.random()*400, Math.random()*400, Math.random()*400]);
+            maze.walls = [];
+            maze.walls.push([0,0,400,0], [0,400,400,400], [0,0,0,400], [400,0,400,400]);
+            
+            let hWalls = Array(maze.cols).fill().map(()=>Array(maze.cols-1).fill(true));
+            let vWalls = Array(maze.cols-1).fill().map(()=>Array(maze.cols).fill(true));
+            let visited = Array(maze.cols).fill().map(()=>Array(maze.cols).fill(false));
+            
+            const carve = (cx, cy) => {
+                visited[cx][cy] = true;
+                let dirs = [[0,-1], [1,0], [0,1], [-1,0]];
+                dirs.sort(() => Math.random() - 0.5);
+                dirs.forEach(d => {
+                    let nx = cx + d[0], ny = cy + d[1];
+                    if(nx>=0 && nx<maze.cols && ny>=0 && ny<maze.cols && !visited[nx][ny]) {
+                        if(d[0]===1) vWalls[cx][cy] = false;
+                        else if(d[0]===-1) vWalls[nx][cy] = false;
+                        else if(d[1]===1) hWalls[cx][cy] = false;
+                        else if(d[1]===-1) hWalls[cx][ny] = false;
+                        carve(nx, ny);
+                    }
+                });
+            };
+            carve(0, 0);
+
+            for(let x=0; x<maze.cols; x++) {
+                for(let y=0; y<maze.cols-1; y++) {
+                    if(hWalls[x][y]) maze.walls.push([x*maze.cellW, (y+1)*maze.cellW, (x+1)*maze.cellW, (y+1)*maze.cellW]);
+                }
+            }
+            for(let x=0; x<maze.cols-1; x++) {
+                for(let y=0; y<maze.cols; y++) {
+                    if(vWalls[x][y]) maze.walls.push([(x+1)*maze.cellW, y*maze.cellW, (x+1)*maze.cellW, (y+1)*maze.cellW]);
+                }
+            }
+        },
+        lineDist: (x, y, x1, y1, x2, y2) => {
+            let A = x - x1, B = y - y1, C = x2 - x1, D = y2 - y1;
+            let dot = A * C + B * D;
+            let len_sq = C * C + D * D;
+            let param = -1;
+            if (len_sq != 0) param = dot / len_sq;
+            let xx, yy;
+            if (param < 0) { xx = x1; yy = y1; }
+            else if (param > 1) { xx = x2; yy = y2; }
+            else { xx = x1 + param * C; yy = y1 + param * D; }
+            let dx = x - xx, dy = y - yy;
+            return Math.sqrt(dx * dx + dy * dy);
         },
         loop: () => {
-            if(!window.maze.running) return;
-            if(window.maze.keys.w) { window.maze.p.x += Math.cos(window.maze.p.a)*2; window.maze.p.y += Math.sin(window.maze.p.a)*2; }
-            if(window.maze.keys.a) window.maze.p.a -= 0.08;
-            if(window.maze.keys.d) window.maze.p.a += 0.08;
-            window.maze.ctx.fillStyle = "black"; window.maze.ctx.fillRect(0,0,400,400);
-            window.maze.ctx.save(); window.maze.ctx.beginPath(); window.maze.ctx.moveTo(window.maze.p.x, window.maze.p.y);
-            window.maze.ctx.arc(window.maze.p.x, window.maze.p.y, 100, window.maze.p.a - 0.5, window.maze.p.a + 0.5);
-            window.maze.ctx.lineTo(window.maze.p.x, window.maze.p.y); window.maze.ctx.clip();
-            window.maze.ctx.strokeStyle = getComputedStyle(document.body).color;
-            window.maze.walls.forEach(w => { window.maze.ctx.beginPath(); window.maze.ctx.moveTo(w[0], w[1]); window.maze.ctx.lineTo(w[2], w[3]); window.maze.ctx.stroke(); });
-            window.maze.ctx.fillStyle = "white"; window.maze.ctx.beginPath(); window.maze.ctx.arc(window.maze.p.x, window.maze.p.y, 5, 0, Math.PI*2); window.maze.ctx.fill();
-            window.maze.ctx.restore(); window.maze.frame = requestAnimationFrame(window.maze.loop);
+            if(!maze.running) return;
+            
+            // Physics
+            if(maze.keys.w) { maze.p.x += Math.cos(maze.p.a)*2; maze.p.y += Math.sin(maze.p.a)*2; }
+            if(maze.keys.s) { maze.p.x -= Math.cos(maze.p.a)*2; maze.p.y -= Math.sin(maze.p.a)*2; }
+            if(maze.keys.a) maze.p.a -= 0.08;
+            if(maze.keys.d) maze.p.a += 0.08;
+
+            // Collision
+            let hit = false;
+            for(let w of maze.walls) {
+                if(maze.lineDist(maze.p.x, maze.p.y, w[0], w[1], w[2], w[3]) < maze.p.r + 2) hit = true;
+            }
+            if(hit) {
+                audioSys.playTone(300, 'sawtooth', 0.5); alert("LINK SEVERED! WALL TOUCHED.");
+                maze.running = false; return;
+            }
+            // Win condition (Bottom Right Cell)
+            if(maze.p.x > 360 && maze.p.y > 360) {
+                audioSys.playTone(800, 'square', 0.5); alert("MAZE SOLVED. DATA EXTRACTED.");
+                maze.running = false; return;
+            }
+
+            // Render Flashlight
+            maze.ctx.fillStyle = "black";
+            maze.ctx.fillRect(0,0,400,400);
+
+            maze.ctx.save();
+            maze.ctx.beginPath();
+            maze.ctx.moveTo(maze.p.x, maze.p.y);
+            maze.ctx.arc(maze.p.x, maze.p.y, 160, maze.p.a - 0.6, maze.p.a + 0.6);
+            maze.ctx.lineTo(maze.p.x, maze.p.y);
+            maze.ctx.clip();
+
+            maze.ctx.fillStyle = "#111"; // ground
+            maze.ctx.fillRect(0,0,400,400);
+            
+            maze.ctx.fillStyle = "#0f0"; // exit
+            maze.ctx.fillRect(365, 365, 30, 30);
+
+            maze.ctx.strokeStyle = getComputedStyle(document.body).color;
+            maze.ctx.lineWidth = 3;
+            maze.ctx.beginPath();
+            for(let w of maze.walls) {
+                maze.ctx.moveTo(w[0], w[1]); maze.ctx.lineTo(w[2], w[3]);
+            }
+            maze.ctx.stroke();
+
+            // Draw Player inside cone
+            maze.ctx.fillStyle = "#fff";
+            maze.ctx.beginPath();
+            maze.ctx.arc(maze.p.x, maze.p.y, maze.p.r, 0, Math.PI*2);
+            maze.ctx.fill();
+
+            maze.ctx.restore();
+            maze.frame = requestAnimationFrame(maze.loop);
         }
     };
 
@@ -1467,109 +2009,204 @@
     // GAME 3: Packet Sniffer
     // ================================================================
     window.sniffer = {
-        ctx: null, frame: null, running: false, score: 0, strikes: 0, packets: [],
-        init: () => { if(!window.sniffer.ctx) window.sniffer.ctx = document.getElementById('sniffer-canvas').getContext('2d'); },
-        start: () => { window.sniffer.score = 0; window.sniffer.strikes = 0; window.sniffer.packets = []; window.sniffer.running = true; window.sniffer.loop(); },
-        stop: () => { window.sniffer.running = false; if(window.sniffer.frame) cancelAnimationFrame(window.sniffer.frame); },
+        ctx: document.getElementById('sniffer-canvas').getContext('2d'),
+        frame: null, running: false, score: 0, strikes: 0,
+        packets: [], colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'],
+        targetCol: '', frameCount: 0,
+        init: () => {},
+        start: () => {
+            sniffer.score = 0; sniffer.strikes = 0; sniffer.packets = []; sniffer.frameCount = 0;
+            sniffer.pickTarget();
+            document.getElementById('sniffer-score').innerText = 0;
+            document.getElementById('sniffer-strikes').innerText = 0;
+            sniffer.running = true;
+            document.getElementById('sniffer-canvas').onmousedown = sniffer.click;
+            if(sniffer.frame) cancelAnimationFrame(sniffer.frame);
+            sniffer.loop();
+        },
+        stop: () => { sniffer.running = false; if(sniffer.frame) cancelAnimationFrame(sniffer.frame); },
+        pickTarget: () => {
+            sniffer.targetCol = sniffer.colors[Math.floor(Math.random() * sniffer.colors.length)];
+            document.getElementById('sniffer-target').style.backgroundColor = sniffer.targetCol;
+        },
+        click: (e) => {
+            if(!sniffer.running) return;
+            let r = e.target.getBoundingClientRect();
+            let cx = e.clientX - r.left, cy = e.clientY - r.top;
+            let hitIdx = -1;
+            for(let i=sniffer.packets.length-1; i>=0; i--) {
+                let p = sniffer.packets[i];
+                if(cx > p.x && cx < p.x+p.s && cy > p.y && cy < p.y+p.s) { hitIdx = i; break; }
+            }
+            if(hitIdx !== -1) {
+                let p = sniffer.packets[hitIdx];
+                sniffer.packets.splice(hitIdx, 1);
+                if(p.c === sniffer.targetCol) {
+                    sniffer.score++; document.getElementById('sniffer-score').innerText = sniffer.score;
+                    audioSys.playTone(600, 'square', 0.1);
+                    if(sniffer.score % 5 === 0) sniffer.pickTarget();
+                } else {
+                    sniffer.strikes++; document.getElementById('sniffer-strikes').innerText = sniffer.strikes;
+                    audioSys.playTone(200, 'sawtooth', 0.2);
+                    if(sniffer.strikes >= 3) sniffer.over();
+                }
+            }
+        },
+        over: () => {
+            sniffer.running = false; audioSys.playTone(300, 'sawtooth', 0.5);
+            alert("TRACE FAILED. FINAL PACKETS: " + sniffer.score);
+        },
         loop: () => {
-            if(!window.sniffer.running) return;
-            window.sniffer.ctx.clearRect(0,0,400,300);
-            if(Math.random() > 0.95) window.sniffer.packets.push({x: Math.random()*380, y: 0, v: 2});
-            window.sniffer.packets.forEach((p, idx) => {
-                p.y += p.v; window.sniffer.ctx.fillStyle = "cyan"; window.sniffer.ctx.fillRect(p.x, p.y, 15, 15);
-                if(p.y > 300) window.sniffer.packets.splice(idx, 1);
-            });
-            window.sniffer.frame = requestAnimationFrame(window.sniffer.loop);
+            if(!sniffer.running) return;
+            sniffer.ctx.clearRect(0,0,400,300);
+            sniffer.frameCount++;
+
+            let spawnRate = Math.max(15, 50 - Math.floor(sniffer.score / 2));
+            if(sniffer.frameCount % spawnRate === 0) {
+                sniffer.packets.push({
+                    x: Math.random()*370, y: -30, s: 30,
+                    c: sniffer.colors[Math.floor(Math.random() * sniffer.colors.length)],
+                    v: 1.5 + Math.random() + (sniffer.score * 0.05)
+                });
+            }
+
+            for(let i=sniffer.packets.length-1; i>=0; i--) {
+                let p = sniffer.packets[i];
+                p.y += p.v;
+                sniffer.ctx.fillStyle = p.c;
+                sniffer.ctx.fillRect(p.x, p.y, p.s, p.s);
+                
+                if(p.y > 300) {
+                    if(p.c === sniffer.targetCol) {
+                        sniffer.strikes++; document.getElementById('sniffer-strikes').innerText = sniffer.strikes;
+                        audioSys.playTone(200, 'sawtooth', 0.2);
+                        if(sniffer.strikes >= 3) { sniffer.over(); return; }
+                    }
+                    sniffer.packets.splice(i, 1);
+                }
+            }
+            sniffer.frame = requestAnimationFrame(sniffer.loop);
+        }
+    };
+
+
+    // ================================================================
+    // EMERGENCY FEED
+    // ================================================================
+    window.emergency = {
+        interval: null,
+        init: () => { emergency.fetchFeed(); if(emergency.interval) clearInterval(emergency.interval); emergency.interval = setInterval(emergency.fetchFeed, 300000);  },
+        triggerAlarm: () => { let beeps = 0; const alarm = setInterval(() => { audioSys.playTone(900, 'sawtooth', 0.4);  beeps++; if (beeps >= 3) clearInterval(alarm); }, 600); },
+        scanLocal: () => {
+            const localFeed = document.getElementById('local-alert-feed'); localFeed.innerHTML = "<div style='opacity:0.5; animation:blinkAnim 1s infinite;'>>> INITIATING GEOLOCATION TRACE...</div>"; audioSys.playTone(300, 'sine', 0.1);
+            if (!navigator.geolocation) return localFeed.innerHTML = "<div style='color:var(--err-color);'>[ ERROR: HARDWARE DOES NOT SUPPORT GEOLOCATION ]</div>";
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude; const lon = position.coords.longitude; localFeed.innerHTML = `<div style='opacity:0.5;'>>> COORDS ACQUIRED: ${lat.toFixed(2)}, ${lon.toFixed(2)}. SCANNING LOCAL FREQUENCIES...</div>`;
+                try {
+                    const response = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`); if (!response.ok) throw new Error("NWS Uplink Failed"); const data = await response.json();
+                    if (data.features && data.features.length > 0) {
+                        let html = ""; let hasSevereThreat = false;
+                        data.features.forEach(alert => { const props = alert.properties; if (props.severity === "Severe" || props.severity === "Extreme") hasSevereThreat = true; html += `<div style="border-left:2px solid var(--err-color); padding-left:8px; margin-top:8px; background:rgba(255,0,0,0.1);"><strong style="color:var(--err-color);">${props.event}</strong><div style="opacity:0.8; font-size:0.9em;">Severity: ${props.severity}</div><div style="opacity:0.6; font-size:0.8em; margin-top:4px;">${props.headline}</div></div>`; });
+                        localFeed.innerHTML = html; if (hasSevereThreat) emergency.triggerAlarm(); else audioSys.playTone(500, 'square', 0.2); 
+                    } else { localFeed.innerHTML = "<div style='color:#00FF00; margin-top:8px; font-weight:bold;'>[ AREA SECURE: NO ACTIVE LOCAL WARNINGS DETECTED ]</div>"; audioSys.playTone(600, 'sine', 0.2); }
+                } catch (e) { localFeed.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: ${e.message} ]</div>`; }
+            }, (error) => { localFeed.innerHTML = `<div style="color:var(--err-color);">[ TRACE FAILED: ACCESS DENIED BY USER ]</div>`; });
+        },
+        fetchFeed: async () => {
+            const feedDiv = document.getElementById('emergency-feed');
+            try {
+                const response = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.gdacs.org%2Fxml%2Frss.xml");
+                if (!response.ok) throw new Error("Network response was not OK"); const data = await response.json(); let html = "";
+                data.items.forEach(item => { html += `<div class="card" style="border-color:var(--err-color); margin-bottom:10px;"><strong style="font-size:1.1em;">[!] ${item.title}</strong><p style="font-size:0.85em; margin:6px 0; color:inherit; opacity:0.8;">${item.description}</p><a href="${item.link}" target="_blank" class="news-link" style="color:var(--err-color);border-color:var(--err-color);display:inline-block;width:auto;">>> VIEW SATELLITE DATA</a></div>`; });
+                feedDiv.innerHTML = html || "<div style='opacity:0.5;'>NO ACTIVE ALERTS DETECTED.</div>";
+            } catch (e) { feedDiv.innerHTML = `<div style="color:var(--err-color);">[ UPLINK FAILED: CONNECTION BLOCKED ]</div>`; }
         }
     };
 
     // ================================================================
-    // MESSAGING / FRIENDS / BLOCKS / RADIO / SETTINGS
-    // (Restored unchanged from V3.2)
+    // SETTINGS — theme preset system
     // ================================================================
-    window.msgSys = {
-        activeDM: null, activeGroup: null, unsubMsg: null, unsubGroup: null, dmTypingTimer: null, rec: null, audioChunks: [],
-        tab: (t) => {
-            ['friends', 'dms', 'groups'].forEach(id => document.getElementById('comms-'+id).classList.add('hidden'));
-            document.getElementById('comms-'+t).classList.remove('hidden');
-            if(t==='friends') window.msgSys.loadFriends();
-            if(t==='groups') window.msgSys.loadGroups();
-            if(t==='dms') window.msgSys.loadDMList();
+    window.settings = {
+        themeMap: { green:  'color-green', red:    'color-red', blue:   'color-blue', white:  'color-white', gold:   'color-gold', purple: 'color-purple', cyan:   'color-cyan', rainbow: 'color-rainbow', rgb: 'color-rgb' },
+        apply: (theme) => {
+            const cls = settings.themeMap[theme] || 'color-green'; document.body.className = cls; localStorage.setItem('clanNetTheme', theme);
+            if(drawing && drawing.ctx) drawing.ctx.strokeStyle = getComputedStyle(document.body).color;
+            const label = document.getElementById('active-theme-name'); if(label) label.innerText = theme.toUpperCase();
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active')); const btn = document.querySelector(`.theme-btn-${theme}`); if(btn) btn.classList.add('active');
+            audioSys.playTone(600, 'sine', 0.1);
         },
-        init: () => { window.msgSys.tab('friends'); },
-        addFriend: async (u) => { if(state.friends.includes(u)) state.friends = state.friends.filter(f=>f!==u); else state.friends.push(u); await supabase.from('users').update({friends: state.friends}).eq('id', state.user); app.openProfile(u); },
-        blockUser: async (u) => { if(state.blocks.includes(u)) state.blocks = state.blocks.filter(b=>b!==u); else state.blocks.push(u); await supabase.from('users').update({blocks: state.blocks}).eq('id', state.user); app.openProfile(u); },
-        reportUser: async (u) => { const reason = prompt(`REPORTING ${u}. REASON:`); if(!reason)return; await supabase.from('reports').insert({reporter: state.user, reported: u, reason, ts: dbHelper.serverTimestamp()}); alert("REPORT LOGGED."); },
-        loadFriends: async () => {
-            const list = document.getElementById('friends-list'); list.innerHTML = "";
-            if(state.friends.length===0) return list.innerHTML = "<div style='opacity:0.5;'>NO FRIENDS FOUND.</div>";
-            const { data } = await supabase.from('users').select('id, presence_status, lastSeen').in('id', state.friends);
-            (data||[]).forEach(f => {
-                list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getBadge(f.id)}</div>
-                    <button onclick="window.msgSys.openDM('${f.id}')" style="width:auto; padding:4px 8px; margin:0; border-color:#FF00FF; color:#FF00FF;">MESSAGE</button>
-                </div>`;
-            });
+        applyHex: () => {
+            const hex = document.getElementById('config-hex').value; if(!hex.startsWith('#')) return alert("MUST START WITH #");
+            document.body.className = ""; document.body.style.color = hex; localStorage.setItem('clanNetThemeHex', hex);
         },
-        loadDMList: async () => {
-            const list = document.getElementById('dms-list'); list.innerHTML="Loading active links...";
-            const { data } = await supabase.from('dms').select('*'); list.innerHTML = "";
-            const myDMs = (data||[]).filter(d => (d.users||[]).includes(state.user));
-            myDMs.forEach(dm => { const other = dm.users.find(u => u !== state.user); list.innerHTML += `<div onclick="window.msgSys.openDM('${other}', '${dm.id}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">@${other}</div>`; });
+        applyBg: () => {
+            const bg = document.getElementById('config-bg').value; 
+            document.body.style.backgroundImage = `url('${bg}')`; localStorage.setItem('clanNetBg', bg);
         },
-        openDM: async (otherUser, knownDmId = null) => {
-            window.msgSys.tab('dms');
-            const dmId = knownDmId || [state.user, otherUser].sort().join('_');
-            window.msgSys.activeDM = { id: dmId, other: otherUser };
-            await supabase.from('dms').upsert({ id: dmId, users: [state.user, otherUser] });
-            const box = document.getElementById('dm-chat-box'); box.innerHTML = `Establishing P2P link with ${otherUser}...`;
-            if(window.msgSys.unsubMsg) window.msgSys.unsubMsg();
-            window.msgSys.unsubMsg = await dbHelper.listenQuery('dm_msgs', 'dm_id', dmId, {col:'ts', asc:true}, 100, async (data) => {
-                box.innerHTML = ""; data.forEach(m => {
-                    if(state.blocks.includes(m.u)) return;
-                    const isMe = m.u === state.user;
-                    let content = m.is_deleted ? `<em style="opacity:0.5">[DATA EXPUNGED]</em>` : app.formatMsg(m.txt);
-                    if(m.file) content += `<br><img src="${m.file}" style="max-width:100%; max-height:150px; border:1px solid currentColor; margin-top:4px;">`;
-                    if(m.audio) content += `<br><audio controls src="${m.audio}" style="height:30px; margin-top:4px;"></audio>`;
-                    const pinnedFlag = state.localPins.includes(m.id) ? `📌 ` : '';
-                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'dm')">REPLY</button><button class="msg-btn" onclick="window.msgSys.pinLocal('${m.id}')">📌</button><button class="msg-btn" onclick="window.msgSys.react('dm_msgs', '${m.id}', '🔥')">🔥</button></div>`;
-                    box.innerHTML += `<div class="chat-msg">${actions} ${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u}</strong>: ${content}</div>`;
-                }); box.scrollTop = box.scrollHeight;
-            });
+        toggleDarkSchedule: (isActive) => {
+            localStorage.setItem('darkSchedule', isActive);
+            if(isActive) settings.runDarkSchedule(); else document.body.style.backgroundColor = "#000";
         },
-        updateTyping: async (type) => { /* logic */ },
-        attachFile: (input) => { if(input.files.length > 0 && input.files[0].size > 1000000) { alert("FILE TOO LARGE."); input.value=""; } },
-        sendDM: async () => { /* logic */ },
-        startVoiceRec: async () => { /* logic */ },
-        stopVoiceRec: () => { /* logic */ },
-        createGroupPrompt: async () => { /* logic */ },
-        loadGroups: async () => { /* logic */ },
-        openGroup: async (gId, gName, gLeader) => { /* logic */ },
-        sendGroupMsg: async () => { /* logic */ },
-        react: async (table, id, emoji) => { /* logic */ },
-        pinLocal: (id) => { if(state.localPins.includes(id)) state.localPins = state.localPins.filter(p=>p!==id); else state.localPins.push(id); localStorage.setItem('localPins', JSON.stringify(state.localPins)); }
+        runDarkSchedule: () => {
+            if(localStorage.getItem('darkSchedule') !== 'true') return;
+            const hour = new Date().getHours();
+            if(hour >= 7 && hour < 17) { document.documentElement.style.setProperty('--bg-color', '#dddddd'); document.body.style.color = '#000'; } // Day
+            else if(hour >= 17 && hour < 20) { document.documentElement.style.setProperty('--bg-color', '#444444'); } // Dusk
+            else { document.documentElement.style.setProperty('--bg-color', '#000000'); } // Night
+        },
+        loadUI: () => {
+            const saved = localStorage.getItem('clanNetTheme') || 'green'; document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.querySelector(`.theme-btn-${saved}`); if(btn) btn.classList.add('active');
+            const label = document.getElementById('active-theme-name'); if(label) label.innerText = saved.toUpperCase();
+            document.getElementById('config-bg').value = localStorage.getItem('clanNetBg') || "";
+            document.getElementById('config-dark-schedule').checked = localStorage.getItem('darkSchedule') === 'true';
+        },
+        load: () => { 
+            const savedHex = localStorage.getItem('clanNetThemeHex');
+            if(savedHex) { document.body.style.color = savedHex; }
+            else { const saved = localStorage.getItem('clanNetTheme') || 'green'; const cls = settings.themeMap[saved] || 'color-green'; document.body.className = cls; }
+            const savedBg = localStorage.getItem('clanNetBg'); if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
+            settings.runDarkSchedule(); setInterval(settings.runDarkSchedule, 60000); // Check time every minute
+        },
+        reset: () => {
+            if(!confirm("RESET TO DEFAULT?")) return; 
+            localStorage.clear(); document.body.className = 'color-green'; document.body.style.color = ''; document.body.style.backgroundImage = 'none';
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active')); const btn = document.querySelector('.theme-btn-green'); if(btn) btn.classList.add('active');
+            const label = document.getElementById('active-theme-name'); if(label) label.innerText = 'GREEN'; audioSys.playTone(400, 'sine', 0.2);
+        }
     };
 
-    window.settingsSystem = {
-        apply: (theme) => { const cls = window.settingsSystem.themeMap[theme] || 'color-green'; document.body.className = cls; localStorage.setItem('clanNetTheme', theme); audioSys.playTone(600, 'sine', 0.1); },
-        themeMap: { green: 'color-green', red: 'color-red', blue: 'color-blue', white: 'color-white', gold: 'color-gold', purple: 'color-purple', cyan: 'color-cyan', rainbow: 'color-rainbow', rgb: 'color-rgb' },
-        applyHex: () => { /* logic */ },
-        applyBg: () => { /* logic */ },
-        toggleDarkSchedule: (isActive) => { /* logic */ },
-        reset: () => { if(confirm("RESET?")) { localStorage.clear(); location.reload(); } },
-        load: () => { const saved = localStorage.getItem('clanNetTheme') || 'green'; window.settingsSystem.apply(saved); },
-        loadUI: () => { /* logic */ }
-    };
-
-    // Event Listeners (Merged)
-    window.settingsSystem.load();
+    settings.load();
+    
+    // Global Event Listeners
     document.addEventListener('keydown', (e) => {
-        if(e.key === ' ' && !document.getElementById('screen-minigame').classList.contains('hidden')) { e.preventDefault(); if(window.game.frame) window.game.player.v = window.game.JUMP_VELOCITY; }
-        let k = e.key.toLowerCase(); if(['w','a','s','d'].includes(k)) window.maze.keys[k] = true;
-        if(e.key === 'Escape' && !document.getElementById('panic-overlay').classList.contains('hidden')) { app.panicCount++; if(app.panicCount >= 3) { document.getElementById('panic-overlay').classList.add('hidden'); app.panicCount = 0; } }
-        if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){ if(e.key==='Enter')audioSys.playTone(400,'square',0.1); else if(e.key==='Backspace')audioSys.playTone(300,'sawtooth',0.1); else audioSys.playTone(800,'sine',0.05); }
+        // Terminal Jump
+        if(e.key === ' ' && !document.getElementById('screen-minigame').classList.contains('hidden')) { e.preventDefault(); if(game.frame) game.player.v = game.JUMP_VELOCITY; }
+        
+        // Maze Controls
+        let k = e.key.toLowerCase();
+        if(['w','a','s','d'].includes(k)) maze.keys[k] = true;
+        
+        // Panic Switch Reset
+        if(e.key === 'Escape') {
+            if(!document.getElementById('panic-overlay').classList.contains('hidden')) {
+                app.panicCount++;
+                if(app.panicCount >= 3) {
+                    document.getElementById('panic-overlay').classList.add('hidden');
+                    app.panicCount = 0;
+                }
+            }
+        }
+
+        if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+            if(e.key==='Enter')audioSys.playTone(400,'square',0.1); else if(e.key==='Backspace')audioSys.playTone(300,'sawtooth',0.1); else audioSys.playTone(800,'sine',0.05);
+        }
     });
-    document.addEventListener('keyup', (e) => { let k = e.key.toLowerCase(); if(['w','a','s','d'].includes(k)) window.maze.keys[k] = false; });
+
+    document.addEventListener('keyup', (e) => {
+        let k = e.key.toLowerCase();
+        if(['w','a','s','d'].includes(k)) maze.keys[k] = false;
+    });
 
 </script>
 </body>
