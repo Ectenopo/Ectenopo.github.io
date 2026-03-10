@@ -1391,17 +1391,15 @@
         },
 
         stop: () => {
-            // 1. Terminate the hardware mic stream
+            // 1. Hardware & Connection Cleanup
             if (commanderSys.stream) {
                 commanderSys.stream.getTracks().forEach(t => t.stop());
             }
-
-            // 2. Destroy the Peer connection
             if (commanderSys.peer) {
                 commanderSys.peer.destroy();
             }
 
-            // 3. Inform the network the broadcast is over
+            // 2. Network Sync
             if (commanderSys.channel) {
                 commanderSys.channel.send({ 
                     type: 'broadcast', 
@@ -1410,15 +1408,21 @@
                 });
             }
             
-            // 4. Reset internal states
+            // 3. Reset Variables
             commanderSys.callContexts = [];
             commanderSys.active = false;
 
-            // 5. Force the UI to switch back to the Hub
-            document.getElementById('screen-commander-broadcast').classList.set('hidden');
+            // 4. NUCLEAR UI RESET: Hide all screens manually
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById('screen-kali').classList.add('hidden');
+            document.getElementById('screen-commander-broadcast').classList.add('hidden');
+
+            // 5. Return to Hub
             nav.to('hub');
             
-            console.log("Broadcast terminated and UI restored.");
+            console.log("System override: All screens cleared. Returning to HUB.");
         }
     };
     window.app = {
@@ -2792,6 +2796,7 @@
 </script>
 </body>
 </html>
+
 
 
 
