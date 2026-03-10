@@ -635,13 +635,14 @@
 <div id="screen-neuralstreams" class="screen hidden" style="border-color:var(--rep-watch); color:var(--rep-watch);">
     <h2>// NEURAL_LINK_STREAMS</h2>
     <p style="font-size:10px;opacity:0.8;">Live, low-latency audio briefings for Verified operators.</p>
-    <div class="card" style="border-color:var(--rep-watch); text-align:center; padding:20px;">
+    
+    <div id="neural-stream-container" class="card" style="border-color:var(--rep-watch); text-align:center; padding:20px;">
         <strong style="display:block; margin-bottom:10px;">NO ACTIVE OPERATION STREAMS</strong>
-        <button onclick="alert('Must be an Elite Operator to initiate a Stream.')" style="border-color:var(--rep-watch); color:var(--rep-watch);">INITIATE STREAM</button>
+        <button onclick="app.initNeuralStream()" style="border-color:var(--rep-watch); color:var(--rep-watch);">INITIATE STREAM</button>
     </div>
+    
     <button onclick="nav.to('hub')" style="border-color:var(--rep-watch); color:var(--rep-watch);">BACK</button>
 </div>
-
 <!-- PROTOCOL VOTING -->
 <div id="screen-protocolvoting" class="screen hidden">
     <h2>// PROTOCOL_VOTING (DAO)</h2>
@@ -1466,7 +1467,36 @@
             document.getElementById('panic-overlay').classList.remove('hidden');
             audioSys.playTone(200, 'sine', 0.1);
         },
+        initNeuralStream: () => {
+            // Check if the user is Verified or the Commander
+            const isElite = state.verifiedUsers.includes(state.user) || app.isCommander(state.user);
+            
+            if (!isElite) {
+                audioSys.playTone(200, 'sawtooth', 0.2);
+                alert("ACCESS DENIED: Must be an Elite Operator to initiate a Stream.");
+                return;
+            }
+            
+            // If Elite, transform the UI to simulate a live uplink
+            audioSys.playTone(600, 'sine', 0.3);
+            const container = document.getElementById('neural-stream-container');
+            container.innerHTML = `
+                <strong style="display:block; margin-bottom:10px; color:#00FF00; letter-spacing: 2px;">>> STREAM UPLINK LIVE <<</strong>
+                <div style="width:16px; height:16px; background:#00FF00; border-radius:50%; margin:0 auto 10px; animation:pulseAnim 1s infinite; box-shadow: 0 0 15px #00FF00;"></div>
+                <div style="font-size:10px; margin-bottom:15px; color:#fff; opacity:0.8;">Broadcasting to secure network nodes...</div>
+                <button onclick="app.stopNeuralStream()" class="danger" style="width:auto; padding:5px 20px; margin: 0 auto;">TERMINATE LINK</button>
+            `;
+        },
 
+        stopNeuralStream: () => {
+            // Restore the default UI when the stream ends
+            audioSys.playTone(300, 'square', 0.2);
+            const container = document.getElementById('neural-stream-container');
+            container.innerHTML = `
+                <strong style="display:block; margin-bottom:10px;">NO ACTIVE OPERATION STREAMS</strong>
+                <button onclick="app.initNeuralStream()" style="border-color:var(--rep-watch); color:var(--rep-watch);">INITIATE STREAM</button>
+            `;
+        },
         formatMsg: (txt) => {
             if(!txt) return "";
             let res = app.translate(txt);
@@ -2824,6 +2854,7 @@
 </script>
 </body>
 </html>
+
 
 
 
