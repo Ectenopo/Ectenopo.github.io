@@ -631,17 +631,48 @@
     <button onclick="nav.to('hub')" style="margin-top:10px;">EXIT</button>
 </div>
 
-<!-- NEURAL LINK STREAMS -->
 <div id="screen-neuralstreams" class="screen hidden" style="border-color:var(--rep-watch); color:var(--rep-watch);">
-    <h2>// NEURAL_LINK_STREAMS</h2>
-    <p style="font-size:10px;opacity:0.8;">Live, low-latency audio briefings for Verified operators.</p>
-    
-    <div id="neural-stream-container" class="card" style="border-color:var(--rep-watch); text-align:center; padding:20px;">
-        <strong style="display:block; margin-bottom:10px;">NO ACTIVE OPERATION STREAMS</strong>
-        <button onclick="app.initNeuralStream()" style="border-color:var(--rep-watch); color:var(--rep-watch);">INITIATE STREAM</button>
+    <div style="display:flex;justify-content:space-between;align-items:center; border-bottom:1px solid var(--rep-watch); padding-bottom:10px; margin-bottom:10px;">
+        <h2 style="border:none; margin:0; padding:0; color:var(--rep-watch);">// NEURAL_LINK_STREAMS</h2>
+        <button id="btn-start-stream" onclick="neural.start()" style="width:auto; margin:0; font-size:10px; border-color:#00FF00; color:#00FF00;" class="hidden">INITIATE BROADCAST</button>
     </div>
-    
-    <button onclick="nav.to('hub')" style="border-color:var(--rep-watch); color:var(--rep-watch);">BACK</button>
+
+    <div id="ns-list-view">
+        <p style="font-size:10px;opacity:0.8; margin-bottom:10px;">Live, low-latency A/V briefings. Verified operators only.</p>
+        <div id="ns-active-list" style="min-height:150px; border:1px solid var(--rep-watch); padding:10px; background:rgba(204,68,255,0.05);">
+            <div style="opacity:0.5; animation:blinkAnim 1s infinite;">Scanning for live transmissions...</div>
+        </div>
+    </div>
+
+    <div id="ns-active-view" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; padding:0 5px;">
+            <strong id="ns-host-name" style="color:#fff; font-size:1.1em;"></strong>
+            <div style="color:red; font-weight:bold; font-size:10px; animation:blinkAnim 1s infinite;">🔴 LIVE</div>
+        </div>
+        
+        <video id="ns-video-player" playsinline style="width:100%; border:1px solid var(--rep-watch); background:#000; height:300px; object-fit:cover; margin-bottom:5px;"></video>
+        
+        <div class="grid-3 hidden" id="ns-controls-host">
+            <button onclick="neural.toggleAudio()" id="ns-btn-mic" style="border-color:var(--rep-watch); color:var(--rep-watch);">MUTE MIC</button>
+            <button onclick="neural.toggleVideo()" id="ns-btn-cam" style="border-color:var(--rep-watch); color:var(--rep-watch);">CAM OFF</button>
+            <button onclick="neural.stop()" class="danger">END STREAM</button>
+        </div>
+        
+        <div id="ns-controls-viewer" class="hidden">
+            <button onclick="neural.leave()" class="warn">DISCONNECT FROM STREAM</button>
+        </div>
+
+        <div style="margin-top:10px; border-top:1px dashed var(--rep-watch); padding-top:10px;">
+            <small style="opacity:0.6; display:block; margin-bottom:4px;">TEMPORARY LIVE CHAT (Ephemeral)</small>
+            <div class="chat-box" id="ns-chat-box" style="border-color:var(--rep-watch); height:150px; margin-bottom:5px;"></div>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="ns-chat-input" placeholder="Type message..." style="margin:0; border-color:var(--rep-watch); color:var(--rep-watch);" onkeydown="if(event.key==='Enter') neural.sendChat()">
+                <button onclick="neural.sendChat()" style="width:60px; margin:0; border-color:var(--rep-watch); color:var(--rep-watch);">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="nav.to('hub')" style="margin-top:10px; border-color:var(--rep-watch); color:var(--rep-watch);">BACK</button>
 </div>
 <!-- PROTOCOL VOTING -->
 <div id="screen-protocolvoting" class="screen hidden">
@@ -1294,6 +1325,8 @@
     window.nav = {
         to: (id) => {
             document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden')); document.getElementById('screen-kali').classList.add('hidden');
+            if(window.neural && id !== 'neuralstreams' && neural.activePeerId) neural.stop();
+            if(id==='neuralstreams') neural.init();
             if(id==='kali') document.getElementById('screen-kali').classList.remove('hidden'); else document.getElementById('screen-'+id).classList.remove('hidden');
             if(id === 'auth' || id === 'social') { try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { } }
             if(id==='hub')      app.initHub();
@@ -1322,6 +1355,187 @@
             if(window.neuralMap && id !== 'neural') neuralMap.stop();
         },
         tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
+    };
+    window.neural = {
+        peer: null, localStream: null, calls: [], activePeerId: null, chatChannel: null, unsubList: null, isHost: false,
+
+        init: async () => {
+            document.getElementById('ns-list-view').classList.remove('hidden');
+            document.getElementById('ns-active-view').classList.add('hidden');
+            
+            // Show "Start Stream" button if Elite
+            const isElite = state.verifiedUsers.includes(state.user) || app.isCommander(state.user);
+            if (isElite) document.getElementById('btn-start-stream').classList.remove('hidden');
+
+            // Listen for live streams in the database
+            if(neural.unsubList) neural.unsubList();
+            neural.unsubList = await dbHelper.listenQuery('active_streams', null, null, {col:'ts', asc:false}, 50, (data) => {
+                const list = document.getElementById('ns-active-list');
+                list.innerHTML = "";
+                if(!data || data.length === 0) {
+                    list.innerHTML = "<div style='opacity:0.5;'>NO ACTIVE STREAMS DETECTED.</div>";
+                    return;
+                }
+                data.forEach(stream => {
+                    list.innerHTML += `
+                        <div class="card" style="border-color:var(--rep-watch); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong style="color:var(--rep-watch); font-size:1.2em;">@${stream.host}'s Stream</strong><br>
+                                <small style="color:red; animation:blinkAnim 2s infinite;">🔴 LIVE NOW</small>
+                            </div>
+                            <button onclick="neural.join('${stream.id}', '${stream.host}')" style="width:auto; padding:8px 16px; border-color:var(--rep-watch); color:var(--rep-watch);">TUNE IN</button>
+                        </div>
+                    `;
+                });
+            });
+        },
+
+        start: async () => {
+            try {
+                neural.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                neural.isHost = true;
+                
+                // Show Host UI
+                document.getElementById('ns-list-view').classList.add('hidden');
+                document.getElementById('btn-start-stream').classList.add('hidden');
+                document.getElementById('ns-active-view').classList.remove('hidden');
+                document.getElementById('ns-controls-host').classList.remove('hidden');
+                document.getElementById('ns-controls-viewer').classList.add('hidden');
+                document.getElementById('ns-host-name').innerText = `@${state.user} (YOU)`;
+                
+                // Bind to video player (Muted locally so you don't hear yourself)
+                const videoEl = document.getElementById('ns-video-player');
+                videoEl.srcObject = neural.localStream;
+                videoEl.muted = true; 
+                videoEl.play().catch(e=>console.log(e));
+
+                // Init Peer
+                const peerId = 'neural_' + Math.floor(Math.random() * 1000000);
+                neural.peer = new Peer(peerId);
+                neural.activePeerId = peerId;
+
+                neural.peer.on('open', async (id) => {
+                    await supabase.from('active_streams').insert({ id: id, host: state.user, ts: dbHelper.serverTimestamp() });
+                    neural.setupChat(id);
+                });
+
+                // Answer viewers with A/V stream
+                neural.peer.on('call', (call) => {
+                    call.answer(neural.localStream);
+                    neural.calls.push(call);
+                });
+
+            } catch (e) {
+                alert("CAMERA/MIC ACCESS DENIED.");
+            }
+        },
+
+        join: (peerId, hostName) => {
+            if (audioSys.ctx.state === 'suspended') audioSys.ctx.resume();
+            neural.isHost = false;
+            neural.activePeerId = peerId;
+
+            // Show Viewer UI
+            document.getElementById('ns-list-view').classList.add('hidden');
+            document.getElementById('btn-start-stream').classList.add('hidden');
+            document.getElementById('ns-active-view').classList.remove('hidden');
+            document.getElementById('ns-controls-host').classList.add('hidden');
+            document.getElementById('ns-controls-viewer').classList.remove('hidden');
+            document.getElementById('ns-host-name').innerText = `@${hostName}'s Broadcast`;
+
+            neural.peer = new Peer();
+            neural.peer.on('open', () => {
+                // Call host with silent audio track to force connection
+                const dummyCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const dest = dummyCtx.createMediaStreamDestination();
+                const call = neural.peer.call(peerId, dest.stream);
+                
+                call.on('stream', (hostStream) => {
+                    const videoEl = document.getElementById('ns-video-player');
+                    videoEl.srcObject = hostStream;
+                    videoEl.muted = false; // Viewers need to hear the host
+                    videoEl.play().catch(e => console.error("Video autoplay blocked", e));
+                });
+                neural.calls.push(call);
+                neural.setupChat(peerId);
+            });
+        },
+
+        // --- Controls ---
+        toggleAudio: () => {
+            if(!neural.localStream) return;
+            const audioTrack = neural.localStream.getAudioTracks()[0];
+            if(audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                const btn = document.getElementById('ns-btn-mic');
+                btn.innerText = audioTrack.enabled ? "MUTE MIC" : "UNMUTE MIC";
+                btn.style.color = audioTrack.enabled ? "var(--rep-watch)" : "red";
+                btn.style.borderColor = audioTrack.enabled ? "var(--rep-watch)" : "red";
+            }
+        },
+
+        toggleVideo: () => {
+            if(!neural.localStream) return;
+            const videoTrack = neural.localStream.getVideoTracks()[0];
+            if(videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                const btn = document.getElementById('ns-btn-cam');
+                btn.innerText = videoTrack.enabled ? "CAM OFF" : "CAM ON";
+                btn.style.color = videoTrack.enabled ? "var(--rep-watch)" : "red";
+                btn.style.borderColor = videoTrack.enabled ? "var(--rep-watch)" : "red";
+            }
+        },
+
+        // --- Ephemeral Realtime Chat ---
+        setupChat: (streamId) => {
+            document.getElementById('ns-chat-box').innerHTML = "<em style='opacity:0.5'>Connected to live chat...</em>";
+            neural.chatChannel = supabase.channel(`ns_chat_${streamId}`)
+                .on('broadcast', { event: 'msg' }, payload => {
+                    const chatBox = document.getElementById('ns-chat-box');
+                    const isCmd = app.isCommander(payload.payload.u) ? `<span class="commander-badge">[COMMANDER]</span>` : '';
+                    chatBox.innerHTML += `<div class="chat-msg"><strong>${payload.payload.u} ${isCmd}:</strong> ${app.formatMsg(payload.payload.t)}</div>`;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }).subscribe();
+        },
+
+        sendChat: () => {
+            const inp = document.getElementById('ns-chat-input');
+            const txt = inp.value.trim();
+            if(!txt || !neural.chatChannel) return;
+            
+            neural.chatChannel.send({ type: 'broadcast', event: 'msg', payload: { u: state.user, t: txt } });
+            
+            // Render locally
+            const chatBox = document.getElementById('ns-chat-box');
+            const isCmd = app.isCommander(state.user) ? `<span class="commander-badge">[COMMANDER]</span>` : '';
+            chatBox.innerHTML += `<div class="chat-msg"><strong>${state.user} ${isCmd}:</strong> ${app.formatMsg(txt)}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+            inp.value = "";
+        },
+
+        // --- Cleanup ---
+        stop: async () => {
+            if(neural.localStream) neural.localStream.getTracks().forEach(t => t.stop());
+            if(neural.peer) neural.peer.destroy();
+            neural.calls.forEach(c => c.close());
+            if(neural.chatChannel) supabase.removeChannel(neural.chatChannel);
+            
+            if(neural.isHost && neural.activePeerId) {
+                try { await supabase.from('active_streams').delete().eq('id', neural.activePeerId); } catch(e){}
+            }
+
+            // Reset UI
+            document.getElementById('ns-video-player').srcObject = null;
+            document.getElementById('ns-btn-mic').innerText = "MUTE MIC";
+            document.getElementById('ns-btn-cam').innerText = "CAM OFF";
+            neural.localStream = null; neural.peer = null; neural.calls = []; neural.chatChannel = null; neural.activePeerId = null;
+            
+            neural.init(); // Returns to list view
+        },
+
+        leave: () => {
+            neural.stop(); // Viewer cleanup uses same logic safely
+        }
     };
     window.commanderSys = {
         peer: null,
@@ -2854,6 +3068,7 @@
 </script>
 </body>
 </html>
+
 
 
 
