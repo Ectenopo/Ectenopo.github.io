@@ -1406,7 +1406,7 @@
             commanderSys.active = false;
 
             // 5. Force the UI to switch back to the Hub
-            document.getElementById('screen-commander-broadcast').classList.add(' hidden');
+            document.getElementById('screen-commander-broadcast').classList.set('screen hidden');
             nav.to('hub');
             
             console.log("Broadcast terminated and UI restored.");
@@ -2783,6 +2783,7 @@
 </script>
 </body>
 </html>
+
 
 
 
