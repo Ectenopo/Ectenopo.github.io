@@ -204,7 +204,18 @@
         .q-mask.elite-mask:hover, .q-mask.elite-mask.revealed { color: inherit; background: transparent; text-shadow: 0 0 5px currentColor; border-color: currentColor; }
         .q-mask.elite-mask:hover::after, .q-mask.elite-mask.revealed::after { display: none; }
         
-        .commander-badge { display: inline-block; color: #FF0000; margin-left: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #FF0000; padding: 0 3px; text-shadow: 0 0 8px #FF0000; box-shadow: 0 0 5px #FF0000; letter-spacing: 1px; }
+        .commander-badge { 
+            display: inline-block; 
+            color: #FF0000; 
+            margin-left: 4px; 
+            font-size: 0.85em; 
+            font-weight: bold; 
+            border: 1px solid #FF0000; 
+            padding: 0 3px; 
+            text-shadow: 0 0 8px #FF0000; 
+            box-shadow: 0 0 5px #FF0000; 
+            letter-spacing: 1px; 
+        }
         
         .hidden {
             display: none !important;
@@ -1895,7 +1906,7 @@
             if(!d) return alert("USER NOT FOUND");
             state.viewedProfile=target;
             document.getElementById('prof-username').innerText="@"+target;
-            document.getElementById('prof-displayname').innerText=(d.displayName||target) + " " + app.getCommanderBadge(target);
+            document.getElementById('prof-displayname').innerHTML=(d.displayName||target) + " " + app.getCommanderBadge(target);
             document.getElementById('prof-bio').innerText=`"${d.bio||'No status set.'}"`;
             document.getElementById('prof-pfp-display').style.backgroundImage=d.pfp?`url('${d.pfp}')`:"none";
             if(d.verified)document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
@@ -3068,6 +3079,7 @@
 </script>
 </body>
 </html>
+
 
 
 
