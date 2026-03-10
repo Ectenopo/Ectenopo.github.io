@@ -1270,10 +1270,39 @@
 
     window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
 
-    // ================================================================
-    // COMMANDER BROADCAST SYSTEM
-    // ================================================================
-window.commanderSys = {
+    window.nav = {
+        to: (id) => {
+            document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden')); document.getElementById('screen-kali').classList.add('hidden');
+            if(id==='kali') document.getElementById('screen-kali').classList.remove('hidden'); else document.getElementById('screen-'+id).classList.remove('hidden');
+            if(id === 'auth' || id === 'social') { try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { } }
+            if(id==='hub')      app.initHub();
+            if(id==='jobs')     app.loadJobs();
+            if(id==='social')   social.loadPosts();
+            if(id==='settings') settings.loadUI();
+            if(id==='dict')     app.renderDict();
+            if(id==='cockpit')  cockpit.init();
+            if(id==='radio')    radio.init();
+            if(id==='news')     news.init();
+            if(id==='verified') app.initVerifiedChat();
+            if(id==='ectotape') app.loadEctoTape();
+            if(id==='events')   app.loadEvents();
+            if(id==='emergency') emergency.init();
+            if(id==='comms')    msgSys.init();
+            if(id==='vault')    vault.load();
+            if(id==='ghost')    ghost.init();
+            if(id==='feedback'){ if(["user1234","user4321"].includes(state.user?.toLowerCase())) document.getElementById('admin-feedback-panel').classList.remove('hidden'); app.loadFeedback(); }
+            if(id==='minigame') game.init();
+            if(id==='maze')     maze.init(); 
+            if(id==='sniffer')  sniffer.init();
+            if(id==='ledger')   ledger.load();
+            if(id==='neural')   neuralMap.start();
+            if(id==='cryptic')  cryptic.generate();
+            if(id==='voidbuffer') voidBuf.init();
+            if(window.neuralMap && id !== 'neural') neuralMap.stop();
+        },
+        tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
+    };
+    window.commanderSys = {
         peer: null,
         stream: null,
         callContexts: [],
@@ -1383,41 +1412,6 @@ window.commanderSys = {
             console.log("Broadcast terminated and UI restored.");
         }
     };
-
-
-    window.nav = {
-        to: (id) => {
-            document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden')); document.getElementById('screen-kali').classList.add('hidden');
-            if(id==='kali') document.getElementById('screen-kali').classList.remove('hidden'); else document.getElementById('screen-'+id).classList.remove('hidden');
-            if(id === 'auth' || id === 'social') { try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { } }
-            if(id==='hub')      app.initHub();
-            if(id==='jobs')     app.loadJobs();
-            if(id==='social')   social.loadPosts();
-            if(id==='settings') settings.loadUI();
-            if(id==='dict')     app.renderDict();
-            if(id==='cockpit')  cockpit.init();
-            if(id==='radio')    radio.init();
-            if(id==='news')     news.init();
-            if(id==='verified') app.initVerifiedChat();
-            if(id==='ectotape') app.loadEctoTape();
-            if(id==='events')   app.loadEvents();
-            if(id==='emergency') emergency.init();
-            if(id==='comms')    msgSys.init();
-            if(id==='vault')    vault.load();
-            if(id==='ghost')    ghost.init();
-            if(id==='feedback'){ if(["user1234","user4321"].includes(state.user?.toLowerCase())) document.getElementById('admin-feedback-panel').classList.remove('hidden'); app.loadFeedback(); }
-            if(id==='minigame') game.init();
-            if(id==='maze')     maze.init(); 
-            if(id==='sniffer')  sniffer.init();
-            if(id==='ledger')   ledger.load();
-            if(id==='neural')   neuralMap.start();
-            if(id==='cryptic')  cryptic.generate();
-            if(id==='voidbuffer') voidBuf.init();
-            if(window.neuralMap && id !== 'neural') neuralMap.stop();
-        },
-        tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
-    };
-
     window.app = {
         encMode:false, dictMode:false, clanUnsub:null, clanChatUnsub:null, alertInterval:null,
         voiceContext:null, voiceSource:null, voiceAnalyser:null, voiceAnim:null, voiceActive:false, voiceUnsubscribe:null, voiceHeartbeat:null,
@@ -2789,6 +2783,7 @@ window.commanderSys = {
 </script>
 </body>
 </html>
+
 
 
 
