@@ -1353,20 +1353,34 @@ window.commanderSys = {
         },
 
         stop: () => {
+            // 1. Terminate the hardware mic stream
             if (commanderSys.stream) {
                 commanderSys.stream.getTracks().forEach(t => t.stop());
             }
-            if (commanderSys.peer) commanderSys.peer.destroy();
 
-            commanderSys.channel.send({ 
-                type: 'broadcast', 
-                event: 'cmd_state', 
-                payload: { active: false } 
-            });
+            // 2. Destroy the Peer connection
+            if (commanderSys.peer) {
+                commanderSys.peer.destroy();
+            }
+
+            // 3. Inform the network the broadcast is over
+            if (commanderSys.channel) {
+                commanderSys.channel.send({ 
+                    type: 'broadcast', 
+                    event: 'cmd_state', 
+                    payload: { active: false } 
+                });
+            }
             
+            // 4. Reset internal states
             commanderSys.callContexts = [];
             commanderSys.active = false;
+
+            // 5. Force the UI to switch back to the Hub
+            document.getElementById('screen-commander-broadcast').classList.add('hidden');
             nav.to('hub');
+            
+            console.log("Broadcast terminated and UI restored.");
         }
     };
 
@@ -2775,5 +2789,6 @@ window.commanderSys = {
 </script>
 </body>
 </html>
+
 
 
