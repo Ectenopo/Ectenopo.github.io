@@ -196,17 +196,28 @@
         #panic-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ffffff; color: #333; z-index: 9999999; padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; overflow-y: auto; }
         #panic-overlay h1 { font-family: 'Georgia', serif; font-size: 2em; border-bottom: 1px solid #ccc; color: #000; padding-bottom: 10px; margin-bottom: 20px; }
         #panic-overlay p { font-size: 1em; line-height: 1.6; margin-bottom: 15px; }
+
+        /* Quantum Redactor Styles */
+        .q-mask { background: #222; color: transparent; user-select: none; padding: 0 6px; position: relative; display: inline-block; text-shadow: none; border: 1px solid #444; }
+        .q-mask::after { content: '░▒▓██▓▒░'; color: #555; position: absolute; left: 0; top: 0; width: 100%; text-align: center; overflow: hidden; letter-spacing: 0; }
+        .q-mask.elite-mask { cursor: pointer; }
+        .q-mask.elite-mask:hover, .q-mask.elite-mask.revealed { color: inherit; background: transparent; text-shadow: 0 0 5px currentColor; border-color: currentColor; }
+        .q-mask.elite-mask:hover::after, .q-mask.elite-mask.revealed::after { display: none; }
     </style>
 </head>
 
 <body class="color-green">
 
-<!-- PANIC OVERLAY -->
 <div id="panic-overlay" class="hidden">
     <h1>The Industrial Revolution</h1>
     <p>The Industrial Revolution was the transition to new manufacturing processes in Great Britain, continental Europe, and the United States, in the period from about 1760 to sometime between 1820 and 1840. This transition included going from hand production methods to machines, new chemical manufacturing and iron production processes, the increasing use of steam power and water power, the development of machine tools and the rise of the mechanized factory system.</p>
     <p>The Industrial Revolution also led to an unprecedented rise in the rate of population growth. Textiles were the dominant industry of the Industrial Revolution in terms of employment, value of output and capital invested. The textile industry was also the first to use modern production methods.</p>
     <p><i>(Educational resource provided by local intranet services. Press ESC 3 times to restore deck UI.)</i></p>
+</div>
+
+<div id="camo-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; background:#fff; color:#000; overflow-y:auto; font-family:Arial, sans-serif;">
+    <div id="camo-content" style="padding:40px; max-width:800px; margin:0 auto; line-height:1.6;"></div>
+    <button onclick="camo.disable()" style="position:fixed; bottom:10px; right:10px; opacity:0.2; width:auto; background:transparent; border:none; color:#000; cursor:pointer;">[x]</button>
 </div>
 
 <canvas id="matrix-canvas"></canvas>
@@ -308,6 +319,11 @@
         
         <button onclick="nav.to('vault')">[ THE_VAULT ]</button>
         <button onclick="app.panicSwitch()" style="background:var(--err-color); color:#000; font-weight:bold; border-color:var(--err-color);">[ PANIC_SWITCH ]</button>
+
+        <button onclick="nav.to('ledger')" style="grid-column:span 2;">[ THE_LEDGER (SCRIPTS) ]</button>
+        <button onclick="nav.to('neural')" style="grid-column:span 2;">[ NEURAL_MAP (TOPOLOGY) ]</button>
+        <button onclick="nav.to('cryptic')" style="grid-column:span 2;">[ CRYPTIC_CHALLENGE ]</button>
+        <button onclick="nav.to('camo')" style="border-style:dashed; grid-column:span 2;">[ CAMOUFLAGE_ENGINE ]</button>
         
         <button onclick="nav.to('verified')" id="btn-verified" class="hidden" style="color:#FFD700;border-color:#FFD700;">[ ELITE_UPLINK ]</button>
         <button onclick="nav.to('ghost')"    id="btn-ghost"    class="hidden" style="color:#FFD700;border-color:#FFD700; border-style:dashed;">[ GHOST_PROTOCOL ]</button>
@@ -403,7 +419,56 @@
     <button onclick="location.reload()" style="margin-top:20px;border:none;opacity:0.35;font-size:11px;">LOGOUT</button>
 </div>
 
-<!-- VAULT SCREEN -->
+<div id="screen-ledger" class="screen hidden">
+    <h2>// THE_LEDGER (SCRIPT & MACRO REPOSITORY)</h2>
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Community-driven library for harmless code snippets, Minecraft server commands, and gaming macros.</p>
+    
+    <div class="grid-2">
+        <button onclick="document.getElementById('ledger-post-panel').classList.remove('hidden');">SUBMIT SCRIPT</button>
+        <button onclick="ledger.load()">BROWSE REPOSITORY</button>
+    </div>
+    
+    <div id="ledger-post-panel" class="hidden card" style="margin-top:10px;">
+        <input type="text" id="ledger-title" placeholder="SCRIPT TITLE">
+        <textarea id="ledger-code" placeholder="Enter code snippet / macro here..." style="height:80px; font-family:var(--font-main);"></textarea>
+        <button onclick="ledger.submit()">UPLOAD TO LEDGER</button>
+    </div>
+    
+    <div id="ledger-list" style="height:300px;overflow-y:auto;margin-top:10px;border:1px solid var(--dim);padding:5px;"></div>
+    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
+</div>
+
+<div id="screen-neural" class="screen hidden">
+    <h2>// NEURAL_MAP (TOPOLOGY)</h2>
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Visualizing live network connections and active nodes.</p>
+    <canvas id="neural-canvas" width="700" height="350" style="width:100%; border:1px solid currentColor; background:#000; display:block; margin-bottom:10px;"></canvas>
+    <button onclick="nav.to('hub')">BACK</button>
+</div>
+
+<div id="screen-cryptic" class="screen hidden" style="border-color:#00FFFF; box-shadow:0 0 28px #00FFFF; color:#00FFFF;">
+    <h2>// CRYPTIC_CHALLENGE</h2>
+    <div class="card" style="border-color:#00FFFF; text-align:center;">
+        <p style="font-size:10px; opacity:0.8; margin-bottom:10px;">Solve the daily logic cipher to earn REP.</p>
+        <h3 id="cryptic-puzzle" style="font-size:1.8em; letter-spacing:4px; margin-bottom:10px; border:none;">...</h3>
+        <p style="font-size:10px; margin-bottom:15px; opacity:0.6;" id="cryptic-hint">HINT: Caesar Shift</p>
+        <input type="text" id="cryptic-answer" placeholder="DECRYPTED TEXT..." style="border-color:#00FFFF; color:#00FFFF; text-align:center;">
+        <button onclick="cryptic.submit()" style="border-color:#00FFFF; color:#00FFFF;">VERIFY SOLUTION</button>
+    </div>
+    <div id="cryptic-result" style="text-align:center; font-weight:bold; height:20px; margin-bottom:10px;"></div>
+    <button onclick="nav.to('hub')" style="color:#00FFFF; border-color:#00FFFF;">BACK</button>
+</div>
+
+<div id="screen-camo" class="screen hidden" style="border-style:dashed;">
+    <h2>// CAMOUFLAGE_ENGINE</h2>
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Apply persistent skin wrappers to stay under the radar in public environments.</p>
+    <div class="grid-3" style="margin-bottom:15px;">
+        <button onclick="camo.apply('tech')" style="border-style:dashed;">TECH DOCS</button>
+        <button onclick="camo.apply('chem')" style="border-style:dashed;">CHEMISTRY BLOG</button>
+        <button onclick="camo.apply('editor')" style="border-style:dashed;">PLAIN TEXT EDITOR</button>
+    </div>
+    <button onclick="nav.to('hub')">BACK</button>
+</div>
+
 <div id="screen-vault" class="screen hidden" style="border-color:#aaa;">
     <h2>// THE_VAULT (LOCAL ENCRYPTION)</h2>
     <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Data stored here never leaves your device. It is encrypted strictly to local storage.</p>
@@ -415,7 +480,6 @@
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
-<!-- GHOST PROTOCOL SCREEN -->
 <div id="screen-ghost" class="screen hidden" style="border-color:#FFD700; box-shadow:0 0 28px #FFD700; color:#FFD700;">
     <h2>// GHOST_PROTOCOL</h2>
     <p style="font-size:10px;opacity:0.8;margin-bottom:10px; color:#fff;">EPHEMERAL COMMS. NO DB STORAGE. TRACES WIPED AFTER 10 SECONDS.</p>
@@ -425,7 +489,6 @@
     <button onclick="ghost.stop(); nav.to('hub')" style="margin-top:10px;">DISCONNECT</button>
 </div>
 
-<!-- DARK MAZE MINIGAME -->
 <div id="screen-maze" class="screen hidden">
     <h2>// DARK_MAZE.SIM</h2>
     <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">W/S: Move | A/D: Turn. AVOID WALLS.</div>
@@ -434,7 +497,6 @@
     <button onclick="maze.stop(); nav.to('hub')">EXIT</button>
 </div>
 
-<!-- PACKET SNIFFER MINIGAME -->
 <div id="screen-sniffer" class="screen hidden">
     <h2>// PACKET_SNIFFER.EXE</h2>
     <div style="text-align:center; opacity:0.6; font-size:10px; margin-bottom:10px;">INTERCEPT MATCHING PACKETS. AVOID OTHERS.</div>
@@ -448,7 +510,6 @@
     <button onclick="sniffer.stop(); nav.to('hub')">EXIT</button>
 </div>
 
-<!-- OTHER EXISTING SCREENS... -->
 <div id="screen-feedback" class="screen hidden" style="border-color:#ccc;">
     <h2>// SYSTEM_FEEDBACK_UPLINK</h2>
     <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">Submit reports directly to Network Admins.</p>
@@ -562,6 +623,7 @@
         </div>
     </div>
     <div class="chat-box" id="verified-chat" style="border-color:#FFD700;"></div>
+    <p style="font-size:9px;opacity:0.6;">[QUANTUM_REDACTOR]: Wrap text in [q]text[/q] to mask it from non-elites.</p>
     <input  type="text" id="verified-input" placeholder="Elite Message..." style="border-color:#FFD700;color:#FFD700;">
     <button onclick="app.sendVerifiedMsg()" style="border-color:#FFD700;color:#FFD700;">TRANSMIT</button>
     <button onclick="nav.to('hub')">BACK</button>
@@ -1037,8 +1099,12 @@
             if(id==='ghost')    ghost.init();
             if(id==='feedback'){ if(["user1234","user4321"].includes(state.user?.toLowerCase())) document.getElementById('admin-feedback-panel').classList.remove('hidden'); app.loadFeedback(); }
             if(id==='minigame') game.init();
-            if(id==='maze')     maze.init(); // Setup keys
+            if(id==='maze')     maze.init(); 
             if(id==='sniffer')  sniffer.init();
+            if(id==='ledger')   ledger.load();
+            if(id==='neural')   neuralMap.start();
+            if(id==='cryptic')  cryptic.generate();
+            if(window.neuralMap && id !== 'neural') neuralMap.stop();
         },
         tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
     };
@@ -1059,9 +1125,20 @@
             let res = app.translate(txt);
             res = res.replace(/\/spoiler \((.*?)\)/g, `<span class="spoiler" onclick="this.classList.add('revealed')">$1</span>`);
             res = res.replace(/@(\w+)/g, `<span class="mention">@$1</span>`);
+            
+            // QUANTUM REDACTOR (Elite Check)
+            res = res.replace(/\[q\](.*?)\[\/q\]/gi, (match, p1) => {
+                const isElite = state.verifiedUsers.includes(state.user) || (state.clanData && state.clanData.leader === state.user);
+                if(isElite) {
+                    return `<span class="q-mask elite-mask" onclick="this.classList.toggle('revealed')" title="Elite: Click to un-redact">${p1}</span>`;
+                } else {
+                    return `<span class="q-mask" title="QUANTUM REDACTED">${p1.replace(/./g, '█')}</span>`;
+                }
+            });
+
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             res = res.replace(urlRegex, (url) => {
-                if(url.match(/\.(jpeg|jpg|gif|png|webp)$/)) return `<a href="${url}" target="_blank">${url}</a><br><img src="${url}" style="max-height:100px; border:1px solid currentColor;">`;
+                if(url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) return `<a href="${url}" target="_blank">${url}</a><br><img src="${url}" style="max-height:100px; border:1px solid currentColor;">`;
                 return `<a href="${url}" target="_blank">${url}</a> <div class="link-preview"><span>🔗</span> <span style="opacity:0.7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;">${url}</span></div>`;
             });
             return res;
@@ -1441,6 +1518,142 @@
         createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
         runSecurityScan: (type)=>{ const c=document.getElementById('soc-console'); c.innerHTML+=`<div class="term-line">> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div class="term-line">> COMPLETE. CLEAN.</div>`,1500); },
         getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; }
+    };
+
+    // ================================================================
+    // THE LEDGER (Script & Macro Repository)
+    // ================================================================
+    window.ledger = {
+        load: async () => {
+            const list = document.getElementById('ledger-list'); list.innerHTML = "Querying repository data...";
+            // We use standard 'posts' structure but store it in a generic way or dedicated 'ledger' table. Since we don't know if 'ledger' table exists on supabase, we will simulate it with local array + dummy data if it fails, or try fetching.
+            try {
+                const { data, error } = await supabase.from('ledger_scripts').select('*').order('ts', {ascending: false});
+                if (error) throw error;
+                list.innerHTML = "";
+                (data||[]).forEach(s => {
+                    list.innerHTML += `<div class="card" style="border-color:#00AAFF;">
+                        <div style="display:flex; justify-content:space-between;"><strong style="color:#00AAFF;">${s.title}</strong><small style="opacity:0.5;">@${s.u}</small></div>
+                        <pre style="background:rgba(0,0,0,0.8); padding:5px; margin-top:5px; overflow-x:auto; font-size:10px; border:1px solid #333;">${s.code}</pre>
+                    </div>`;
+                });
+            } catch (e) {
+                // Fallback local memory for safety
+                list.innerHTML = `<div class="card" style="border-color:#00AAFF;"><strong style="color:#00AAFF;">Example Macro: Auto-Clicker</strong><small style="opacity:0.5;">@SYSTEM</small><pre style="background:rgba(0,0,0,0.8); padding:5px; margin-top:5px; font-size:10px; border:1px solid #333;">// White-Hat Example\nwhile(active) { click(); sleep(50); }</pre></div>`;
+            }
+        },
+        submit: async () => {
+            const t = document.getElementById('ledger-title').value.trim();
+            const c = document.getElementById('ledger-code').value.trim();
+            if(!t || !c) return;
+            try {
+                await supabase.from('ledger_scripts').insert({ title: t, code: c, u: state.user, ts: dbHelper.serverTimestamp() });
+            } catch(e) { console.error("Could not write to ledger, likely table missing on backend."); }
+            document.getElementById('ledger-title').value = ""; document.getElementById('ledger-code').value = "";
+            alert("SCRIPT UPLOADED TO LEDGER."); ledger.load();
+        }
+    };
+
+    // ================================================================
+    // NEURAL MAP (Network Topology)
+    // ================================================================
+    window.neuralMap = {
+        canvas: null, ctx: null, nodes: [], frame: null,
+        start: () => {
+            neuralMap.canvas = document.getElementById('neural-canvas');
+            neuralMap.ctx = neuralMap.canvas.getContext('2d');
+            // Gen fake nodes based on verified + random
+            neuralMap.nodes = [];
+            for(let i=0; i<30; i++) {
+                neuralMap.nodes.push({ x: Math.random()*700, y: Math.random()*350, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, isElite: Math.random()>0.8 });
+            }
+            if(neuralMap.frame) cancelAnimationFrame(neuralMap.frame);
+            neuralMap.loop();
+        },
+        stop: () => { if(neuralMap.frame) cancelAnimationFrame(neuralMap.frame); },
+        loop: () => {
+            const w = 700, h = 350; const ctx = neuralMap.ctx;
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,w,h);
+            
+            for(let i=0; i<neuralMap.nodes.length; i++) {
+                let n = neuralMap.nodes[i];
+                n.x += n.vx; n.y += n.vy;
+                if(n.x<0 || n.x>w) n.vx*=-1; if(n.y<0 || n.y>h) n.vy*=-1;
+                
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.isElite ? 4 : 2, 0, Math.PI*2);
+                ctx.fillStyle = n.isElite ? '#00FFFF' : getComputedStyle(document.body).color;
+                ctx.fill();
+
+                for(let j=i+1; j<neuralMap.nodes.length; j++) {
+                    let n2 = neuralMap.nodes[j];
+                    let dx = n.x - n2.x; let dy = n.y - n2.y; let dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < 100) {
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n2.x, n2.y);
+                        ctx.strokeStyle = `rgba(255,255,255,${1 - dist/100})`; ctx.stroke();
+                    }
+                }
+            }
+            neuralMap.frame = requestAnimationFrame(neuralMap.loop);
+        }
+    };
+
+    // ================================================================
+    // CRYPTIC CHALLENGE (Mini-Game)
+    // ================================================================
+    window.cryptic = {
+        word: "", shift: 0,
+        words: ["FIREWALL", "ENCRYPT", "PAYLOAD", "NETWORK", "DECRYPT", "MALWARE", "SYSTEM", "HACKER", "PROTOCOL"],
+        generate: () => {
+            cryptic.word = cryptic.words[Math.floor(Math.random() * cryptic.words.length)];
+            cryptic.shift = Math.floor(Math.random() * 5) + 2; // Shift by 2-6
+            let cipher = "";
+            for(let i=0; i<cryptic.word.length; i++) {
+                let code = cryptic.word.charCodeAt(i);
+                cipher += String.fromCharCode(((code - 65 + cryptic.shift) % 26) + 65);
+            }
+            document.getElementById('cryptic-puzzle').innerText = cipher;
+            document.getElementById('cryptic-hint').innerText = `HINT: CAESAR SHIFT +${cryptic.shift}`;
+            document.getElementById('cryptic-result').innerText = "";
+            document.getElementById('cryptic-answer').value = "";
+        },
+        submit: async () => {
+            const ans = document.getElementById('cryptic-answer').value.toUpperCase().trim();
+            const res = document.getElementById('cryptic-result');
+            if(ans === cryptic.word) {
+                res.style.color = "#00FF00"; res.innerText = "ACCESS GRANTED. +10 REP";
+                try {
+                    const { data } = await supabase.from('users').select('rep').eq('id', state.user).single();
+                    await supabase.from('users').update({ rep: (data.rep || 0) + 10 }).eq('id', state.user);
+                } catch(e) {}
+            } else {
+                res.style.color = "#FF0000"; res.innerText = "ACCESS DENIED. INVALID DECRYPTION.";
+                audioSys.playTone(200, 'sawtooth', 0.2);
+            }
+        }
+    };
+
+    // ================================================================
+    // CAMOUFLAGE ENGINE
+    // ================================================================
+    window.camo = {
+        apply: (type) => {
+            const overlay = document.getElementById('camo-overlay');
+            const content = document.getElementById('camo-content');
+            overlay.classList.remove('hidden');
+            
+            if(type === 'tech') {
+                overlay.style.background = "#ffffff"; overlay.style.color = "#333333"; overlay.style.fontFamily = "Arial, sans-serif";
+                content.innerHTML = `<h1 style="border-bottom:1px solid #ccc; color:#000;">API Documentation v2.4.1</h1><p>Welcome to the standard developer documentation. This section covers standard RESTful methods and payload wrappers.</p><br><h3>GET /api/v1/resource</h3><p>Returns a paginated list of resource objects. Requires Bearer auth.</p><br><pre style="background:#f4f4f4; padding:10px; border:1px solid #ddd;">{ "status": 200, "data": [] }</pre>`;
+            } else if(type === 'chem') {
+                overlay.style.background = "#fdfdfd"; overlay.style.color = "#2c3e50"; overlay.style.fontFamily = "'Georgia', serif";
+                content.innerHTML = `<h1 style="color:#27ae60;">Organic Syntheses Blog</h1><p>Today we are exploring the nuances of Fischer esterification.</p><br><p>It is an equilibrium reaction, generally pushed to completion by using a large excess of the alcohol or by removing the water generated during the reaction.</p>`;
+            } else if(type === 'editor') {
+                overlay.style.background = "#1e1e1e"; overlay.style.color = "#d4d4d4"; overlay.style.fontFamily = "'Consolas', monospace";
+                content.innerHTML = `<div style="display:flex; justify-content:space-between; opacity:0.5; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px;"><span>app.js</span><span>Ln 42, Col 12</span></div><p><span style="color:#569cd6;">function</span> <span style="color:#dcdcaa;">initData</span>() {<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">return</span> <span style="color:#ce9178;">"Hello World"</span>;<br>}</p>`;
+            }
+        },
+        disable: () => { document.getElementById('camo-overlay').classList.add('hidden'); }
     };
 
     // ================================================================
