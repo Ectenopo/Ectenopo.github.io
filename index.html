@@ -205,12 +205,27 @@
         .q-mask.elite-mask:hover::after, .q-mask.elite-mask.revealed::after { display: none; }
         
         .commander-badge { display: inline-block; color: #FF0000; margin-left: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #FF0000; padding: 0 3px; text-shadow: 0 0 8px #FF0000; box-shadow: 0 0 5px #FF0000; letter-spacing: 1px; }
+        /* === COMMANDER UI FIXES === */
         #screen-commander-broadcast {
-            pointer-events: all !important; /* Ensures the screen accepts clicks */
+            display: none; /* Controlled by .hidden class */
+            pointer-events: all !important;
+            z-index: 9999999 !important;
         }
-        #cmd-broadcast-controls button {
+
+        #screen-commander-broadcast:not(.hidden) {
+            display: flex !important;
+        }
+
+        #cmd-broadcast-controls {
             position: relative;
-            z-index: 10000000; /* Ensure button is above the background effects */
+            z-index: 10000001;
+            pointer-events: auto;
+        }
+
+        #cmd-broadcast-controls button {
+            cursor: pointer;
+            width: auto;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -1258,68 +1273,99 @@
     // ================================================================
     // COMMANDER BROADCAST SYSTEM
     // ================================================================
-    window.commanderSys = {
-        peer: null, stream: null, callContexts: [], active: false, channel: null,
-        initListener: () => { /* ... keep your existing listener code ... */ },
-        
-        start: async () => {
-            try {
-                // 1. Get the stream FIRST
-                commanderSys.stream = await navigator.mediaDevices.getUserMedia({audio: true, video: false});
-                
-                const peerId = 'cmd_node_' + Math.floor(Math.random()*100000);
-                commanderSys.peer = new Peer(peerId);
-    
-                commanderSys.peer.on('open', (id) => {
-                    commanderSys.channel.send({ type: 'broadcast', event: 'cmd_state', payload: { active: true, peer_id: id } });
-                    nav.to('commander-broadcast');
-                    document.getElementById('cmd-broadcast-controls').classList.remove('hidden');
-                    document.getElementById('cmd-listener-ui').classList.add('hidden');
-                });
-    
-                // 2. IMPORTANT: Answer incoming calls with the stream immediately
-                commanderSys.peer.on('call', (call) => {
-                    call.answer(commanderSys.stream); 
-                    commanderSys.callContexts.push(call);
-                });
-    
-            } catch(e) { 
-                alert("Mic access is required for the Commander to broadcast."); 
+window.commanderSys = {
+        peer: null,
+        stream: null,
+        callContexts: [],
+        active: false,
+        channel: null,
+
+        initListener: () => {
+            if (!commanderSys.channel) {
+                commanderSys.channel = supabase.channel('cmd_broadcast')
+                    .on('broadcast', { event: 'cmd_state' }, payload => {
+                        const data = payload.payload;
+                        if (data.active && !app.isCommander(state.user)) {
+                            sysAlerts.showBroadcastBtn(data.peer_id);
+                        } else if (!data.active && !app.isCommander(state.user)) {
+                            if (commanderSys.active) commanderSys.leave();
+                            sysAlerts.hide();
+                        }
+                    }).subscribe();
             }
         },
-    
+
+        start: async () => {
+            // Switch screen IMMEDIATELY so the user knows the button worked
+            nav.to('commander-broadcast');
+            document.getElementById('cmd-broadcast-controls').classList.remove('hidden');
+            document.getElementById('cmd-listener-ui').classList.add('hidden');
+
+            try {
+                // Request Mic Access
+                commanderSys.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                
+                const peerId = 'cmd_node_' + Math.floor(Math.random() * 100000);
+                commanderSys.peer = new Peer(peerId);
+
+                commanderSys.peer.on('open', (id) => {
+                    console.log("Commander node live: " + id);
+                    commanderSys.channel.send({ 
+                        type: 'broadcast', 
+                        event: 'cmd_state', 
+                        payload: { active: true, peer_id: id } 
+                    });
+                });
+
+                // Answer listeners
+                commanderSys.peer.on('call', (call) => {
+                    call.answer(commanderSys.stream);
+                    commanderSys.callContexts.push(call);
+                });
+
+            } catch (e) {
+                console.error(e);
+                alert("BROADCAST FAILED: Mic access denied.");
+                nav.to('hub');
+            }
+        },
+
         join: (peerId) => {
-            // Ensure AudioContext is active for the listener
             if (audioSys.ctx.state === 'suspended') audioSys.ctx.resume();
-    
+
             commanderSys.peer = new Peer();
             commanderSys.peer.on('open', () => {
-                // Listeners call the commander
-                const call = commanderSys.peer.call(peerId, new MediaStream()); // Send empty stream to trigger answer
+                // We call the commander with an empty stream to initiate
+                const call = commanderSys.peer.call(peerId, new MediaStream());
                 call.on('stream', (remoteStream) => {
                     const audio = new Audio();
                     audio.srcObject = remoteStream;
-                    audio.play().catch(err => console.error("Autoplay blocked:", err));
+                    audio.play().catch(err => console.error("Playback blocked:", err));
                     commanderSys.callContexts.push(audio);
                 });
             });
-            
+
             commanderSys.active = true;
             nav.to('commander-broadcast');
             document.getElementById('cmd-broadcast-controls').classList.add('hidden');
             document.getElementById('cmd-listener-ui').classList.remove('hidden');
             sysAlerts.hide();
         },
-    
+
         stop: () => {
-            // Stop the mic hardware
-            if(commanderSys.stream) {
+            if (commanderSys.stream) {
                 commanderSys.stream.getTracks().forEach(t => t.stop());
             }
-            if(commanderSys.peer) commanderSys.peer.destroy();
+            if (commanderSys.peer) commanderSys.peer.destroy();
+
+            commanderSys.channel.send({ 
+                type: 'broadcast', 
+                event: 'cmd_state', 
+                payload: { active: false } 
+            });
             
-            commanderSys.channel.send({ type: 'broadcast', event: 'cmd_state', payload: { active: false } });
             commanderSys.callContexts = [];
+            commanderSys.active = false;
             nav.to('hub');
         }
     };
@@ -2729,4 +2775,5 @@
 </script>
 </body>
 </html>
+
 
