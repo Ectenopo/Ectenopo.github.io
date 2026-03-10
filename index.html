@@ -1345,78 +1345,68 @@
         },
 
         start: async () => {
-            nav.to('commander-broadcast');
+            // Instantly open the broadcast screen
+            document.getElementById('screen-commander-broadcast').classList.remove('hidden');
             document.getElementById('cmd-broadcast-controls').classList.remove('hidden');
             document.getElementById('cmd-listener-ui').classList.add('hidden');
 
             try {
-                // Capture the Mic Stream FIRST
-                commanderSys.stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: true, 
-                    video: false 
-                });
+                // 1. Commander gets their real microphone
+                commanderSys.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 
                 const peerId = 'cmd_node_' + Math.floor(Math.random() * 100000);
                 commanderSys.peer = new Peer(peerId);
 
                 commanderSys.peer.on('open', (id) => {
-                    commanderSys.channel.send({ 
-                        type: 'broadcast', 
-                        event: 'cmd_state', 
-                        payload: { active: true, peer_id: id } 
-                    });
+                    commanderSys.channel.send({ type: 'broadcast', event: 'cmd_state', payload: { active: true, peer_id: id } });
                 });
 
-                // CLAN CHAT LOGIC: When a listener 'calls' the commander, the commander answers with their mic stream
-                commanderSys.peer.on('call', (incomingCall) => {
-                    incomingCall.answer(commanderSys.stream);
-                    
-                    incomingCall.on('stream', (remoteStream) => {
-                        // We don't usually need the listener's audio, but we store the call context to close it later
-                        commanderSys.callContexts.push(incomingCall);
-                    });
+                // 2. Commander answers incoming calls with their real microphone
+                commanderSys.peer.on('call', (call) => {
+                    call.answer(commanderSys.stream);
+                    commanderSys.callContexts.push(call);
                 });
 
             } catch (e) {
                 alert("CRITICAL: Mic access denied. Broadcast aborted.");
-                nav.to('hub');
+                commanderSys.stop();
             }
         },
 
         join: (peerId) => {
-            // Force Resume Audio Context for the receiver (Browser Security Fix)
-            if (audioSys.ctx.state === 'suspended') {
-                audioSys.ctx.resume();
-            }
+            if (audioSys.ctx.state === 'suspended') audioSys.ctx.resume();
 
             commanderSys.peer = new Peer();
             commanderSys.peer.on('open', () => {
-                // CLAN CHAT LOGIC: The listener initiates the call to the commander
-                const call = commanderSys.peer.call(peerId, new MediaStream());
+                
+                // FIX: Create a "silent" audio track so WebRTC accepts the connection
+                const dummyCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const dest = dummyCtx.createMediaStreamDestination();
+                const silentStream = dest.stream;
+
+                // Listener calls Commander using the silent stream
+                const call = commanderSys.peer.call(peerId, silentStream);
                 
                 call.on('stream', (commanderStream) => {
-                    // Create the audio element and play it
                     const audio = new Audio();
                     audio.srcObject = commanderStream;
                     audio.autoplay = true;
-                    
-                    // Explicit play command for modern browsers
-                    audio.play().catch(err => {
-                        console.error("Audio playback requires user interaction", err);
-                    });
-                    
+                    audio.play().catch(e => console.error("Audio blocked by browser:", e));
                     commanderSys.callContexts.push(audio);
                 });
+                
+                commanderSys.callContexts.push(call);
             });
 
             commanderSys.active = true;
-            nav.to('commander-broadcast');
+            document.getElementById('screen-commander-broadcast').classList.remove('hidden');
             document.getElementById('cmd-broadcast-controls').classList.add('hidden');
             document.getElementById('cmd-listener-ui').classList.remove('hidden');
             sysAlerts.hide();
         },
 
         stop: () => {
+            // 1. Hardware & Peer Cleanup
             if (commanderSys.stream) {
                 commanderSys.stream.getTracks().forEach(t => t.stop());
             }
@@ -1424,28 +1414,26 @@
                 commanderSys.peer.destroy();
             }
             if (commanderSys.channel) {
-                commanderSys.channel.send({ 
-                    type: 'broadcast', 
-                    event: 'cmd_state', 
-                    payload: { active: false } 
-                });
+                commanderSys.channel.send({ type: 'broadcast', event: 'cmd_state', payload: { active: false } });
             }
             
-            // Cleanup audio elements and calls
+            // 2. Stop audio elements from playing in the background
             commanderSys.callContexts.forEach(item => {
-                if (item.pause) item.pause(); // for Audio elements
-                if (item.close) item.close(); // for Call elements
+                if (item.pause) item.pause(); // for Audio objects
+                if (item.close) item.close(); // for PeerJS Call objects
             });
 
             commanderSys.callContexts = [];
             commanderSys.active = false;
 
+            // 3. UI FIX: Explicitly target the broadcast overlay ID, not just the classes
+            document.getElementById('screen-commander-broadcast').classList.add('hidden');
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            
             nav.to('hub');
         },
 
         leave: () => {
-            // Cleanup for listeners when broadcast ends
             commanderSys.stop();
         }
     };
@@ -2820,6 +2808,7 @@
 </script>
 </body>
 </html>
+
 
 
 
