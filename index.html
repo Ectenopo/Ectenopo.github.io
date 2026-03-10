@@ -1350,7 +1350,7 @@
             document.getElementById('cmd-listener-ui').classList.add('hidden');
 
             try {
-                // 1. Capture the Mic Stream first
+                // Capture the Mic Stream FIRST
                 commanderSys.stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: true, 
                     video: false 
@@ -1367,10 +1367,14 @@
                     });
                 });
 
-                // 2. This is the fix: Explicitly answer every incoming listener with the stream
+                // CLAN CHAT LOGIC: When a listener 'calls' the commander, the commander answers with their mic stream
                 commanderSys.peer.on('call', (incomingCall) => {
                     incomingCall.answer(commanderSys.stream);
-                    commanderSys.callContexts.push(incomingCall);
+                    
+                    incomingCall.on('stream', (remoteStream) => {
+                        // We don't usually need the listener's audio, but we store the call context to close it later
+                        commanderSys.callContexts.push(incomingCall);
+                    });
                 });
 
             } catch (e) {
@@ -1378,24 +1382,27 @@
                 nav.to('hub');
             }
         },
+
         join: (peerId) => {
-            // 1. Resume Audio Context to bypass browser "Autoplay" blocks
+            // Force Resume Audio Context for the receiver (Browser Security Fix)
             if (audioSys.ctx.state === 'suspended') {
                 audioSys.ctx.resume();
             }
 
             commanderSys.peer = new Peer();
             commanderSys.peer.on('open', () => {
-                // 2. Initiate the call to the Commander
+                // CLAN CHAT LOGIC: The listener initiates the call to the commander
                 const call = commanderSys.peer.call(peerId, new MediaStream());
                 
-                call.on('stream', (remoteStream) => {
+                call.on('stream', (commanderStream) => {
+                    // Create the audio element and play it
                     const audio = new Audio();
-                    audio.srcObject = remoteStream;
+                    audio.srcObject = commanderStream;
+                    audio.autoplay = true;
                     
-                    // 3. Play and catch errors if the browser still blocks it
+                    // Explicit play command for modern browsers
                     audio.play().catch(err => {
-                        console.error("Audio play blocked. Needs manual trigger.", err);
+                        console.error("Audio playback requires user interaction", err);
                     });
                     
                     commanderSys.callContexts.push(audio);
@@ -1410,15 +1417,12 @@
         },
 
         stop: () => {
-            // 1. Hardware & Connection Cleanup
             if (commanderSys.stream) {
                 commanderSys.stream.getTracks().forEach(t => t.stop());
             }
             if (commanderSys.peer) {
                 commanderSys.peer.destroy();
             }
-
-            // 2. Network Sync
             if (commanderSys.channel) {
                 commanderSys.channel.send({ 
                     type: 'broadcast', 
@@ -1427,21 +1431,22 @@
                 });
             }
             
-            // 3. Reset Variables
+            // Cleanup audio elements and calls
+            commanderSys.callContexts.forEach(item => {
+                if (item.pause) item.pause(); // for Audio elements
+                if (item.close) item.close(); // for Call elements
+            });
+
             commanderSys.callContexts = [];
             commanderSys.active = false;
 
-            // 4. NUCLEAR UI RESET: Hide all screens manually
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.add('hidden');
-            });
-            document.getElementById('screen-kali').classList.add('hidden');
-            document.getElementById('screen-commander-broadcast').classList.add('hidden');
-
-            // 5. Return to Hub
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             nav.to('hub');
-            
-            console.log("System override: All screens cleared. Returning to HUB.");
+        },
+
+        leave: () => {
+            // Cleanup for listeners when broadcast ends
+            commanderSys.stop();
         }
     };
     window.app = {
@@ -2815,6 +2820,7 @@
 </script>
 </body>
 </html>
+
 
 
 
