@@ -236,6 +236,17 @@
             width: auto;
             margin: 0 auto;
         }
+
+        .commander-live-led {
+            width: 12px;
+            height: 12px;
+            background: #ff0000;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            box-shadow: 0 0 10px #ff0000;
+            animation: blinkAnim 1s infinite;
+        }
     </style>
 </head>
 
@@ -1334,20 +1345,21 @@
         },
 
         start: async () => {
-            // Switch screen IMMEDIATELY so the user knows the button worked
             nav.to('commander-broadcast');
             document.getElementById('cmd-broadcast-controls').classList.remove('hidden');
             document.getElementById('cmd-listener-ui').classList.add('hidden');
 
             try {
-                // Request Mic Access
-                commanderSys.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                // 1. Capture the Mic Stream first
+                commanderSys.stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: true, 
+                    video: false 
+                });
                 
                 const peerId = 'cmd_node_' + Math.floor(Math.random() * 100000);
                 commanderSys.peer = new Peer(peerId);
 
                 commanderSys.peer.on('open', (id) => {
-                    console.log("Commander node live: " + id);
                     commanderSys.channel.send({ 
                         type: 'broadcast', 
                         event: 'cmd_state', 
@@ -1355,30 +1367,37 @@
                     });
                 });
 
-                // Answer listeners
-                commanderSys.peer.on('call', (call) => {
-                    call.answer(commanderSys.stream);
-                    commanderSys.callContexts.push(call);
+                // 2. This is the fix: Explicitly answer every incoming listener with the stream
+                commanderSys.peer.on('call', (incomingCall) => {
+                    incomingCall.answer(commanderSys.stream);
+                    commanderSys.callContexts.push(incomingCall);
                 });
 
             } catch (e) {
-                console.error(e);
-                alert("BROADCAST FAILED: Mic access denied.");
+                alert("CRITICAL: Mic access denied. Broadcast aborted.");
                 nav.to('hub');
             }
         },
-
         join: (peerId) => {
-            if (audioSys.ctx.state === 'suspended') audioSys.ctx.resume();
+            // 1. Resume Audio Context to bypass browser "Autoplay" blocks
+            if (audioSys.ctx.state === 'suspended') {
+                audioSys.ctx.resume();
+            }
 
             commanderSys.peer = new Peer();
             commanderSys.peer.on('open', () => {
-                // We call the commander with an empty stream to initiate
+                // 2. Initiate the call to the Commander
                 const call = commanderSys.peer.call(peerId, new MediaStream());
+                
                 call.on('stream', (remoteStream) => {
                     const audio = new Audio();
                     audio.srcObject = remoteStream;
-                    audio.play().catch(err => console.error("Playback blocked:", err));
+                    
+                    // 3. Play and catch errors if the browser still blocks it
+                    audio.play().catch(err => {
+                        console.error("Audio play blocked. Needs manual trigger.", err);
+                    });
+                    
                     commanderSys.callContexts.push(audio);
                 });
             });
@@ -2796,6 +2815,7 @@
 </script>
 </body>
 </html>
+
 
 
 
