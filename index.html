@@ -205,7 +205,16 @@
         .q-mask.elite-mask:hover::after, .q-mask.elite-mask.revealed::after { display: none; }
         
         .commander-badge { display: inline-block; color: #FF0000; margin-left: 4px; font-size: 0.85em; font-weight: bold; border: 1px solid #FF0000; padding: 0 3px; text-shadow: 0 0 8px #FF0000; box-shadow: 0 0 5px #FF0000; letter-spacing: 1px; }
-        /* === COMMANDER UI FIXES === */
+        
+        .hidden {
+            display: none !important;
+        }
+
+        #screen-commander-broadcast.hidden {
+            display: none !important;
+            visibility: hidden;
+            pointer-events: none !important;
+        }
         #screen-commander-broadcast {
             display: none; /* Controlled by .hidden class */
             pointer-events: all !important;
@@ -1406,7 +1415,7 @@
             commanderSys.active = false;
 
             // 5. Force the UI to switch back to the Hub
-            document.getElementById('screen-commander-broadcast').classList.set('screen hidden');
+            document.getElementById('screen-commander-broadcast').classList.set('hidden');
             nav.to('hub');
             
             console.log("Broadcast terminated and UI restored.");
@@ -2783,6 +2792,7 @@
 </script>
 </body>
 </html>
+
 
 
 
