@@ -566,15 +566,23 @@
 </div>
 
 <!-- BLACK MARKET -->
-<div class="card" style="border-color:#555;">
-    <strong style="color:#fff;">GHOST TOKEN (100 REP)</strong>
-    <p style="font-size:11px; margin:4px 0;">Bypass global mute limits to send a high-priority ping to the network.</p>
-    <button onclick="blackMarket.buy('GHOST_TOKEN', 100)" style="border-color:#555; color:#fff;">PURCHASE</button>
-</div>
-<div class="card" style="border-color:#555;">
-    <strong style="color:#fff;">NEON_GLOW CSS (500 REP)</strong>
-    <p style="font-size:11px; margin:4px 0;">Unlock a permanent glowing name aesthetic across all hubs.</p>
-    <button onclick="blackMarket.buy('NEON_GLOW', 500)" style="border-color:#555; color:#fff;">PURCHASE</button>
+<div id="screen-blackmarket" class="screen hidden" style="border-color:#555; color:#aaa;">
+    <h2>// BLACK_MARKET (ECONOMY)</h2>
+    <p style="font-size:10px;opacity:0.8;margin-bottom:10px;">Exchange REP for exclusive digital assets and system overrides.</p>
+    
+    <div class="card" style="border-color:#555;">
+        <strong style="color:#fff;">GHOST TOKEN (100 REP)</strong>
+        <p style="font-size:11px; margin:4px 0;">Bypass global mute limits to send a high-priority ping to the network.</p>
+        <button onclick="blackMarket.buy('GHOST_TOKEN', 100)" style="border-color:#555; color:#fff;">PURCHASE</button>
+    </div>
+    
+    <div class="card" style="border-color:#555;">
+        <strong style="color:#fff;">NEON_GLOW CSS (500 REP)</strong>
+        <p style="font-size:11px; margin:4px 0;">Unlock a permanent glowing name aesthetic across all hubs.</p>
+        <button onclick="blackMarket.buy('NEON_GLOW', 500)" style="border-color:#555; color:#fff;">PURCHASE</button>
+    </div>
+    
+    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
 <!-- SENTINEL LOGS -->
@@ -681,9 +689,24 @@
     <button onclick="nav.to('hub')" style="margin-top:10px; border-color:var(--rep-watch); color:var(--rep-watch);">BACK</button>
 </div>
 <!-- PROTOCOL VOTING -->
-<div class="grid-2">
-    <button onclick="voting.cast('yes')">YES (Contribute REP)</button>
-    <button onclick="voting.cast('no')" class="danger">NO</button>
+<div id="screen-protocolvoting" class="screen hidden">
+    <h2>// PROTOCOL_VOTING (DAO)</h2>
+    <div class="card">
+        <h3>SYS_PROPOSAL: Upgrade Base Encryption Level?</h3>
+        <p style="font-size:11px; opacity:0.7; margin-bottom:10px;">Requires 10,000 Total REP to pass.</p>
+        
+        <div class="grid-2">
+            <button onclick="voting.cast('yes')">YES (Contribute REP)</button>
+            <button onclick="voting.cast('no')" class="danger">NO</button>
+        </div>
+        
+        <div class="poll-bar" style="margin-top:10px;">
+            <div class="poll-fill" style="width:0%; background:#0f0;"></div>
+        </div>
+        <small style="opacity:0.5; display:block; margin-top:4px;">0 / 10000 REP</small>
+    </div>
+    
+    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
 <!-- CLAN WARFARE SIM -->
@@ -3211,6 +3234,7 @@
 </script>
 </body>
 </html>
+
 
 
 
