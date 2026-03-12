@@ -434,6 +434,7 @@
         <button onclick="nav.to('sniffer')" style="grid-column:span 2;">[ MINIGAME: PACKET SNIFFER ]</button>
         
         <button onclick="nav.to('feedback')" style="border-style:dashed; grid-column:span 2;">[ FEEDBACK & BUGS ]</button>
+        <button onclick="nav.to('journal')" id="btn-journal" class="hidden" style="color:#CC44FF; border-color:#CC44FF; grid-column:span 2;">[ A JOURNAL (PRIVATE) ]</button>
     </div>
 
     <div id="tab-clans">
@@ -1255,6 +1256,17 @@
     </div>
 </div>
 
+<div id="screen-journal" class="screen hidden" style="border-color:#CC44FF; box-shadow:0 0 28px #CC44FF; color:#CC44FF;">
+    <h2>// PERSONAL_JOURNAL (ELITE ONLY)</h2>
+    <p style="font-size:10px;opacity:0.6;margin-bottom:10px; color:#fff;">ENCRYPTED PERSONAL LOGS. FOR YOUR EYES ONLY.</p>
+    
+    <textarea id="journal-input" placeholder="Begin log entry..." style="height:100px; border-color:#CC44FF; color:inherit; font-family:var(--font-main);"></textarea>
+    <button onclick="journal.save()" style="border-color:#CC44FF; color:inherit; font-weight:bold;">SAVE TO LEDGER</button>
+    
+    <div id="journal-entries" style="margin-top:15px; height:250px; overflow-y:auto; border:1px solid #CC44FF; padding:10px; background:rgba(204, 68, 255, 0.05);"></div>
+    
+    <button onclick="nav.to('hub')" style="margin-top:10px; border-color:#CC44FF; color:inherit;">BACK</button>
+</div>
 <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
@@ -1340,7 +1352,36 @@
     };
 
     window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
-
+    window.journal = {
+        load: async () => {
+            const list = document.getElementById('journal-entries');
+            list.innerHTML = "<div style='opacity:0.5;'>Decrypting logs...</div>";
+            
+            // We use the existing supabase client (anon key), NOT the secret key!
+            const { data, error } = await supabase.from('journal_entries').select('*').eq('u', state.user).order('ts', {ascending: false});
+            
+            list.innerHTML = "";
+            if (error) { list.innerHTML = `<div style="color:red;">[ ERROR: ${error.message} ]</div>`; return; }
+            if (!data || data.length === 0) { list.innerHTML = "<div style='opacity:0.5;'>NO ENTRIES FOUND.</div>"; return; }
+    
+            data.forEach(entry => {
+                const dateStr = new Date(entry.ts).toLocaleString();
+                list.innerHTML += `
+                    <div style="border-bottom:1px solid rgba(204,68,255,0.4); margin-bottom:8px; padding-bottom:8px;">
+                        <small style="opacity:0.6; display:block; margin-bottom:4px;">[ ${dateStr} ]</small>
+                        ${app.formatMsg(entry.entry_text)}
+                    </div>`;
+            });
+        },
+        save: async () => {
+            const txt = document.getElementById('journal-input').value.trim();
+            if (!txt) return;
+            
+            await supabase.from('journal_entries').insert({ u: state.user, entry_text: txt, ts: dbHelper.serverTimestamp() });
+            document.getElementById('journal-input').value = "";
+            journal.load();
+        }
+    };
     window.nav = {
         to: (id) => {
             document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden')); document.getElementById('screen-kali').classList.add('hidden');
@@ -1375,6 +1416,7 @@
             if(id === 'sentinel') sentinel.load();
             if(id === 'clanwarfare') clanWar.load();
             if(id === 'protocolvoting') voting.load();
+            if(id==='journal') journal.load();
         },
         tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
     };
@@ -1873,10 +1915,12 @@
                 document.getElementById('btn-payload').classList.remove('hidden'); 
                 document.getElementById('btn-verified').classList.remove('hidden'); 
                 document.getElementById('btn-ghost').classList.remove('hidden'); 
+                document.getElementById('btn-journal').classList.remove('hidden');
             } else { 
                 document.getElementById('btn-payload').classList.add('hidden'); 
                 document.getElementById('btn-verified').classList.add('hidden'); 
                 document.getElementById('btn-ghost').classList.add('hidden'); 
+                document.getElementById('btn-journal').classList.add('hidden');
             }
             const setupClan=(data)=>{
                 state.friends = data.friends||[]; state.blocks = data.blocks||[];
@@ -3234,21 +3278,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
