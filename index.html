@@ -2186,7 +2186,7 @@
                     const isBase64 = v.url.startsWith('data:');
                     const vh = isBase64 ? 
                         (v.url.startsWith('data:image') ? `<img src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;">` : `<video controls src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;"></video>`) 
-                        : (app.getEmbedUrl(v.url) ? `<iframe width="100%" height="150" src="${app.getEmbedUrl(v.url)}" frameborder="0" allowfullscreen style="display:block;margin-top:5px;"></iframe>`:`<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`);
+                        : (app.bedUrl(v.url) ? `<iframe width="100%" height="150" src="${app.getEmbedUrl(v.url)}" frameborder="0" allowfullscreen style="display:block;margin-top:5px;"></iframe>`:`<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`);
                     feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getCommanderBadge(v.uploader)}${app.getBadge(v.uploader)}</strong></small>${vh}</div>`;
                 });
             }catch(e){feed.innerHTML="<div style='color:red;'>ERROR: "+e.message+"</div>";}
@@ -2206,7 +2206,7 @@
 
         createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
         runSecurityScan: (type)=>{ const c=document.getElementById('soc-console'); c.innerHTML+=`<div class="term-line">> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div class="term-line">> COMPLETE. CLEAN.</div>`,1500); },
-        getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; }
+        getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; },
         editClanRules: async()=>{
             if (state.clanData.leader !== state.user) return alert("UNAUTHORIZED: LEADER CLEARANCE REQUIRED.");
             
