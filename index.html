@@ -508,6 +508,13 @@
                     Loading directives...
                 </div>
             </div>
+            <div id="clan-rules-edit-panel" class="hidden card" style="border-color: #00FFFF;">
+                <textarea id="clan-rules-input" style="height: 120px; font-family: var(--font-main); resize: vertical;" placeholder="1. Rule one&#10;2. Rule two"></textarea>
+                <div class="grid-2">
+                    <button onclick="app.saveClanRules()" style="border-color: #00FFFF; color: #00FFFF;">SAVE DIRECTIVES</button>
+                    <button onclick="document.getElementById('clan-rules-edit-panel').classList.add('hidden')" class="danger">CANCEL</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2207,18 +2214,21 @@
         createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
         runSecurityScan: (type)=>{ const c=document.getElementById('soc-console'); c.innerHTML+=`<div class="term-line">> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div class="term-line">> COMPLETE. CLEAN.</div>`,1500); },
         getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; },
-        editClanRules: async()=>{
+        editClanRules: () => {
             if (state.clanData.leader !== state.user) return alert("UNAUTHORIZED: LEADER CLEARANCE REQUIRED.");
+            // Populate the textarea with current rules and unhide the panel
+            document.getElementById('clan-rules-input').value = state.clanData.rules || "";
+            document.getElementById('clan-rules-edit-panel').classList.remove('hidden');
+        },
+        saveClanRules: async () => {
+            const newRules = document.getElementById('clan-rules-input').value.trim();
+            const { error } = await supabase.from('clans').update({ rules: newRules }).eq('id', state.clan);
             
-            const currentRules = state.clanData.rules || "";
-            // Using prompt for simplicity to match your current codebase style. 
-            // \n works in prompts to show line breaks if they already exist.
-            const newRules = prompt("ENTER NEW CLAN DIRECTIVES (RULES):", currentRules);
-            
-            if (newRules !== null) { 
-                const { error } = await supabase.from('clans').update({ rules: newRules.trim() }).eq('id', state.clan);
-                if (error) alert("UPLINK ERROR: " + error.message);
-                else alert("DIRECTIVES UPDATED.");
+            if (error) {
+                alert("UPLINK ERROR: " + error.message);
+            } else {
+                // Hide the panel on success (the UI will auto-update via your listenToClan subscription)
+                document.getElementById('clan-rules-edit-panel').classList.add('hidden');
             }
         },
     };
