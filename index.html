@@ -366,7 +366,7 @@
             <button onclick="nav.to('settings')"          style="width:auto;padding:5px 12px;font-size:10px;margin:0;">CONFIG</button>
         </div>
     </div>
-
+    
     <!-- HARDWARE PROFILER WIDGET -->
     <div id="hardware-profiler" class="card" style="border-color:#00AAFF; display:flex; justify-content:space-between; font-size:10px; margin-bottom:10px; align-items:center;">
         <span style="color:#00AAFF; font-weight:bold;">[ CYBER-DECK PROFILER ]</span>
@@ -435,6 +435,7 @@
         
         <button onclick="nav.to('feedback')" style="border-style:dashed; grid-column:span 2;">[ FEEDBACK & BUGS ]</button>
         <button onclick="nav.to('journal')" id="btn-journal" class="hidden" style="color:#CC44FF; border-color:#CC44FF; grid-column:span 2;">[ A JOURNAL (PRIVATE) ]</button>
+        <button onclick="nav.to('hub2')" style="grid-column:span 2; border-style:double; color:#00AAFF; border-color:#00AAFF;">[ SYSTEM_HUB // PAGE_02 ]</button>
     </div>
 
     <div id="tab-clans">
@@ -528,7 +529,43 @@
 
     <button onclick="location.reload()" style="margin-top:20px;border:none;opacity:0.35;font-size:11px;">LOGOUT</button>
 </div>
+<div id="screen-hub2" class="screen hidden" style="border-color:#00AAFF; box-shadow:0 0 28px #00AAFF; color:#00AAFF;">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid currentColor;padding-bottom:10px;margin-bottom:12px;">
+        <h2>// SYSTEM_HUB :: PAGE_02</h2>
+        <button onclick="nav.to('hub')" style="width:auto;padding:5px 12px;font-size:10px;margin:0; border-color:#00AAFF; color:#00AAFF;">BACK TO MAIN</button>
+    </div>
 
+    <div class="grid-2" style="margin-bottom:10px;">
+        <button onclick="nav.to('skillswap')" style="grid-column:span 2; border-color:#00AAFF; color:#00AAFF;">[ SKILL_SWAP_NODE ]</button>
+        
+        <button disabled style="opacity:0.3; border-style:dashed;">[ EXPANSION_SLOT_1 ]</button>
+        <button disabled style="opacity:0.3; border-style:dashed;">[ EXPANSION_SLOT_2 ]</button>
+    </div>
+</div>
+<div id="screen-skillswap" class="screen hidden" style="border-color:#00FF00; color:#00FF00;">
+    <h2>// SKILL_SWAP_NODE (P2P LEARNING)</h2>
+    <p style="font-size:10px;opacity:0.8;margin-bottom:10px;">Register your proficiencies and desired knowledge. The network will find compatible operators.</p>
+    
+    <div class="grid-2">
+        <div class="card" style="border-color:#00FF00;">
+            <strong style="border-bottom:1px solid currentColor; display:block; margin-bottom:6px;">TEACHING (HAVE)</strong>
+            <input type="text" id="swap-have" placeholder="e.g. Python, Digital Art, Video Editing" style="border-color:#00FF00; color:#00FF00;">
+        </div>
+        <div class="card" style="border-color:#00FF00;">
+            <strong style="border-bottom:1px solid currentColor; display:block; margin-bottom:6px;">LEARNING (WANT)</strong>
+            <input type="text" id="swap-want" placeholder="e.g. C++, Sound Design, 3D Modeling" style="border-color:#00FF00; color:#00FF00;">
+        </div>
+    </div>
+    
+    <button onclick="skillSwap.register()" style="border-color:#00FF00; color:#00FF00; margin-bottom:10px;">UPDATE PROFILE & SCAN NETWORK</button>
+
+    <h3 style="border-color:#00FF00; margin-top:15px;">// COMPATIBLE MATCHES</h3>
+    <div id="skillswap-matches" style="height:200px; overflow-y:scroll; border:1px solid #00FF00; padding:10px; background:rgba(0,255,0,0.05);">
+        <div style="opacity:0.5;">WAITING FOR SCAN COMMAND...</div>
+    </div>
+
+    <button onclick="nav.to('hub2')" style="margin-top:10px; border-color:#00FF00; color:#00FF00;">EXIT NODE</button>
+</div>
 <!-- ================= NEW FEATURE SCREENS ================= -->
 
 <!-- THE LEDGER SCREEN -->
@@ -2551,7 +2588,57 @@
             }
         }
     };
+    // ================================================================
+    // SKILL SWAP NETWORK
+    // ================================================================
+    window.skillSwap = {
+        register: async () => {
+            const have = document.getElementById('swap-have').value.trim().toLowerCase();
+            const want = document.getElementById('swap-want').value.trim().toLowerCase();
+            
+            if (!have || !want) return alert("INPUT REQUIRED FOR BOTH FIELDS.");
+            
+            const list = document.getElementById('skillswap-matches');
+            list.innerHTML = "<div style='opacity:0.5; animation:blinkAnim 1s infinite;'>> RUNNING MATCHMAKING ALGORITHM...</div>";
+            
+            // 1. Save current user's skills
+            await supabase.from('skill_swap').upsert({ 
+                u: state.user, 
+                have: have, 
+                want: want, 
+                ts: dbHelper.serverTimestamp() 
+            });
 
+            // 2. Query for matches (People who HAVE what you WANT, and WANT what you HAVE)
+            // Using a simple LIKE operator for basic text matching
+            const { data } = await supabase.from('skill_swap')
+                .select('*')
+                .neq('u', state.user)
+                .ilike('have', `%${want}%`)
+                .ilike('want', `%${have}%`);
+                
+            list.innerHTML = "";
+            
+            if (!data || data.length === 0) {
+                list.innerHTML = "<div style='opacity:0.5;'>NO PERFECT MATCHES CURRENTLY ONLINE. TRY USING BROADER TERMS.</div>";
+                return;
+            }
+
+            data.forEach(match => {
+                list.innerHTML += `
+                    <div class="card" style="border-color:#00FF00;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong onclick="app.openProfile('${match.u}')" style="cursor:pointer; text-decoration:underline;">@${match.u} ${app.getCommanderBadge(match.u)}</strong>
+                            <button onclick="msgSys.openDM('${match.u}')" style="width:auto; padding:2px 8px; font-size:9px; border-color:#00FF00; color:#00FF00; margin:0;">INITIATE COMMS</button>
+                        </div>
+                        <div style="font-size:10px; margin-top:6px; opacity:0.8;">
+                            <strong>TEACHES:</strong> ${match.have.toUpperCase()}<br>
+                            <strong>LEARNS:</strong> ${match.want.toUpperCase()}
+                        </div>
+                    </div>`;
+            });
+        }
+    };
     // ================================================================
     // GHOST PROTOCOL (Ephemeral Broadcast)
     // ================================================================
