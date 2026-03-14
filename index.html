@@ -499,6 +499,15 @@
                 <button onclick="app.leaveClan()" class="danger">LEAVE</button>
                 <button onclick="app.deleteClan()" id="btn-delete-clan" class="danger hidden" style="grid-column:span 2;border-style:double;">// DELETE CLAN //</button>
             </div>
+            <div class="card" style="border-color: #00FFFF; margin-bottom: 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #00FFFF; padding-bottom:4px; margin-bottom:6px;">
+                    <strong style="color: #00FFFF;">// CLAN_DIRECTIVES</strong>
+                    <button id="btn-edit-rules" class="hidden admin" onclick="app.editClanRules()" style="width:auto; font-size:9px; padding:2px 5px; margin:0;">EDIT</button>
+                </div>
+                <div id="clan-rules-display" style="font-size:11px; white-space:pre-wrap; opacity:0.8; line-height: 1.4;">
+                    Loading directives...
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2006,41 +2015,54 @@
         },
 
         listenToClan: async (cName)=>{
-            document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText=cName;
-            if(app.clanUnsub){app.clanUnsub();app.clanUnsub=null;} if(app.clanChatUnsub){app.clanChatUnsub();app.clanChatUnsub=null;}
-            app.clanUnsub = await dbHelper.listenDoc('clans', cName, (data) => {
-                state.clanData = data || {};
-                if(state.clanData.leader===state.user){document.getElementById('btn-delete-clan').classList.remove('hidden');document.getElementById('clan-leader-cmds').classList.remove('hidden');}
-                else{document.getElementById('btn-delete-clan').classList.add('hidden');document.getElementById('clan-leader-cmds').classList.add('hidden');}
-                if(!document.getElementById('screen-dict').classList.contains('hidden'))app.renderDict();
-            });
-            app.clanChatUnsub = await dbHelper.listenQuery('clan_msgs', 'clan_id', cName, {col:'ts', asc:false}, 50, (data) => {
-                const d=document.getElementById('clan-chat'); d.innerHTML="";
-                data.reverse().forEach(m=>{
-                    if(state.blocks.includes(m.u)) return;
-                    let txt=app.formatMsg(m.txt); let style="";
-                    const rank=(state.clanData.ranks&&state.clanData.ranks[m.u])?state.clanData.ranks[m.u].toUpperCase():'MEMBER';
-                    const prefix=`<span style="opacity:0.5;font-size:0.8em;">[${rank}]</span>`;
-                    if(m.type==='ANNOUNCE') style="font-weight:bold;color:#00FF00;border:1px solid #004400;padding:5px;margin:4px 0;background:rgba(0,255,0,0.05);display:block;";
-                    if(m.type==='WARN')     style="font-weight:bold;color:#FFAA00;border:1px solid #332200;padding:5px;margin:4px 0;background:rgba(255,170,0,0.05);display:block;";
-                    if(m.type==='ALERT')    style="font-weight:bold;color:#fff;background:red;padding:5px;margin:4px 0;border:1px solid #fff;display:block;";
-                    
-                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'clan')">REPLY</button></div>`;
-                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
+            document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText=cName;
+            if(app.clanUnsub){app.clanUnsub();app.clanUnsub=null;} if(app.clanChatUnsub){app.clanChatUnsub();app.clanChatUnsub=null;}
+            app.clanUnsub = await dbHelper.listenDoc('clans', cName, (data) => {
+                state.clanData = data || {};
+                if(state.clanData.leader===state.user){
+                    document.getElementById('btn-delete-clan').classList.remove('hidden');
+                    document.getElementById('clan-leader-cmds').classList.remove('hidden');
+                    document.getElementById('btn-edit-rules').classList.remove('hidden');
+                } else {
+                    document.getElementById('btn-delete-clan').classList.add('hidden');
+                    document.getElementById('clan-leader-cmds').classList.add('hidden');
+                    document.getElementById('btn-edit-rules').classList.add('hidden');
+                }
 
-                    if(m.u==="SYSTEM") d.innerHTML+=`<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`;
-                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${txt}</div>`;
-                });
-                d.scrollTop=d.scrollHeight;
-            }, (newMsg) => {
-                const now=Date.now(); const mt=newMsg.ts ? new Date(newMsg.ts).getTime() : now;
-                if(now-mt<15000){
-                    if(newMsg.type==='WARN'){audioSys.playTone(800,'sine',0.1);setTimeout(()=>audioSys.playTone(800,'sine',0.1),200);setTimeout(()=>audioSys.playTone(800,'sine',0.1),400);}
-                    if(newMsg.type==='ALERT')app.triggerClanRedAlert(newMsg.txt);
-                }
-            });
-            app.listenToVoiceUsers();
-        },
+                const rulesDisplay = document.getElementById('clan-rules-display');
+                if(rulesDisplay) {
+                    rulesDisplay.innerText = state.clanData.rules || "NO DIRECTIVES ESTABLISHED.";
+                }
+
+                if(!document.getElementById('screen-dict').classList.contains('hidden'))app.renderDict();
+            });
+            app.clanChatUnsub = await dbHelper.listenQuery('clan_msgs', 'clan_id', cName, {col:'ts', asc:false}, 50, (data) => {
+                const d=document.getElementById('clan-chat'); d.innerHTML="";
+                data.reverse().forEach(m=>{
+                    if(state.blocks.includes(m.u)) return;
+                    let txt=app.formatMsg(m.txt); let style="";
+                    const rank=(state.clanData.ranks&&state.clanData.ranks[m.u])?state.clanData.ranks[m.u].toUpperCase():'MEMBER';
+                    const prefix=`<span style="opacity:0.5;font-size:0.8em;">[${rank}]</span>`;
+                    if(m.type==='ANNOUNCE') style="font-weight:bold;color:#00FF00;border:1px solid #004400;padding:5px;margin:4px 0;background:rgba(0,255,0,0.05);display:block;";
+                    if(m.type==='WARN')     style="font-weight:bold;color:#FFAA00;border:1px solid #332200;padding:5px;margin:4px 0;background:rgba(255,170,0,0.05);display:block;";
+                    if(m.type==='ALERT')    style="font-weight:bold;color:#fff;background:red;padding:5px;margin:4px 0;border:1px solid #fff;display:block;";
+                    
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'clan')">REPLY</button></div>`;
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
+
+                    if(m.u==="SYSTEM") d.innerHTML+=`<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`;
+                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${txt}</div>`;
+                });
+                d.scrollTop=d.scrollHeight;
+            }, (newMsg) => {
+                const now=Date.now(); const mt=newMsg.ts ? new Date(newMsg.ts).getTime() : now;
+                if(now-mt<15000){
+                    if(newMsg.type==='WARN'){audioSys.playTone(800,'sine',0.1);setTimeout(()=>audioSys.playTone(800,'sine',0.1),200);setTimeout(()=>audioSys.playTone(800,'sine',0.1),400);}
+                    if(newMsg.type==='ALERT')app.triggerClanRedAlert(newMsg.txt);
+                }
+            });
+            app.listenToVoiceUsers();
+        },
 
         sendClanAlert: async(level)=>{ if(state.clanData.leader!==state.user)return; const txt=prompt(`ENTER ${level} MESSAGE:`); if(!txt)return; await supabase.from('clan_msgs').insert({clan_id: state.clan, u:"SYSTEM", txt, type:level, ts:dbHelper.serverTimestamp()}); },
         triggerClanRedAlert: (msg)=>{ document.getElementById('clan-alert-msg').innerText=msg; document.getElementById('clan-alert-overlay').classList.remove('hidden'); if(app.alertInterval)clearInterval(app.alertInterval); const ctx=audioSys.ctx; app.alertInterval=setInterval(()=>{ if(ctx.state==='suspended')ctx.resume(); const osc=ctx.createOscillator(); const g=ctx.createGain(); osc.connect(g); g.connect(ctx.destination); osc.type='sawtooth'; const now=ctx.currentTime; osc.frequency.setValueAtTime(600,now); osc.frequency.linearRampToValueAtTime(1200,now+0.5); osc.frequency.linearRampToValueAtTime(600,now+1.0); g.gain.setValueAtTime(0.2,now); osc.start(now); osc.stop(now+1.0); },1000); },
@@ -2185,6 +2207,20 @@
         createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
         runSecurityScan: (type)=>{ const c=document.getElementById('soc-console'); c.innerHTML+=`<div class="term-line">> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div class="term-line">> COMPLETE. CLEAN.</div>`,1500); },
         getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; }
+        editClanRules: async()=>{
+            if (state.clanData.leader !== state.user) return alert("UNAUTHORIZED: LEADER CLEARANCE REQUIRED.");
+            
+            const currentRules = state.clanData.rules || "";
+            // Using prompt for simplicity to match your current codebase style. 
+            // \n works in prompts to show line breaks if they already exist.
+            const newRules = prompt("ENTER NEW CLAN DIRECTIVES (RULES):", currentRules);
+            
+            if (newRules !== null) { 
+                const { error } = await supabase.from('clans').update({ rules: newRules.trim() }).eq('id', state.clan);
+                if (error) alert("UPLINK ERROR: " + error.message);
+                else alert("DIRECTIVES UPDATED.");
+            }
+        },
     };
 
     // ================================================================
@@ -2827,7 +2863,7 @@
         canvas: document.getElementById('draw-canvas'), ctx: document.getElementById('draw-canvas').getContext('2d'), isDrawing:false, mode:'create', letters:[], idx:0, tempData:{},
         init: ()=>{ drawing.ctx.lineWidth=4; drawing.ctx.strokeStyle=getComputedStyle(document.body).color; const start=(x,y)=>{drawing.isDrawing=true;drawing.ctx.beginPath();drawing.ctx.moveTo(x,y);}; const move=(x,y)=>{if(drawing.isDrawing){drawing.ctx.lineTo(x,y);drawing.ctx.stroke();}}; drawing.canvas.onmousedown=e=>start(e.offsetX,e.offsetY); drawing.canvas.onmousemove=e=>move(e.offsetX,e.offsetY); drawing.canvas.onmouseup=()=>drawing.isDrawing=false; },
         clear: ()=>drawing.ctx.clearRect(0,0,280,280), cancel: ()=>nav.to('hub'),
-        save: async()=>{ const char=drawing.letters[drawing.idx]; drawing.tempData.syms[char]=drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx<drawing.letters.length){drawing.clear();document.getElementById('draw-title').innerText="DRAW: "+drawing.letters[drawing.idx];} else{ loading(true); if(drawing.mode==='create'){ await supabase.from('clans').insert({id: drawing.tempData.name, pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: {[state.user]: 'leader'}}); await supabase.from('users').update({clan: drawing.tempData.name}).eq('id', state.user); } else if(drawing.mode==='edit'){ await supabase.from('clans').update({symbols: drawing.tempData.syms}).eq('id', state.clan); } loading(false); nav.to('hub'); } }
+        save: async()=>{ const char=drawing.letters[drawing.idx]; drawing.tempData.syms[char]=drawing.canvas.toDataURL(); drawing.idx++; if(drawing.idx<drawing.letters.length){drawing.clear();document.getElementById('draw-title').innerText="DRAW: "+drawing.letters[drawing.idx];} else{ loading(true); if(drawing.mode==='create'){ await supabase.from('clans').insert({id: drawing.tempData.name, pass: drawing.tempData.pass, leader: state.user, symbols: drawing.tempData.syms, words: {}, ranks: {[state.user]: 'leader'}, rules: "1. NO COMMS LEAKS\n2. OBEY LEADER"}); await supabase.from('users').update({clan: drawing.tempData.name}).eq('id', state.user); } else if(drawing.mode==='edit'){ await supabase.from('clans').update({symbols: drawing.tempData.syms}).eq('id', state.clan); } loading(false); nav.to('hub'); } }
     };
     drawing.init();
 
