@@ -533,14 +533,48 @@
     <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid currentColor;padding-bottom:10px;margin-bottom:12px;">
         <h2>// SYSTEM_HUB :: PAGE_02</h2>
         <button onclick="nav.to('hub')" style="width:auto;padding:5px 12px;font-size:10px;margin:0; border-color:#00AAFF; color:#00AAFF;">BACK TO MAIN</button>
+        
     </div>
 
     <div class="grid-2" style="margin-bottom:10px;">
         <button onclick="nav.to('skillswap')" style="grid-column:span 2; border-color:#00AAFF; color:#00AAFF;">[ SKILL_SWAP_NODE ]</button>
-        
+        <button onclick="nav.to('ephemera')" style="grid-column:span 2; border-color:#00AAFF; color:#00AAFF;">[ EPHEMERA_NET (AUTO-PURGING BOARDS) ]</button>
         <button disabled style="opacity:0.3; border-style:dashed;">[ EXPANSION_SLOT_1 ]</button>
         <button disabled style="opacity:0.3; border-style:dashed;">[ EXPANSION_SLOT_2 ]</button>
     </div>
+</div>
+<div id="screen-ephemera" class="screen hidden" style="border-color:#00AAFF; color:#00AAFF;">
+    <h2>// EPHEMERA_NET (5-DAY AUTO-PURGE)</h2>
+    <div class="grid-2" style="margin-bottom:10px;">
+        <input type="text" id="ephemera-search" placeholder="SEARCH SECURE BOARDS..." oninput="ephemera.filter(this.value)">
+        <button onclick="document.getElementById('ephemera-create').classList.remove('hidden')">INITIATE NEW THREAD</button>
+    </div>
+
+    <div id="ephemera-create" class="card hidden" style="border-color:#00AAFF;">
+        <input type="text" id="ephem-title" placeholder="THREAD TITLE" style="border-color:#00AAFF;">
+        <textarea id="ephem-body" placeholder="Transmission body..." style="height:80px; border-color:#00AAFF;"></textarea>
+        <div class="grid-2">
+            <button onclick="ephemera.create()" style="border-color:#00AAFF; color:#00AAFF;">BROADCAST</button>
+            <button onclick="document.getElementById('ephemera-create').classList.add('hidden')" class="danger">CANCEL</button>
+        </div>
+    </div>
+
+    <div id="ephemera-list" style="height:350px; overflow-y:auto; border:1px solid #00AAFF; padding:5px; background:rgba(0, 170, 255, 0.05);"></div>
+
+    <div id="ephemera-view" class="hidden" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,4,0,0.98); z-index:20; padding:15px; border:1px solid #00AAFF; display:flex; flex-direction:column;">
+        <button onclick="document.getElementById('ephemera-view').classList.add('hidden')" class="warn" style="margin-bottom:10px; flex-shrink:0;">[X] CLOSE THREAD</button>
+        <h3 id="ephem-view-title" style="color:#00AAFF; border-color:#00AAFF; margin-bottom:5px;">TITLE</h3>
+        <p id="ephem-view-body" style="font-size:12px; margin-bottom:15px; opacity:0.9; white-space:pre-wrap; line-height:1.5; border-bottom:1px dashed #00AAFF; padding-bottom:10px;"></p>
+        
+        <div id="ephem-comments" class="chat-box" style="flex:1; border-color:#00AAFF; margin-bottom:10px;"></div>
+        
+        <div style="display:flex; gap:5px; flex-shrink:0;">
+            <input type="text" id="ephem-comment-input" placeholder="Add comment..." style="margin:0; border-color:#00AAFF;">
+            <button onclick="ephemera.postComment()" style="width:80px; margin:0; border-color:#00AAFF; color:#00AAFF;">REPLY</button>
+        </div>
+    </div>
+
+    <button onclick="nav.to('hub2')" style="margin-top:10px; border-color:#00AAFF; color:#00AAFF;">BACK</button>
 </div>
 <div id="screen-skillswap" class="screen hidden" style="border-color:#00FF00; color:#00FF00;">
     <h2>// SKILL_SWAP_NODE (P2P LEARNING)</h2>
@@ -1470,6 +1504,7 @@
             if(id === 'clanwarfare') clanWar.load();
             if(id === 'protocolvoting') voting.load();
             if(id==='journal') journal.load();
+            if(id==='ephemera') ephemera.load();
         },
         tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
     };
@@ -2636,6 +2671,90 @@
                             <strong>LEARNS:</strong> ${match.want.toUpperCase()}
                         </div>
                     </div>`;
+            });
+        }
+    };
+    window.ephemera = {
+        activeThread: null,
+        unsub: null,
+        load: async () => {
+            const list = document.getElementById('ephemera-list');
+            list.innerHTML = "<div style='opacity:0.5; animation:blinkAnim 1s infinite;'>Scanning network for active threads...</div>";
+            
+            // Calculate exactly 5 days ago
+            const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+
+            // Fetch threads newer than 5 days old
+            const { data } = await supabase.from('ephemera_threads')
+                .select('*')
+                .gte('ts', fiveDaysAgo)
+                .order('ts', {ascending: false});
+
+            list.innerHTML = "";
+            if(!data || data.length === 0) return list.innerHTML = "<div style='opacity:0.5; text-align:center; padding:20px;'>NO ACTIVE THREADS FOUND.</div>";
+
+            data.forEach(t => {
+                // Calculate time left for the UI
+                const created = new Date(t.ts).getTime();
+                const expires = created + (5 * 24 * 60 * 60 * 1000);
+                const daysLeft = Math.max(0, Math.ceil((expires - Date.now()) / (1000 * 60 * 60 * 24)));
+
+                list.innerHTML += `
+                    <div class="card ephem-thread-card" style="border-color:#00AAFF; cursor:pointer;" onclick="ephemera.view('${t.id}')">
+                        <strong class="ephem-search-target" style="font-size:1.1em; color:#00AAFF;">${app.formatMsg(t.title)}</strong>
+                        <div style="font-size:9px; opacity:0.6; margin-top:4px; display:flex; justify-content:space-between;">
+                            <span>BY: @${t.u}</span>
+                            <span style="color:var(--warn-color);">PURGE IN: ${daysLeft} DAYS</span>
+                        </div>
+                    </div>`;
+            });
+        },
+        create: async () => {
+            const title = document.getElementById('ephem-title').value.trim();
+            const body = document.getElementById('ephem-body').value.trim();
+            if(!title || !body) return;
+
+            const id = 'THR_' + Date.now() + Math.floor(Math.random()*1000);
+            await supabase.from('ephemera_threads').insert({ id, title, body, u: state.user, ts: dbHelper.serverTimestamp() });
+            
+            document.getElementById('ephem-title').value = "";
+            document.getElementById('ephem-body').value = "";
+            document.getElementById('ephemera-create').classList.add('hidden');
+            ephemera.load();
+        },
+        view: async (id) => {
+            ephemera.activeThread = id;
+            document.getElementById('ephemera-view').classList.remove('hidden');
+            
+            const { data: t } = await supabase.from('ephemera_threads').select('*').eq('id', id).single();
+            document.getElementById('ephem-view-title').innerHTML = app.formatMsg(t.title);
+            document.getElementById('ephem-view-body').innerHTML = app.formatMsg(t.body);
+
+            if(ephemera.unsub) ephemera.unsub();
+            ephemera.unsub = await dbHelper.listenQuery('ephemera_comments', 'thread_id', id, {col:'ts', asc:true}, 100, (data) => {
+                const box = document.getElementById('ephem-comments');
+                box.innerHTML = "";
+                data.forEach(c => {
+                    box.innerHTML += `<div class="chat-msg">
+                        <strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">@${c.u} ${app.getCommanderBadge(c.u)}:</strong> 
+                        ${app.formatMsg(c.txt)}
+                    </div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        },
+        postComment: async () => {
+            const txt = document.getElementById('ephem-comment-input').value.trim();
+            if(!txt || !ephemera.activeThread) return;
+            await supabase.from('ephemera_comments').insert({ thread_id: ephemera.activeThread, u: state.user, txt, ts: dbHelper.serverTimestamp() });
+            document.getElementById('ephem-comment-input').value = "";
+        },
+        filter: (query) => {
+            const cards = document.querySelectorAll('.ephem-thread-card');
+            cards.forEach(c => {
+                const title = c.querySelector('.ephem-search-target').innerText.toLowerCase();
+                if(title.includes(query.toLowerCase())) c.style.display = 'block';
+                else c.style.display = 'none';
             });
         }
     };
