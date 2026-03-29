@@ -1447,12 +1447,7 @@
     };
 
     window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
-    // --- NEW GLOBAL USER CACHE ---
-    window.userCache = {};
-    // Load all users on boot
-    supabase.from('users').select('*').then(({data}) => {
-        if(data) data.forEach(u => window.userCache[u.id] = u);
-    });
+
     // Listen for any live title/permission updates
     supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
         if(payload.new) window.userCache[payload.new.id] = payload.new;
@@ -1838,77 +1833,87 @@
             commanderSys.stop();
         }
     };
+    // --- NEW GLOBAL USER CACHE ---
+    window.userCache = {};
+    supabase.from('users').select('*').then(({data}) => {
+        if(data) data.forEach(u => window.userCache[u.id] = u);
+    });
+    supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
+        if(payload.new) window.userCache[payload.new.id] = payload.new;
+    }).subscribe();
+
+    // --- FULL WINDOW.APP LOGIC ---
     window.app = {
         encMode:false, dictMode:false, clanUnsub:null, clanChatUnsub:null, alertInterval:null,
         voiceContext:null, voiceSource:null, voiceAnalyser:null, voiceAnim:null, voiceActive:false, voiceUnsubscribe:null, voiceHeartbeat:null,
         globalHeartbeat: null, globalChatUnsub: null, userUnsub: null, isVideo: false,
         panicCount: 0,
+
         isCommander: (u) => {
-            if ((u||'').toLowerCase() === 'user1234') return true; // Hardcoded fallback
+            if ((u||'').toLowerCase() === 'user1234') return true;
             if (window.userCache && window.userCache[u] && window.userCache[u].perm_level >= 10) return true;
             return false;
         },
+
         getCustomBadge: (u) => {
             let html = '';
             const ud = window.userCache ? window.userCache[u] : null;
             
-            // 1. Custom Title rendering
+            // Custom Title rendering
             if (ud && ud.custom_title) {
                 const color = ud.custom_title_color || '#FF0000';
                 html += ` <span class="commander-badge" style="color:${color}; border-color:${color}; box-shadow:0 0 5px ${color}; text-shadow:0 0 8px ${color};">[${ud.custom_title}]</span>`;
-            } 
-            // Fallback for default commander
-            else if (app.isCommander(u)) {
+            } else if (app.isCommander(u)) {
                 html += ` <span class="commander-badge">[COMMANDER]</span>`;
             }
-
-            // 2. Verified rendering (Perm Level 2+ automatically verified)
+            // Verified rendering
             if (ud && (ud.perm_level >= 2 || ud.verified)) {
                 html += ` <span class="verified-badge" title="Verified Identity">♦✓</span>`;
             }
             return html;
         },
+
         panicSwitch: () => {
             document.getElementById('panic-overlay').classList.remove('hidden');
             audioSys.playTone(200, 'sine', 0.1);
         },
+        
         initNeuralStream: () => {
-            // Check if the user is Verified or the Commander
             const isElite = state.verifiedUsers.includes(state.user) || app.isCommander(state.user);
-            
             if (!isElite) {
                 audioSys.playTone(200, 'sawtooth', 0.2);
                 alert("ACCESS DENIED: Must be an Elite Operator to initiate a Stream.");
                 return;
             }
-            
-            // If Elite, transform the UI to simulate a live uplink
             audioSys.playTone(600, 'sine', 0.3);
             const container = document.getElementById('neural-stream-container');
-            container.innerHTML = `
-                <strong style="display:block; margin-bottom:10px; color:#00FF00; letter-spacing: 2px;">>> STREAM UPLINK LIVE <<</strong>
-                <div style="width:16px; height:16px; background:#00FF00; border-radius:50%; margin:0 auto 10px; animation:pulseAnim 1s infinite; box-shadow: 0 0 15px #00FF00;"></div>
-                <div style="font-size:10px; margin-bottom:15px; color:#fff; opacity:0.8;">Broadcasting to secure network nodes...</div>
-                <button onclick="app.stopNeuralStream()" class="danger" style="width:auto; padding:5px 20px; margin: 0 auto;">TERMINATE LINK</button>
-            `;
+            if(container) {
+                container.innerHTML = `
+                    <strong style="display:block; margin-bottom:10px; color:#00FF00; letter-spacing: 2px;">>> STREAM UPLINK LIVE <<</strong>
+                    <div style="width:16px; height:16px; background:#00FF00; border-radius:50%; margin:0 auto 10px; animation:pulseAnim 1s infinite; box-shadow: 0 0 15px #00FF00;"></div>
+                    <div style="font-size:10px; margin-bottom:15px; color:#fff; opacity:0.8;">Broadcasting to secure network nodes...</div>
+                    <button onclick="app.stopNeuralStream()" class="danger" style="width:auto; padding:5px 20px; margin: 0 auto;">TERMINATE LINK</button>
+                `;
+            }
         },
 
         stopNeuralStream: () => {
-            // Restore the default UI when the stream ends
             audioSys.playTone(300, 'square', 0.2);
             const container = document.getElementById('neural-stream-container');
-            container.innerHTML = `
-                <strong style="display:block; margin-bottom:10px;">NO ACTIVE OPERATION STREAMS</strong>
-                <button onclick="app.initNeuralStream()" style="border-color:var(--rep-watch); color:var(--rep-watch);">INITIATE STREAM</button>
-            `;
+            if(container) {
+                container.innerHTML = `
+                    <strong style="display:block; margin-bottom:10px;">NO ACTIVE OPERATION STREAMS</strong>
+                    <button onclick="app.initNeuralStream()" style="border-color:var(--rep-watch); color:var(--rep-watch);">INITIATE STREAM</button>
+                `;
+            }
         },
+        
         formatMsg: (txt) => {
             if(!txt) return "";
             let res = app.translate(txt);
             res = res.replace(/\/spoiler \((.*?)\)/g, `<span class="spoiler" onclick="this.classList.add('revealed')">$1</span>`);
             res = res.replace(/@(\w+)/g, `<span class="mention">@$1</span>`);
             
-            // QUANTUM REDACTOR (Elite Check)
             res = res.replace(/\[q\](.*?)\[\/q\]/gi, (match, p1) => {
                 const isElite = state.verifiedUsers.includes(state.user) || (state.clanData && state.clanData.leader === state.user) || app.isCommander(state.user);
                 if(isElite) {
@@ -1965,7 +1970,7 @@
             if(!u||!p) return; loading(true);
             const { data: existingUser } = await supabase.from('users').select('*').eq('id', u).maybeSingle();
             if(existingUser){ loading(false); return alert("USERNAME ALREADY TAKEN"); }
-            const { error } = await supabase.from('users').insert({ id: u, pass: p, clan: null, rep: 0, displayName: u, verified: false, pfp: "", private: false, friends:[], blocks:[], presence_status:'ONLINE', bio:'No status set.', lastSeen: dbHelper.serverTimestamp() });
+            const { error } = await supabase.from('users').insert({ id: u, pass: p, clan: null, rep: 0, displayName: u, verified: false, pfp: "", private: false, friends:[], blocks:[], presence_status:'ONLINE', bio:'No status set.', lastSeen: dbHelper.serverTimestamp(), perm_level: 1 });
             loading(false); 
             if (error) alert("REGISTRATION FAILED: " + error.message); else alert("REGISTERED. YOU MAY NOW AUTHENTICATE.");
         },
@@ -1977,11 +1982,12 @@
             if(!data.emailVerified) return alert("This account does not have a verified recovery email attached.");
             alert(`A recovery link would be sent to ${data.email} (Simulation: Password is ${data.pass})`);
         },
+        
         setEmail: async () => {
             const e = document.getElementById('config-email').value; if(!e) return;
             await supabase.from('users').update({email: e, emailVerified: true}).eq('id', state.user); alert("EMAIL VERIFIED & SECURED.");
         },
-        
+
         getStatusDot: (statusStr, lastSeen) => {
             const now = new Date().getTime(); const ls = new Date(lastSeen).getTime();
             if(now - ls > 120000) return `<div class="status-dot status-offline" title="OFFLINE"></div>`;
@@ -2020,9 +2026,9 @@
                 let vListHTML = "";
                 state.verifiedUsers.forEach(vUser => {
                     const uData = (onlineSnap||[]).find(o=>o.id===vUser);
-                    let sDot = `<div class="status-dot status-offline"></div>`; let timeStr = "";
+                    let sDot = `<div class="status-dot status-offline"></div>`; 
                     if(uData) sDot = app.getStatusDot(uData.presence_status, uData.lastSeen);
-                    vListHTML += `<div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">${sDot} @${vUser} ${app.getCommanderBadge(vUser)}${app.getBadge(vUser)}</div>`;
+                    vListHTML += `<div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">${sDot} @${vUser} ${app.getCustomBadge(vUser)}</div>`;
                 });
                 dir.innerHTML = `<div class="grid-3" style="margin-bottom:15px; text-align:center;"><div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${count||0}</b></div><div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div><div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div></div><h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3><div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS YET</span>"}</div>`;
             } catch (e) { dir.innerHTML = `[ ERROR: ${e.message} ]`; }
@@ -2031,12 +2037,13 @@
         initHub: async () => {
             loading(true); document.getElementById('device-info').innerText="DEVICE: "+deviceDetect.getInfo();
             const { data: ud } = await supabase.from('users').select('*').eq('id', state.user).single();
-            let vHTML=ud.verified?`<span class="verified-badge">♦✓</span>`:''; document.getElementById('hub-user').innerHTML=`${ud.displayName||state.user} ${app.getCommanderBadge(state.user)}${vHTML}`;
-            const admins=["user1234","user4321"];
-            if(admins.includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
+            document.getElementById('hub-user').innerHTML=`${ud.displayName||state.user} ${app.getCustomBadge(state.user)}`;
+            
+            // Show SOC button if they have permission
+            if(ud.perm_level >= 10 || ["user1234","user4321"].includes(state.user.toLowerCase())) document.getElementById('btn-soc').classList.remove('hidden');
             if(app.isCommander(state.user)) document.getElementById('btn-commander-control').classList.remove('hidden');
 
-            if(ud.verified || app.isCommander(state.user)){ 
+            if(ud.verified || ud.perm_level >= 2 || app.isCommander(state.user)){ 
                 document.getElementById('btn-payload').classList.remove('hidden'); 
                 document.getElementById('btn-verified').classList.remove('hidden'); 
                 document.getElementById('btn-ghost').classList.remove('hidden'); 
@@ -2060,38 +2067,42 @@
                 const d=document.getElementById('global-chat'); d.innerHTML="";
                 data.reverse().forEach(m=>{
                     if(state.blocks.includes(m.u)) return;
-                    d.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
+                    d.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
                 }); 
                 d.scrollTop=d.scrollHeight;
             });
         },
 
         sendGlobalMsg: async()=>{ const t=document.getElementById('global-input').value; if(t){await supabase.from('global_chat').insert({u:state.user,txt:t,ts:dbHelper.serverTimestamp()});document.getElementById('global-input').value="";} },
+        
         initVerifiedChat: async ()=>{
             const d=document.getElementById('verified-chat'); d.innerHTML="Establishing Secure Uplink...";
             await dbHelper.listenQuery('verified_chat', null, null, {col:'ts', asc:false}, 50, (data) => {
                 d.innerHTML=""; 
                 data.reverse().forEach(m=>{
                     if(state.blocks.includes(m.u)) return;
-                    d.innerHTML+=`<div class="chat-msg" style="color:#FFD700;border-color:#664400;"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
+                    d.innerHTML+=`<div class="chat-msg" style="color:#FFD700;border-color:#664400;"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
                 }); 
                 d.scrollTop=d.scrollHeight;
             });
         },
+        
         sendVerifiedMsg: async()=>{ const t=document.getElementById('verified-input').value; if(t){await supabase.from('verified_chat').insert({u:state.user,txt:t,ts:dbHelper.serverTimestamp()});document.getElementById('verified-input').value="";} },
 
         searchUser: ()=>{ const u=document.getElementById('search-user-input').value.trim(); if(u)app.openProfile(u); },
+        
         openProfile: async(target)=>{
             loading(true); const { data: d } = await supabase.from('users').select('*').eq('id', target).maybeSingle(); loading(false);
             if(!d) return alert("USER NOT FOUND");
             state.viewedProfile=target;
             document.getElementById('prof-username').innerText="@"+target;
-            document.getElementById('prof-displayname').innerHTML=(d.displayName||target) + " " + app.getCustomBadge(target);
+            document.getElementById('prof-displayname').innerHTML=(d.displayName||target) + app.getCustomBadge(target);
             document.getElementById('prof-bio').innerText=`"${d.bio||'No status set.'}"`;
             document.getElementById('prof-pfp-display').style.backgroundImage=d.pfp?`url('${d.pfp}')`:"none";
-            if(d.verified)document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
+            if(d.verified || d.perm_level >= 2) document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
             if(d.private&&target!==state.user){document.getElementById('prof-clan').innerText="[REDACTED]";document.getElementById('prof-rep').innerText="[REDACTED]";}
             else{document.getElementById('prof-clan').innerText=d.clan||"NONE";document.getElementById('prof-rep').innerText=d.rep||"0";}
+            
             if(target===state.user){
                 document.getElementById('prof-edit-panel').classList.remove('hidden'); document.getElementById('prof-social-panel').classList.add('hidden');
                 document.getElementById('edit-disp').value=d.displayName||""; document.getElementById('edit-bio').value=d.bio||""; document.getElementById('edit-pfp').value=d.pfp||""; document.getElementById('edit-private').checked=d.private||false;
@@ -2101,7 +2112,7 @@
                 if(state.friends.includes(target)) { addBtn.innerText="REMOVE FRIEND"; addBtn.className="danger"; } else { addBtn.innerText="ADD FRIEND"; addBtn.className=""; }
                 if(state.blocks.includes(target)) { blkBtn.innerText="UNBLOCK"; } else { blkBtn.innerText="BLOCK"; }
             }
-            // --- REPLACE THE OLD ADMIN CHECK WITH THIS ---
+            
             if(app.isCommander(state.user) && target !== state.user){
                 document.getElementById('prof-admin-panel').classList.remove('hidden');
                 document.getElementById('btn-admin-ban').innerText = d.banned ? "UNBAN" : "BAN";
@@ -2114,20 +2125,20 @@
             } else {
                 document.getElementById('prof-admin-panel').classList.add('hidden');
             }
-            // --- END OF REPLACEMENT ---
-
-            nav.to('profile'); // This line comes right after
-        },
             nav.to('profile');
         },
+        
         saveProfile: async()=>{ const dn=document.getElementById('edit-disp').value.trim(); const bio=document.getElementById('edit-bio').value.trim(); const pf=document.getElementById('edit-pfp').value.trim(); const priv=document.getElementById('edit-private').checked; await supabase.from('users').update({displayName:dn, bio:bio, pfp:pf, private:priv}).eq('id', state.user); alert("SAVED"); app.openProfile(state.user); },
+        
         verifyUser: async()=>{ if(!confirm("VERIFY?"))return; const {data} = await supabase.from('users').select('verified').eq('id', state.viewedProfile).single(); await supabase.from('users').update({verified:!data.verified}).eq('id', state.viewedProfile); alert("VERIFIED TOGGLED"); app.openProfile(state.viewedProfile); },
+        
         adminBan: async(target, isIP) => {
             const {data} = await supabase.from('users').select('banned, ipBanned').eq('id', target).single();
             if(isIP) { await supabase.from('users').update({ipBanned: !data.ipBanned}).eq('id', target); alert("IP BAN TOGGLED"); }
             else { await supabase.from('users').update({banned: !data.banned}).eq('id', target); alert("BAN TOGGLED"); }
             app.openProfile(target);
         },
+
         saveUserClearance: async (target) => {
             const pl = parseInt(document.getElementById('admin-perm-level').value) || 1;
             const ct = document.getElementById('admin-custom-title').value.trim();
@@ -2146,11 +2157,13 @@
                 app.openProfile(target); // Refresh UI
             }
         },
+
         sendFeedback: async () => {
             const type = document.getElementById('fb-type').value; const txt = document.getElementById('fb-text').value.trim();
             if(!txt) return; await supabase.from('feedback').insert({u: state.user, type, txt, ts: dbHelper.serverTimestamp()});
             document.getElementById('fb-text').value = ""; alert("TRANSMISSION SENT.");
         },
+        
         loadFeedback: async () => {
             const list = document.getElementById('feedback-list'); list.innerHTML = "Loading...";
             const { data } = await supabase.from('feedback').select('*').order('ts', {ascending:false});
@@ -2159,59 +2172,60 @@
         },
 
         listenToClan: async (cName)=>{
-            document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText=cName;
-            if(app.clanUnsub){app.clanUnsub();app.clanUnsub=null;} if(app.clanChatUnsub){app.clanChatUnsub();app.clanChatUnsub=null;}
-            app.clanUnsub = await dbHelper.listenDoc('clans', cName, (data) => {
-                state.clanData = data || {};
-                if(state.clanData.leader===state.user){
-                    document.getElementById('btn-delete-clan').classList.remove('hidden');
-                    document.getElementById('clan-leader-cmds').classList.remove('hidden');
-                    document.getElementById('btn-edit-rules').classList.remove('hidden');
-                } else {
-                    document.getElementById('btn-delete-clan').classList.add('hidden');
-                    document.getElementById('clan-leader-cmds').classList.add('hidden');
-                    document.getElementById('btn-edit-rules').classList.add('hidden');
-                }
+            document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); document.getElementById('clan-header').innerText=cName;
+            if(app.clanUnsub){app.clanUnsub();app.clanUnsub=null;} if(app.clanChatUnsub){app.clanChatUnsub();app.clanChatUnsub=null;}
+            app.clanUnsub = await dbHelper.listenDoc('clans', cName, (data) => {
+                state.clanData = data || {};
+                if(state.clanData.leader===state.user){
+                    document.getElementById('btn-delete-clan').classList.remove('hidden');
+                    document.getElementById('clan-leader-cmds').classList.remove('hidden');
+                    document.getElementById('btn-edit-rules').classList.remove('hidden');
+                } else {
+                    document.getElementById('btn-delete-clan').classList.add('hidden');
+                    document.getElementById('clan-leader-cmds').classList.add('hidden');
+                    document.getElementById('btn-edit-rules').classList.add('hidden');
+                }
 
-                const rulesDisplay = document.getElementById('clan-rules-display');
-                if(rulesDisplay) {
-                    rulesDisplay.innerText = state.clanData.rules || "NO DIRECTIVES ESTABLISHED.";
-                }
+                const rulesDisplay = document.getElementById('clan-rules-display');
+                if(rulesDisplay) {
+                    rulesDisplay.innerText = state.clanData.rules || "NO DIRECTIVES ESTABLISHED.";
+                }
 
-                if(!document.getElementById('screen-dict').classList.contains('hidden'))app.renderDict();
-            });
-            app.clanChatUnsub = await dbHelper.listenQuery('clan_msgs', 'clan_id', cName, {col:'ts', asc:false}, 50, (data) => {
-                const d=document.getElementById('clan-chat'); d.innerHTML="";
-                data.reverse().forEach(m=>{
-                    if(state.blocks.includes(m.u)) return;
-                    let txt=app.formatMsg(m.txt); let style="";
-                    const rank=(state.clanData.ranks&&state.clanData.ranks[m.u])?state.clanData.ranks[m.u].toUpperCase():'MEMBER';
-                    const prefix=`<span style="opacity:0.5;font-size:0.8em;">[${rank}]</span>`;
-                    if(m.type==='ANNOUNCE') style="font-weight:bold;color:#00FF00;border:1px solid #004400;padding:5px;margin:4px 0;background:rgba(0,255,0,0.05);display:block;";
-                    if(m.type==='WARN')     style="font-weight:bold;color:#FFAA00;border:1px solid #332200;padding:5px;margin:4px 0;background:rgba(255,170,0,0.05);display:block;";
-                    if(m.type==='ALERT')    style="font-weight:bold;color:#fff;background:red;padding:5px;margin:4px 0;border:1px solid #fff;display:block;";
-                    
-                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'clan')">REPLY</button></div>`;
-                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
+                if(!document.getElementById('screen-dict').classList.contains('hidden'))app.renderDict();
+            });
+            app.clanChatUnsub = await dbHelper.listenQuery('clan_msgs', 'clan_id', cName, {col:'ts', asc:false}, 50, (data) => {
+                const d=document.getElementById('clan-chat'); d.innerHTML="";
+                data.reverse().forEach(m=>{
+                    if(state.blocks.includes(m.u)) return;
+                    let txt=app.formatMsg(m.txt); let style="";
+                    const rank=(state.clanData.ranks&&state.clanData.ranks[m.u])?state.clanData.ranks[m.u].toUpperCase():'MEMBER';
+                    const prefix=`<span style="opacity:0.5;font-size:0.8em;">[${rank}]</span>`;
+                    if(m.type==='ANNOUNCE') style="font-weight:bold;color:#00FF00;border:1px solid #004400;padding:5px;margin:4px 0;background:rgba(0,255,0,0.05);display:block;";
+                    if(m.type==='WARN')     style="font-weight:bold;color:#FFAA00;border:1px solid #332200;padding:5px;margin:4px 0;background:rgba(255,170,0,0.05);display:block;";
+                    if(m.type==='ALERT')    style="font-weight:bold;color:#fff;background:red;padding:5px;margin:4px 0;border:1px solid #fff;display:block;";
+                    
+                    let actions = `<div class="msg-actions"><button class="msg-btn" onclick="app.replyTo('${m.id}', '${m.u}', 'clan')">REPLY</button></div>`;
+                    let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
 
-                    if(m.u==="SYSTEM") d.innerHTML+=`<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`;
-                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}${app.getBadge(m.u)}:</strong> ${txt}</div>`;
-                });
-                d.scrollTop=d.scrollHeight;
-            }, (newMsg) => {
-                const now=Date.now(); const mt=newMsg.ts ? new Date(newMsg.ts).getTime() : now;
-                if(now-mt<15000){
-                    if(newMsg.type==='WARN'){audioSys.playTone(800,'sine',0.1);setTimeout(()=>audioSys.playTone(800,'sine',0.1),200);setTimeout(()=>audioSys.playTone(800,'sine',0.1),400);}
-                    if(newMsg.type==='ALERT')app.triggerClanRedAlert(newMsg.txt);
-                }
-            });
-            app.listenToVoiceUsers();
-        },
+                    if(m.u==="SYSTEM") d.innerHTML+=`<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`;
+                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}:</strong> ${txt}</div>`;
+                });
+                d.scrollTop=d.scrollHeight;
+            }, (newMsg) => {
+                const now=Date.now(); const mt=newMsg.ts ? new Date(newMsg.ts).getTime() : now;
+                if(now-mt<15000){
+                    if(newMsg.type==='WARN'){audioSys.playTone(800,'sine',0.1);setTimeout(()=>audioSys.playTone(800,'sine',0.1),200);setTimeout(()=>audioSys.playTone(800,'sine',0.1),400);}
+                    if(newMsg.type==='ALERT')app.triggerClanRedAlert(newMsg.txt);
+                }
+            });
+            app.listenToVoiceUsers();
+        },
 
         sendClanAlert: async(level)=>{ if(state.clanData.leader!==state.user)return; const txt=prompt(`ENTER ${level} MESSAGE:`); if(!txt)return; await supabase.from('clan_msgs').insert({clan_id: state.clan, u:"SYSTEM", txt, type:level, ts:dbHelper.serverTimestamp()}); },
+        
         triggerClanRedAlert: (msg)=>{ document.getElementById('clan-alert-msg').innerText=msg; document.getElementById('clan-alert-overlay').classList.remove('hidden'); if(app.alertInterval)clearInterval(app.alertInterval); const ctx=audioSys.ctx; app.alertInterval=setInterval(()=>{ if(ctx.state==='suspended')ctx.resume(); const osc=ctx.createOscillator(); const g=ctx.createGain(); osc.connect(g); g.connect(ctx.destination); osc.type='sawtooth'; const now=ctx.currentTime; osc.frequency.setValueAtTime(600,now); osc.frequency.linearRampToValueAtTime(1200,now+0.5); osc.frequency.linearRampToValueAtTime(600,now+1.0); g.gain.setValueAtTime(0.2,now); osc.start(now); osc.stop(now+1.0); },1000); },
+        
         ackAlert: ()=>{ document.getElementById('clan-alert-overlay').classList.add('hidden'); if(app.alertInterval)clearInterval(app.alertInterval); },
-
 
         listenToVoiceUsers: async ()=>{
             if(!state.clan)return; if(app.voiceUnsubscribe)app.voiceUnsubscribe();
@@ -2222,7 +2236,6 @@
             });
         },
 
-        peer: null, calls: [], audioElements: [], localStream: null,
         handleCall: (call) => { 
             app.calls.push(call); 
             call.on('stream', (remoteStream) => { 
@@ -2235,6 +2248,7 @@
                 }
             }); 
         },
+        
         toggleVoice: async(videoMode = false)=>{
             const vBtn=document.getElementById('btn-voice-conn'); const cBtn=document.getElementById('btn-video-conn'); const status=document.getElementById('voice-status'); const viz=document.getElementById('voice-viz'); const muteBtn=document.getElementById('btn-voice-mute');
             app.isVideo = videoMode;
@@ -2277,8 +2291,9 @@
                 } catch(e){ alert("MEDIA ACCESS DENIED OR NOT FOUND"); }
             }
         },
+        
         muteVoice: ()=>{
-            const btn=document.getElementById('btn-voice-mute'); if(app.localStream) { const audioTrack = app.localStream.getAudioTracks()[0]; if(audioTrack) { if(btn.innerText==="MUTE"){ audioTrack.enabled = false; btn.innerText="UNMUTE"; } else { audioTrack.enabled = true; btn.innerText="MUTE"; } } }
+            const btn=document.getElementById('btn-voice-mute'); if(app.localStream) { const audioTrack = app.localStream.getAudioTracks(); if(audioTrack) { if(btn.innerText==="MUTE"){ audioTrack.enabled = false; btn.innerText="UNMUTE"; } else { audioTrack.enabled = true; btn.innerText="MUTE"; } } }
         },
 
         loadRoster: ()=>{
@@ -2286,14 +2301,16 @@
             const ranks=state.clanData.ranks||{}; const isLeader=state.clanData.leader===state.user;
             for(const [member,rank] of Object.entries(ranks)){
                 let ctrl=""; if(isLeader&&member!==state.user) ctrl=`<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0;" class="danger">KICK</button><button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0 0 0 5px;">SET RANK</button>`;
-                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getCustomBadge(member)}${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
+                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getCustomBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
             }
         },
+        
         setCustomRank: async(member)=>{ const r=prompt("ENTER CUSTOM RANK TITLE:"); if(r){ let ranks = state.clanData.ranks||{}; ranks[member]=r.toUpperCase(); await supabase.from('clans').update({ranks}).eq('id', state.clan); app.loadRoster();} },
         clanKick: async(target)=>{ if(!confirm(`KICK ${target}?`))return; let ranks = state.clanData.ranks||{}; delete ranks[target]; await supabase.from('clans').update({ranks}).eq('id', state.clan); await supabase.from('users').update({clan:null}).eq('id', target); app.loadRoster(); },
         deleteClan: async()=>{ const cN=state.clan; if(!confirm("WARNING: DELETE CLAN?"))return; loading(true); const { data: cD } = await supabase.from('clans').select('ranks').eq('id', cN).single(); for(const m of Object.keys(cD?.ranks||{})) await supabase.from('users').update({clan:null}).eq('id', m); await supabase.from('clans').delete().eq('id', cN); loading(false); alert("DELETED"); nav.to('hub'); },
         joinClan: async()=>{ const n=document.getElementById('join-name').value.trim(); const p=document.getElementById('join-pass').value.trim(); const { data: s } = await supabase.from('clans').select('*').eq('id', n).maybeSingle(); if(s&&s.pass===p){await supabase.from('users').update({clan:n}).eq('id', state.user); let ranks = s.ranks||{}; ranks[state.user]='member'; await supabase.from('clans').update({ranks}).eq('id', n);}else alert("INVALID"); },
         leaveClan: async()=>{ if(!confirm("LEAVE?"))return; await supabase.from('users').update({clan:null}).eq('id', state.user); let ranks = state.clanData.ranks||{}; delete ranks[state.user]; await supabase.from('clans').update({ranks}).eq('id', state.clan); },
+        
         sendClanMsg: async()=>{ 
             const t=document.getElementById('clan-input').value; 
             if(!t) return;
@@ -2301,6 +2318,7 @@
             if (error) alert("CLAN COMMS ERROR: " + error.message);
             else { document.getElementById('clan-input').value=""; app.cancelReply('clan'); }
         },
+        
         toggleEnc: ()=>{ app.encMode=!app.encMode; document.getElementById('btn-enc').style.opacity=app.encMode?'1':'0.5'; }, toggleDict: ()=>{ app.dictMode=!app.dictMode; document.getElementById('btn-dict').style.opacity=app.dictMode?'1':'0.5'; },
         translate: (txt)=>{ if(!app.encMode&&!app.dictMode)return txt; let out=""; const words=state.clanData.words||{}; const syms=state.clanData.symbols||{}; txt.split(" ").forEach(w=>{ const c=w.toLowerCase().replace(/[^a-z]/g,''); let fw=w; if(app.dictMode&&words[c])fw=words[c]; else if(app.encMode&&words[c])fw=words[c]; if(app.encMode){const cl=fw.toLowerCase().replace(/[^a-z]/g,'');out+=app.strToSym(cl,syms)+" ";}else{out+=fw+" ";} }); return out; },
         strToSym: (str,syms)=>{ let html=""; for(let c of str){if(syms[c.toUpperCase()])html+=`<img src="${syms[c.toUpperCase()]}" class="chat-img">`;else html+=c;} return html; },
@@ -2311,17 +2329,18 @@
 
         createEvent: async()=>{ const n=document.getElementById('evt-name').value; if(!n)return; await supabase.from('events').insert({name:n, desc:document.getElementById('evt-desc').value, start:document.getElementById('evt-start').value, end:document.getElementById('evt-end').value, creator:state.user, ts:dbHelper.serverTimestamp()}); alert("CREATED"); app.loadEvents(); },
         loadEvents: async()=>{ const list=document.getElementById('event-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('events').select('*').order('start', {ascending:true}); list.innerHTML=""; (data||[]).forEach(e=>{ list.innerHTML+=`<div class="card"><strong>${e.name}</strong><br><span style="opacity:0.6;font-size:11px;">${e.start} — ${e.end||'?'}</span><br><p style="margin:4px 0;font-size:12px;">${e.desc}</p><small style="opacity:0.4;">ORG: ${e.creator}</small></div>`;}); },
+        
         createJob: async()=>{ const t=document.getElementById('job-title').value; if(!t)return; await supabase.from('jobs').insert({title:t, desc:document.getElementById('job-desc').value, owner:state.user, worker:null, status:'OPEN', ts:dbHelper.serverTimestamp()}); alert("POSTED"); app.loadJobs(); },
-        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getCustomBadge(j.owner)}${app.getBadge(j.owner)}</strong></small>${act}</div>`;}); },
+        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getCustomBadge(j.owner)}</strong></small>${act}</div>`;}); },
         acceptJob: async(jid)=>{ if(!confirm("ACCEPT?"))return; await supabase.from('jobs').update({worker:state.user, status:'ASSIGNED'}).eq('id', jid); app.openJobChat(jid); },
-        openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
+        openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
         sendJobMsg: async()=>{ const t=document.getElementById('job-msg-input').value; if(t) await supabase.from('job_msgs').insert({job_id:state.currentJob, u:state.user, txt:t, ts:dbHelper.serverTimestamp()}); document.getElementById('job-msg-input').value=""; },
         closeJobChat: ()=>{ document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob=null; },
 
         loadEctoTape: async()=>{
             const feed=document.getElementById('video-feed'); feed.innerHTML="<div style='opacity:0.4;padding:10px;'>LOADING STREAM...</div>";
-            const { data: ud } = await supabase.from('users').select('verified').eq('id', state.user).single();
-            if(ud && (ud.verified || app.isCommander(state.user))) document.getElementById('upload-zone').classList.remove('hidden');
+            const { data: ud } = await supabase.from('users').select('verified, perm_level').eq('id', state.user).single();
+            if(ud && (ud.verified || ud.perm_level >= 2 || app.isCommander(state.user))) document.getElementById('upload-zone').classList.remove('hidden');
             else { document.getElementById('upload-zone').classList.add('hidden'); document.getElementById('upload-denied').classList.remove('hidden'); }
             try{
                 const { data } = await supabase.from('ectotape_vids').select('*').order('ts', {ascending:false}).limit(20); feed.innerHTML="";
@@ -2330,8 +2349,8 @@
                     const isBase64 = v.url.startsWith('data:');
                     const vh = isBase64 ? 
                         (v.url.startsWith('data:image') ? `<img src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;">` : `<video controls src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;"></video>`) 
-                        : (app.bedUrl(v.url) ? `<iframe width="100%" height="150" src="${app.getEmbedUrl(v.url)}" frameborder="0" allowfullscreen style="display:block;margin-top:5px;"></iframe>`:`<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`);
-                    feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getCustomBadge(v.uploader)}${app.getBadge(v.uploader)}</strong></small>${vh}</div>`;
+                        : (app.getEmbedUrl(v.url) ? `<iframe width="100%" height="150" src="${app.getEmbedUrl(v.url)}" frameborder="0" allowfullscreen style="display:block;margin-top:5px;"></iframe>`:`<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`);
+                    feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getCustomBadge(v.uploader)}</strong></small>${vh}</div>`;
                 });
             }catch(e){feed.innerHTML="<div style='color:red;'>ERROR: "+e.message+"</div>";}
         },
@@ -2340,7 +2359,7 @@
             const fileInput = document.getElementById('vid-file-upload');
             if(!title) return alert("TITLE REQUIRED"); 
             if(fileInput.files.length > 0) {
-                const file = fileInput.files[0];
+                const file = fileInput.files;
                 if(file.size > 2000000) return alert("FILE TOO LARGE FOR DB STORAGE (Max 2MB). USE LINK.");
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = async () => { await supabase.from('ectotape_vids').insert({title, url: reader.result, uploader:state.user, ts:dbHelper.serverTimestamp()}); app.loadEctoTape(); alert("BROADCAST UPLOADED"); };
@@ -2348,26 +2367,23 @@
             document.getElementById('vid-title').value=""; document.getElementById('vid-url').value=""; fileInput.value="";
         },
 
-        createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
+        createClanStart: ()=>{ const n=document.getElementById('create-name').value; const p=document.getElementById('create-pass').value; if(!n||!p)return; drawing.mode="create"; drawing.tempData={name:n,pass:p,syms:{}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); }, 
+        startSymbolEdit: ()=>{ drawing.mode="edit"; drawing.tempData={syms:{...state.clanData.symbols}}; drawing.letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''); drawing.idx=0; nav.to('draw'); },
         runSecurityScan: (type)=>{ const c=document.getElementById('soc-console'); c.innerHTML+=`<div class="term-line">> SCANNING ${type}...</div>`; setTimeout(()=>c.innerHTML+=`<div class="term-line">> COMPLETE. CLEAN.</div>`,1500); },
-        getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s[1]; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l[1]; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e[1]; return id?`https://www.youtube.com/embed/${id}`:null; },
+        
+        getEmbedUrl: (url)=>{ if(!url)return null; let id=null; const s=url.match(/youtu\.be\/([^?&]+)/); if(s)id=s; const l=url.match(/[?&]v=([^?&]+)/); if(!id&&l)id=l; const e=url.match(/embed\/([^?&]+)/); if(!id&&e)id=e; return id?`https://www.youtube.com/embed/${id}`:null; },
+        
         editClanRules: () => {
             if (state.clanData.leader !== state.user) return alert("UNAUTHORIZED: LEADER CLEARANCE REQUIRED.");
-            // Populate the textarea with current rules and unhide the panel
             document.getElementById('clan-rules-input').value = state.clanData.rules || "";
             document.getElementById('clan-rules-edit-panel').classList.remove('hidden');
         },
         saveClanRules: async () => {
             const newRules = document.getElementById('clan-rules-input').value.trim();
             const { error } = await supabase.from('clans').update({ rules: newRules }).eq('id', state.clan);
-            
-            if (error) {
-                alert("UPLINK ERROR: " + error.message);
-            } else {
-                // Hide the panel on success (the UI will auto-update via your listenToClan subscription)
-                document.getElementById('clan-rules-edit-panel').classList.add('hidden');
-            }
-        },
+            if (error) { alert("UPLINK ERROR: " + error.message); } 
+            else { document.getElementById('clan-rules-edit-panel').classList.add('hidden'); }
+        }
     };
 
     // ================================================================
