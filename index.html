@@ -2515,7 +2515,7 @@
                 list.innerHTML = "";
                 (data||[]).forEach(s => {
                     list.innerHTML += `<div class="card" style="border-color:#00AAFF;">
-                        <div style="display:flex; justify-content:space-between;"><strong style="color:#00AAFF;">${s.title}</strong><small style="opacity:0.5;">@${s.u} ${app.getCommanderBadge(s.u)}</small></div>
+                        <div style="display:flex; justify-content:space-between;"><strong style="color:#00AAFF;">${s.title}</strong><small style="opacity:0.5;">@${s.u} ${app.getCustomBadge(s.u)}</small></div>
                         <pre style="background:rgba(0,0,0,0.8); padding:5px; margin-top:5px; overflow-x:auto; font-size:10px; border:1px solid #333;">${s.code}</pre>
                     </div>`;
                 });
@@ -2744,7 +2744,7 @@
                 list.innerHTML += `
                     <div class="card" style="border-color:#00FF00;">
                         <div style="display:flex; justify-content:space-between;">
-                            <strong onclick="app.openProfile('${match.u}')" style="cursor:pointer; text-decoration:underline;">@${match.u} ${app.getCommanderBadge(match.u)}</strong>
+                            <strong onclick="app.openProfile('${match.u}')" style="cursor:pointer; text-decoration:underline;">@${match.u} ${app.getCustomBadge(match.u)}</strong>
                             <button onclick="msgSys.openDM('${match.u}')" style="width:auto; padding:2px 8px; font-size:9px; border-color:#00FF00; color:#00FF00; margin:0;">INITIATE COMMS</button>
                         </div>
                         <div style="font-size:10px; margin-top:6px; opacity:0.8;">
@@ -2817,7 +2817,7 @@
                 box.innerHTML = "";
                 data.forEach(c => {
                     box.innerHTML += `<div class="chat-msg">
-                        <strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">@${c.u} ${app.getCommanderBadge(c.u)}:</strong> 
+                        <strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">@${c.u} ${app.getCustomBadge(c.u)}:</strong> 
                         ${app.formatMsg(c.txt)}
                     </div>`;
                 });
@@ -2861,7 +2861,7 @@
             const d = document.getElementById('ghost-chat');
             const msgId = 'g_' + Date.now() + Math.floor(Math.random()*1000);
             let h = `<div id="${msgId}" class="chat-msg" style="color:#FFD700; border-color:#665500; opacity:1; transition: opacity 2s ease-in-out;">`;
-            h += `<strong style="cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${data.u}')">${data.u} ${app.getCommanderBadge(data.u)}</strong>: ${app.formatMsg(data.t)}</div>`;
+            h += `<strong style="cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${data.u}')">${data.u} ${app.getCustomBadge(data.u)}</strong>: ${app.formatMsg(data.t)}</div>`;
             d.innerHTML += h; d.scrollTop = d.scrollHeight;
             setTimeout(() => {
                 const el = document.getElementById(msgId);
@@ -2904,7 +2904,7 @@
             const { data } = await supabase.from('users').select('id, presence_status, lastSeen').in('id', state.friends);
             (data||[]).forEach(f => {
                 list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getCommanderBadge(f.id)}${app.getBadge(f.id)}</div>
+                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getCustomBadge(f.id)}${app.getBadge(f.id)}</div>
                     <button onclick="msgSys.openDM('${f.id}')" style="width:auto; padding:4px 8px; margin:0; border-color:#FF00FF; color:#FF00FF;">MESSAGE</button>
                 </div>`;
             });
@@ -2918,7 +2918,7 @@
             const myDMs = (data||[]).filter(d => (d.users||[]).includes(state.user));
             myDMs.forEach(dm => {
                 const other = dm.users.find(u => u !== state.user);
-                list.innerHTML += `<div onclick="msgSys.openDM('${other}', '${dm.id}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">@${other} ${app.getCommanderBadge(other)}</div>`;
+                list.innerHTML += `<div onclick="msgSys.openDM('${other}', '${dm.id}')" style="cursor:pointer; padding:5px; border-bottom:1px solid var(--dim);">@${other} ${app.getCustomBadge(other)}</div>`;
             });
         },
         openDM: async (otherUser, knownDmId = null) => {
@@ -2954,7 +2954,7 @@
                     if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('dm_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('dm_msgs', '${m.id}')">DEL</button>`;
                     actions += `</div>`;
 
-                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
                 });
                 box.scrollTop = box.scrollHeight;
 
@@ -3053,7 +3053,7 @@
                     if(isMe && !m.is_deleted) actions += `<button class="msg-btn" onclick="msgSys.editMsg('group_msgs', '${m.id}', '${m.txt.replace(/'/g,"\\'")}')">EDIT</button><button class="msg-btn" onclick="msgSys.delMsg('group_msgs', '${m.id}')">DEL</button>`;
                     actions += `</div>`;
 
-                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
+                    box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML}</div></div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
@@ -3087,7 +3087,7 @@
             if (state.unsubComments) { state.unsubComments(); }
             state.unsubComments = await dbHelper.listenQuery('comments', 'parent_id', id, {col:'ts', asc:true}, null, (data) => {
                 div.innerHTML = ""; if (!data || data.length === 0) { div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; return; }
-                data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getCommanderBadge(c.u)}${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
+                data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getCustomBadge(c.u)}${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
                 div.scrollTop = div.scrollHeight;
             });
         },
@@ -3099,7 +3099,7 @@
             const div=document.getElementById('feed-posts'); div.innerHTML="LOADING FEED..."; const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); div.innerHTML="";
             (data||[]).forEach(p=>{ 
                 if(state.blocks.includes(p.u)) return;
-                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getCommanderBadge(p.u)}${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
+                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getCustomBadge(p.u)}${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
             });
         },
         createPoll: async()=>{ const q=document.getElementById('poll-q').value; const o1=document.getElementById('poll-o1').value; const o2=document.getElementById('poll-o2').value; const vid=document.getElementById('poll-video').value; if(!q||!o1||!o2)return; await supabase.from('polls').insert({u:state.user, q, video:vid||null, opts:[{t:o1,v:0},{t:o2,v:0}], voters:[], likes:[], dislikes:[], ts:dbHelper.serverTimestamp()}); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
@@ -3107,7 +3107,7 @@
             const div=document.getElementById('feed-polls'); div.innerHTML="LOADING POLLS..."; const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); div.innerHTML="";
             (data||[]).forEach(p=>{ 
                 if(state.blocks.includes(p.u)) return;
-                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getCommanderBadge(p.u)}${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
+                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getCustomBadge(p.u)}${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
             });
         },
         vote: async(id,optIdx)=>{ const { data: d } = await supabase.from('polls').select('*').eq('id', id).single(); if((d.voters||[]).includes(state.user))return alert("ALREADY VOTED"); let opts=d.opts; let voters=d.voters||[]; opts[optIdx].v++; voters.push(state.user); await supabase.from('polls').update({opts, voters}).eq('id', id); social.loadPolls(); }
@@ -3121,7 +3121,7 @@
         post: async()=>{ const h=document.getElementById('news-headline').value; const l=document.getElementById('news-link-input').value; if(!h)return; await supabase.from('news').insert({title:h, link:l||null, u:state.user, ts:dbHelper.serverTimestamp()}); document.getElementById('news-headline').value=""; document.getElementById('news-link-input').value=""; news.loadInternal(); },
         loadInternal: async()=>{
             const d=document.getElementById('news-feed-internal'); d.innerHTML="Scanning local nodes..."; const { data } = await supabase.from('news').select('*').order('ts', {ascending:false}).limit(10); d.innerHTML="";
-            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getCommanderBadge(n.u)}${app.getBadge(n.u)}</small></div>`; });
+            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getCustomBadge(n.u)}${app.getBadge(n.u)}</small></div>`; });
             if(!data || data.length===0) d.innerHTML="<div style='opacity:0.4;'>No broadcasts yet.</div>";
         }
     };
