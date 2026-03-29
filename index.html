@@ -3076,41 +3076,182 @@
     // SOCIAL
     // ================================================================
     window.social = {
-        tab: (t)=>{ document.getElementById('soc-tab-posts').classList.add('hidden'); document.getElementById('soc-tab-polls').classList.add('hidden'); document.getElementById('soc-tab-'+t).classList.remove('hidden'); if(t==='posts')social.loadPosts(); if(t==='polls')social.loadPolls(); },
-        like: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); else{ likes.push(state.user); if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
-        dislike: async(id,type)=>{ const col=type==='post'?'posts':'polls'; const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); let likes=d.likes||[]; let dislikes=d.dislikes||[]; if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); else{ dislikes.push(state.user); if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); } await supabase.from(col).update({likes, dislikes}).eq('id', id); type==='post'?social.loadPosts():social.loadPolls(); },
+        tab: (t)=>{ 
+            document.getElementById('soc-tab-posts').classList.add('hidden'); 
+            document.getElementById('soc-tab-polls').classList.add('hidden'); 
+            document.getElementById('soc-tab-'+t).classList.remove('hidden'); 
+            if(t==='posts')social.loadPosts(); 
+            if(t==='polls')social.loadPolls(); 
+        },
+        like: async(id,type)=>{ 
+            const col=type==='post'?'posts':'polls'; 
+            const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); 
+            let likes=d.likes||[]; let dislikes=d.dislikes||[]; 
+            if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); 
+            else{ likes.push(state.user); if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); } 
+            await supabase.from(col).update({likes, dislikes}).eq('id', id); 
+            type==='post'?social.loadPosts():social.loadPolls(); 
+        },
+        dislike: async(id,type)=>{ 
+            const col=type==='post'?'posts':'polls'; 
+            const { data: d } = await supabase.from(col).select('likes, dislikes').eq('id', id).single(); 
+            let likes=d.likes||[]; let dislikes=d.dislikes||[]; 
+            if(dislikes.includes(state.user)) dislikes = dislikes.filter(u => u !== state.user); 
+            else{ dislikes.push(state.user); if(likes.includes(state.user)) likes = likes.filter(u => u !== state.user); } 
+            await supabase.from(col).update({likes, dislikes}).eq('id', id); 
+            type==='post'?social.loadPosts():social.loadPolls(); 
+        },
 
         openComments: async (id, type) => {
-            document.querySelector('#comment-overlay .screen').classList.remove('hidden'); state.activeCommentId = id; state.activeCommentType = type;
-            const overlay = document.getElementById('comment-overlay'); overlay.classList.remove('hidden'); 
-            const div = document.getElementById('active-comment-list'); div.innerHTML = "<div style='opacity:0.4;'>>> ACCESSING ENCRYPTED THREAD...</div>";
+            document.querySelector('#comment-overlay .screen').classList.remove('hidden'); 
+            state.activeCommentId = id; state.activeCommentType = type;
+            const overlay = document.getElementById('comment-overlay'); 
+            overlay.classList.remove('hidden'); 
+            const div = document.getElementById('active-comment-list'); 
+            div.innerHTML = "<div style='opacity:0.4;'>>> ACCESSING ENCRYPTED THREAD...</div>";
             if (state.unsubComments) { state.unsubComments(); }
             state.unsubComments = await dbHelper.listenQuery('comments', 'parent_id', id, {col:'ts', asc:true}, null, (data) => {
-                div.innerHTML = ""; if (!data || data.length === 0) { div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; return; }
-                data.forEach(c => { if(!state.blocks.includes(c.u)) div.innerHTML += `<div class="comment-item"><strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">${c.u} ${app.getCustomBadge(c.u)}${app.getBadge(c.u)}:</strong> ${app.formatMsg(c.txt)}</div>`; });
+                div.innerHTML = ""; 
+                if (!data || data.length === 0) { 
+                    div.innerHTML = "<div style='opacity:0.4;padding:10px;'>NO DATA FOUND. BE THE FIRST TO LOG.</div>"; 
+                    return; 
+                }
+                data.forEach(c => { 
+                    if(!state.blocks.includes(c.u)) {
+                        div.innerHTML += `<div class="comment-item">
+                            <strong onclick="app.openProfile('${c.u}')" style="cursor:pointer;text-decoration:underline;">
+                                ${c.u}${app.getCustomBadge(c.u)}:
+                            </strong> ${app.formatMsg(c.txt)}
+                        </div>`; 
+                    }
+                });
                 div.scrollTop = div.scrollHeight;
             });
         },
-        closeComments: () => { document.getElementById('comment-overlay').classList.add('hidden'); if (state.unsubComments) { state.unsubComments(); state.unsubComments = null; } state.activeCommentId = null; state.activeCommentType = null; },
-        submitComment: async()=>{ const txt=document.getElementById('new-comment-input').value.trim(); if(!txt||!state.activeCommentId)return; const btn=document.querySelector('#comment-overlay button:last-child'); if(btn)btn.disabled=true; await supabase.from('comments').insert({parent_type: state.activeCommentType, parent_id: state.activeCommentId, u: state.user, txt, ts: dbHelper.serverTimestamp()}); document.getElementById('new-comment-input').value=""; if(btn)btn.disabled=false; },
+        closeComments: () => { 
+            document.getElementById('comment-overlay').classList.add('hidden'); 
+            if (state.unsubComments) { state.unsubComments(); state.unsubComments = null; } 
+            state.activeCommentId = null; state.activeCommentType = null; 
+        },
+        submitComment: async()=>{ 
+            const txt=document.getElementById('new-comment-input').value.trim(); 
+            if(!txt||!state.activeCommentId)return; 
+            await supabase.from('comments').insert({
+                parent_type: state.activeCommentType, 
+                parent_id: state.activeCommentId, 
+                u: state.user, 
+                txt, 
+                ts: dbHelper.serverTimestamp()
+            }); 
+            document.getElementById('new-comment-input').value=""; 
+        },
 
-        createPost: async()=>{ const txt=document.getElementById('post-content').value; const vid=document.getElementById('post-video').value; if(!txt)return; await supabase.from('posts').insert({u:state.user, txt, video:vid||null, ts:dbHelper.serverTimestamp(), likes:[], dislikes:[]}); document.getElementById('post-content').value=""; document.getElementById('post-video').value=""; social.loadPosts(); },
+        createPost: async()=>{ 
+            const txt=document.getElementById('post-content').value; 
+            const vid=document.getElementById('post-video').value; 
+            if(!txt)return; 
+            await supabase.from('posts').insert({u:state.user, txt, video:vid||null, ts:dbHelper.serverTimestamp(), likes:[], dislikes:[]}); 
+            document.getElementById('post-content').value=""; 
+            document.getElementById('post-video').value=""; 
+            social.loadPosts(); 
+        },
         loadPosts: async()=>{
-            const div=document.getElementById('feed-posts'); div.innerHTML="LOADING FEED..."; const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); div.innerHTML="";
+            const div=document.getElementById('feed-posts'); 
+            div.innerHTML="LOADING FEED..."; 
+            const { data } = await supabase.from('posts').select('*').order('ts', {ascending:false}).limit(20); 
+            div.innerHTML="";
             (data||[]).forEach(p=>{ 
                 if(state.blocks.includes(p.u)) return;
-                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">@${p.u} ${app.getCustomBadge(p.u)}${app.getBadge(p.u)}</span><span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span></div><div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>${vH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button></div></div>`; 
+                const likes=(p.likes||[]).length; 
+                const dislikes=(p.dislikes||[]).length; 
+                const uL=(p.likes||[]).includes(state.user)?"active-action":""; 
+                const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; 
+                let vH=""; 
+                if(p.video){
+                    const e=app.getEmbedUrl(p.video);
+                    if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;
+                } 
+                div.innerHTML+=`<div class="card">
+                    <div class="post-header">
+                        <span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">
+                            @${p.u}${app.getCustomBadge(p.u)}
+                        </span>
+                        <span>${p.ts?new Date(p.ts).toLocaleTimeString():'NOW'}</span>
+                    </div>
+                    <div style="margin-bottom:5px;">${app.formatMsg(p.txt)}</div>
+                    ${vH}
+                    <div class="social-actions">
+                        <button class="social-btn ${uL}" onclick="social.like('${p.id}','post')">LIKE (${likes})</button>
+                        <button class="social-btn ${uD}" onclick="social.dislike('${p.id}','post')">DISLIKE (${dislikes})</button>
+                        <button class="social-btn" onclick="social.openComments('${p.id}','post')">COMMENTS</button>
+                    </div>
+                </div>`; 
             });
         },
-        createPoll: async()=>{ const q=document.getElementById('poll-q').value; const o1=document.getElementById('poll-o1').value; const o2=document.getElementById('poll-o2').value; const vid=document.getElementById('poll-video').value; if(!q||!o1||!o2)return; await supabase.from('polls').insert({u:state.user, q, video:vid||null, opts:[{t:o1,v:0},{t:o2,v:0}], voters:[], likes:[], dislikes:[], ts:dbHelper.serverTimestamp()}); document.getElementById('poll-creator').classList.add('hidden'); social.loadPolls(); },
+        createPoll: async()=>{ 
+            const q=document.getElementById('poll-q').value; 
+            const o1=document.getElementById('poll-o1').value; 
+            const o2=document.getElementById('poll-o2').value; 
+            const vid=document.getElementById('poll-video').value; 
+            if(!q||!o1||!o2)return; 
+            await supabase.from('polls').insert({
+                u:state.user, q, video:vid||null, 
+                opts:[{t:o1,v:0},{t:o2,v:0}], 
+                voters:[], likes:[], dislikes:[], 
+                ts:dbHelper.serverTimestamp()
+            }); 
+            document.getElementById('poll-creator').classList.add('hidden'); 
+            social.loadPolls(); 
+        },
         loadPolls: async()=>{
-            const div=document.getElementById('feed-polls'); div.innerHTML="LOADING POLLS..."; const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); div.innerHTML="";
+            const div=document.getElementById('feed-polls'); 
+            div.innerHTML="LOADING POLLS..."; 
+            const { data } = await supabase.from('polls').select('*').order('ts', {ascending:false}).limit(10); 
+            div.innerHTML="";
             (data||[]).forEach(p=>{ 
                 if(state.blocks.includes(p.u)) return;
-                const likes=(p.likes||[]).length; const dislikes=(p.dislikes||[]).length; const uL=(p.likes||[]).includes(state.user)?"active-action":""; const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; let optsH=""; p.opts.forEach((opt,idx)=>{const total=p.opts.reduce((a,b)=>a+b.v,0)||1;const pct=Math.round((opt.v/total)*100);optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div><div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div></div>`;}); let vH=""; if(p.video){const e=app.getEmbedUrl(p.video);if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;} div.innerHTML+=`<div class="card"><div class="post-header"><span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">POLL BY @${p.u} ${app.getCustomBadge(p.u)}${app.getBadge(p.u)}</span></div><strong>${app.formatMsg(p.q)}</strong>${vH}${optsH}<div class="social-actions"><button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button><button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button><button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button></div></div>`; 
+                const likes=(p.likes||[]).length; 
+                const dislikes=(p.dislikes||[]).length; 
+                const uL=(p.likes||[]).includes(state.user)?"active-action":""; 
+                const uD=(p.dislikes||[]).includes(state.user)?"active-action":""; 
+                let optsH=""; 
+                p.opts.forEach((opt,idx)=>{
+                    const total=p.opts.reduce((a,b)=>a+b.v,0)||1;
+                    const pct=Math.round((opt.v/total)*100);
+                    optsH+=`<div style="margin-top:6px;cursor:pointer;" onclick="social.vote('${p.id}',${idx})">
+                        <div style="display:flex;justify-content:space-between;font-size:12px;"><span>${opt.t}</span><span>${opt.v}</span></div>
+                        <div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div>
+                    </div>`;
+                }); 
+                let vH=""; 
+                if(p.video){
+                    const e=app.getEmbedUrl(p.video);
+                    if(e)vH=`<iframe class="vid-embed" src="${e}" allowfullscreen></iframe>`;
+                } 
+                div.innerHTML+=`<div class="card">
+                    <div class="post-header">
+                        <span onclick="app.openProfile('${p.u}')" style="cursor:pointer;text-decoration:underline;">
+                            POLL BY @${p.u}${app.getCustomBadge(p.u)}
+                        </span>
+                    </div>
+                    <strong>${app.formatMsg(p.q)}</strong>
+                    ${vH}${optsH}
+                    <div class="social-actions">
+                        <button class="social-btn ${uL}" onclick="social.like('${p.id}','poll')">LIKE (${likes})</button>
+                        <button class="social-btn ${uD}" onclick="social.dislike('${p.id}','poll')">DISLIKE (${dislikes})</button>
+                        <button class="social-btn" onclick="social.openComments('${p.id}','poll')">COMMENTS</button>
+                    </div>
+                </div>`; 
             });
         },
-        vote: async(id,optIdx)=>{ const { data: d } = await supabase.from('polls').select('*').eq('id', id).single(); if((d.voters||[]).includes(state.user))return alert("ALREADY VOTED"); let opts=d.opts; let voters=d.voters||[]; opts[optIdx].v++; voters.push(state.user); await supabase.from('polls').update({opts, voters}).eq('id', id); social.loadPolls(); }
+        vote: async(id,optIdx)=>{ 
+            const { data: d } = await supabase.from('polls').select('*').eq('id', id).single(); 
+            if((d.voters||[]).includes(state.user))return alert("ALREADY VOTED"); 
+            let opts=d.opts; let voters=d.voters||[]; 
+            opts[optIdx].v++; voters.push(state.user); 
+            await supabase.from('polls').update({opts, voters}).eq('id', id); 
+            social.loadPolls(); 
+        }
     };
 
     // ================================================================
