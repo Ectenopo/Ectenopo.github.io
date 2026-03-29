@@ -1104,6 +1104,14 @@
             <button onclick="app.adminBan(state.viewedProfile, false)" class="danger" style="font-size:9px; padding:4px;" id="btn-admin-ban">BAN</button>
             <button onclick="app.adminBan(state.viewedProfile, true)" class="danger" style="font-size:9px; padding:4px;" id="btn-admin-ipban">IP BAN</button>
         </div>
+        
+        <div style="border-top:1px dashed #00FFFF; margin-top:8px; padding-top:8px;">
+            <strong style="color:#00FFFF;font-size:10px;">CLEARANCE & TITLE OVERRIDE</strong>
+            <input type="number" id="admin-perm-level" placeholder="Perm Level (1=Norm, 2=Ver, 10=Cmdr)" style="margin-top:4px;">
+            <input type="text" id="admin-custom-title" placeholder="Custom Title (e.g. SYSTEM_ADMIN)">
+            <input type="text" id="admin-title-color" placeholder="Hex Color (e.g. #00FFFF)">
+            <button onclick="app.saveUserClearance(state.viewedProfile)" class="admin" style="margin-top:5px;">APPLY CLEARANCE</button>
+        </div>
     </div>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
@@ -1439,6 +1447,16 @@
     };
 
     window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
+    // --- NEW GLOBAL USER CACHE ---
+    window.userCache = {};
+    // Load all users on boot
+    supabase.from('users').select('*').then(({data}) => {
+        if(data) data.forEach(u => window.userCache[u.id] = u);
+    });
+    // Listen for any live title/permission updates
+    supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
+        if(payload.new) window.userCache[payload.new.id] = payload.new;
+    }).subscribe();
     window.journal = {
         load: async () => {
             const list = document.getElementById('journal-entries');
@@ -1825,10 +1843,31 @@
         voiceContext:null, voiceSource:null, voiceAnalyser:null, voiceAnim:null, voiceActive:false, voiceUnsubscribe:null, voiceHeartbeat:null,
         globalHeartbeat: null, globalChatUnsub: null, userUnsub: null, isVideo: false,
         panicCount: 0,
+        isCommander: (u) => {
+            if ((u||'').toLowerCase() === 'user1234') return true; // Hardcoded fallback
+            if (window.userCache && window.userCache[u] && window.userCache[u].perm_level >= 10) return true;
+            return false;
+        },
+        getCustomBadge: (u) => {
+            let html = '';
+            const ud = window.userCache ? window.userCache[u] : null;
+            
+            // 1. Custom Title rendering
+            if (ud && ud.custom_title) {
+                const color = ud.custom_title_color || '#FF0000';
+                html += ` <span class="commander-badge" style="color:${color}; border-color:${color}; box-shadow:0 0 5px ${color}; text-shadow:0 0 8px ${color};">[${ud.custom_title}]</span>`;
+            } 
+            // Fallback for default commander
+            else if (app.isCommander(u)) {
+                html += ` <span class="commander-badge">[COMMANDER]</span>`;
+            }
 
-        isCommander: (u) => (u||'').toLowerCase() === 'user1234',
-        getCommanderBadge: (u) => app.isCommander(u) ? `<span class="commander-badge">[COMMANDER]</span>` : '',
-
+            // 2. Verified rendering (Perm Level 2+ automatically verified)
+            if (ud && (ud.perm_level >= 2 || ud.verified)) {
+                html += ` <span class="verified-badge" title="Verified Identity">♦✓</span>`;
+            }
+            return html;
+        },
         panicSwitch: () => {
             document.getElementById('panic-overlay').classList.remove('hidden');
             audioSys.playTone(200, 'sine', 0.1);
@@ -1942,8 +1981,6 @@
             const e = document.getElementById('config-email').value; if(!e) return;
             await supabase.from('users').update({email: e, emailVerified: true}).eq('id', state.user); alert("EMAIL VERIFIED & SECURED.");
         },
-
-        getBadge: (username) => state.verifiedUsers.includes(username) ? `<span class="verified-badge" title="Verified Identity">♦✓</span>` : '',
         
         getStatusDot: (statusStr, lastSeen) => {
             const now = new Date().getTime(); const ls = new Date(lastSeen).getTime();
@@ -2023,7 +2060,7 @@
                 const d=document.getElementById('global-chat'); d.innerHTML="";
                 data.reverse().forEach(m=>{
                     if(state.blocks.includes(m.u)) return;
-                    d.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
+                    d.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
                 }); 
                 d.scrollTop=d.scrollHeight;
             });
@@ -2036,7 +2073,7 @@
                 d.innerHTML=""; 
                 data.reverse().forEach(m=>{
                     if(state.blocks.includes(m.u)) return;
-                    d.innerHTML+=`<div class="chat-msg" style="color:#FFD700;border-color:#664400;"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
+                    d.innerHTML+=`<div class="chat-msg" style="color:#FFD700;border-color:#664400;"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`
                 }); 
                 d.scrollTop=d.scrollHeight;
             });
@@ -2049,7 +2086,7 @@
             if(!d) return alert("USER NOT FOUND");
             state.viewedProfile=target;
             document.getElementById('prof-username').innerText="@"+target;
-            document.getElementById('prof-displayname').innerHTML=(d.displayName||target) + " " + app.getCommanderBadge(target);
+            document.getElementById('prof-displayname').innerHTML=(d.displayName||target) + " " + app.getCustomBadge(target);
             document.getElementById('prof-bio').innerText=`"${d.bio||'No status set.'}"`;
             document.getElementById('prof-pfp-display').style.backgroundImage=d.pfp?`url('${d.pfp}')`:"none";
             if(d.verified)document.getElementById('prof-verified').classList.remove('hidden'); else document.getElementById('prof-verified').classList.add('hidden');
@@ -2064,12 +2101,23 @@
                 if(state.friends.includes(target)) { addBtn.innerText="REMOVE FRIEND"; addBtn.className="danger"; } else { addBtn.innerText="ADD FRIEND"; addBtn.className=""; }
                 if(state.blocks.includes(target)) { blkBtn.innerText="UNBLOCK"; } else { blkBtn.innerText="BLOCK"; }
             }
-            const admins=["user1234","user4321"];
-            if(admins.includes(state.user.toLowerCase())&&target!==state.user){
+            // --- REPLACE THE OLD ADMIN CHECK WITH THIS ---
+            if(app.isCommander(state.user) && target !== state.user){
                 document.getElementById('prof-admin-panel').classList.remove('hidden');
                 document.getElementById('btn-admin-ban').innerText = d.banned ? "UNBAN" : "BAN";
                 document.getElementById('btn-admin-ipban').innerText = d.ipBanned ? "UN-IP BAN" : "IP BAN";
-            } else document.getElementById('prof-admin-panel').classList.add('hidden');
+                
+                // Populate clearance inputs
+                document.getElementById('admin-perm-level').value = d.perm_level || 1;
+                document.getElementById('admin-custom-title').value = d.custom_title || "";
+                document.getElementById('admin-title-color').value = d.custom_title_color || "";
+            } else {
+                document.getElementById('prof-admin-panel').classList.add('hidden');
+            }
+            // --- END OF REPLACEMENT ---
+
+            nav.to('profile'); // This line comes right after
+        },
             nav.to('profile');
         },
         saveProfile: async()=>{ const dn=document.getElementById('edit-disp').value.trim(); const bio=document.getElementById('edit-bio').value.trim(); const pf=document.getElementById('edit-pfp').value.trim(); const priv=document.getElementById('edit-private').checked; await supabase.from('users').update({displayName:dn, bio:bio, pfp:pf, private:priv}).eq('id', state.user); alert("SAVED"); app.openProfile(state.user); },
@@ -2080,7 +2128,24 @@
             else { await supabase.from('users').update({banned: !data.banned}).eq('id', target); alert("BAN TOGGLED"); }
             app.openProfile(target);
         },
+        saveUserClearance: async (target) => {
+            const pl = parseInt(document.getElementById('admin-perm-level').value) || 1;
+            const ct = document.getElementById('admin-custom-title').value.trim();
+            const ctc = document.getElementById('admin-title-color').value.trim();
 
+            const { error } = await supabase.from('users').update({
+                perm_level: pl,
+                custom_title: ct || null,
+                custom_title_color: ctc || null,
+                verified: pl >= 2 // Auto-verify if they are level 2 or higher
+            }).eq('id', target);
+
+            if (error) alert("DB ERROR: " + error.message);
+            else {
+                alert("CLEARANCE & TITLE UPDATED FOR " + target);
+                app.openProfile(target); // Refresh UI
+            }
+        },
         sendFeedback: async () => {
             const type = document.getElementById('fb-type').value; const txt = document.getElementById('fb-text').value.trim();
             if(!txt) return; await supabase.from('feedback').insert({u: state.user, type, txt, ts: dbHelper.serverTimestamp()});
@@ -2130,7 +2195,7 @@
                     let threadHtml = m.thread_parent ? `<div class="thread-indicator">Replying to thread...</div>` : '';
 
                     if(m.u==="SYSTEM") d.innerHTML+=`<div class="chat-msg" style="${style}"><strong>SYSTEM:</strong> ${txt}</div>`;
-                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${txt}</div>`;
+                    else d.innerHTML+=`<div class="chat-msg" style="${style}">${actions}${threadHtml}${prefix} <strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}${app.getBadge(m.u)}:</strong> ${txt}</div>`;
                 });
                 d.scrollTop=d.scrollHeight;
             }, (newMsg) => {
@@ -2221,7 +2286,7 @@
             const ranks=state.clanData.ranks||{}; const isLeader=state.clanData.leader===state.user;
             for(const [member,rank] of Object.entries(ranks)){
                 let ctrl=""; if(isLeader&&member!==state.user) ctrl=`<button onclick="app.clanKick('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0;" class="danger">KICK</button><button onclick="app.setCustomRank('${member}')" style="width:auto;font-size:10px;padding:3px 6px;margin:0 0 0 5px;">SET RANK</button>`;
-                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getCommanderBadge(member)}${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
+                list.innerHTML+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;"><span onclick="app.openProfile('${member}')" style="cursor:pointer;text-decoration:underline;">${member} ${app.getCustomBadge(member)}${app.getBadge(member)} <span style="color:#FFD700;font-size:11px;">[${rank.toUpperCase()}]</span></span><div>${ctrl}</div></div>`;
             }
         },
         setCustomRank: async(member)=>{ const r=prompt("ENTER CUSTOM RANK TITLE:"); if(r){ let ranks = state.clanData.ranks||{}; ranks[member]=r.toUpperCase(); await supabase.from('clans').update({ranks}).eq('id', state.clan); app.loadRoster();} },
@@ -2247,9 +2312,9 @@
         createEvent: async()=>{ const n=document.getElementById('evt-name').value; if(!n)return; await supabase.from('events').insert({name:n, desc:document.getElementById('evt-desc').value, start:document.getElementById('evt-start').value, end:document.getElementById('evt-end').value, creator:state.user, ts:dbHelper.serverTimestamp()}); alert("CREATED"); app.loadEvents(); },
         loadEvents: async()=>{ const list=document.getElementById('event-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('events').select('*').order('start', {ascending:true}); list.innerHTML=""; (data||[]).forEach(e=>{ list.innerHTML+=`<div class="card"><strong>${e.name}</strong><br><span style="opacity:0.6;font-size:11px;">${e.start} — ${e.end||'?'}</span><br><p style="margin:4px 0;font-size:12px;">${e.desc}</p><small style="opacity:0.4;">ORG: ${e.creator}</small></div>`;}); },
         createJob: async()=>{ const t=document.getElementById('job-title').value; if(!t)return; await supabase.from('jobs').insert({title:t, desc:document.getElementById('job-desc').value, owner:state.user, worker:null, status:'OPEN', ts:dbHelper.serverTimestamp()}); alert("POSTED"); app.loadJobs(); },
-        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getCommanderBadge(j.owner)}${app.getBadge(j.owner)}</strong></small>${act}</div>`;}); },
+        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getCustomBadge(j.owner)}${app.getBadge(j.owner)}</strong></small>${act}</div>`;}); },
         acceptJob: async(jid)=>{ if(!confirm("ACCEPT?"))return; await supabase.from('jobs').update({worker:state.user, status:'ASSIGNED'}).eq('id', jid); app.openJobChat(jid); },
-        openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCommanderBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
+        openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}${app.getBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
         sendJobMsg: async()=>{ const t=document.getElementById('job-msg-input').value; if(t) await supabase.from('job_msgs').insert({job_id:state.currentJob, u:state.user, txt:t, ts:dbHelper.serverTimestamp()}); document.getElementById('job-msg-input').value=""; },
         closeJobChat: ()=>{ document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob=null; },
 
@@ -2266,7 +2331,7 @@
                     const vh = isBase64 ? 
                         (v.url.startsWith('data:image') ? `<img src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;">` : `<video controls src="${v.url}" style="width:100%; margin-top:5px; border:1px solid currentColor;"></video>`) 
                         : (app.bedUrl(v.url) ? `<iframe width="100%" height="150" src="${app.getEmbedUrl(v.url)}" frameborder="0" allowfullscreen style="display:block;margin-top:5px;"></iframe>`:`<a href="${v.url}" target="_blank" style="color:var(--rep-watch);">[OPEN LINK]</a>`);
-                    feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getCommanderBadge(v.uploader)}${app.getBadge(v.uploader)}</strong></small>${vh}</div>`;
+                    feed.innerHTML+=`<div class="card" style="border-color:var(--rep-watch);"><strong style="color:var(--rep-watch);">${v.title}</strong><br><small style="opacity:0.4;">BY: <strong onclick="app.openProfile('${v.uploader}')" style="cursor:pointer;text-decoration:underline;">${v.uploader||'?'} ${app.getCustomBadge(v.uploader)}${app.getBadge(v.uploader)}</strong></small>${vh}</div>`;
                 });
             }catch(e){feed.innerHTML="<div style='color:red;'>ERROR: "+e.message+"</div>";}
         },
