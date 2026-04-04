@@ -1448,10 +1448,7 @@
 
     window.state = { user:null, clan:null, clanData:{}, viewedProfile:null, activeCommentId:null, activeCommentType:null, unsubComments:null, currentJob:null, verifiedUsers:[], friends:[], blocks:[], localPins: JSON.parse(localStorage.getItem('localPins')||'[]'), replyTarget: null };
 
-    // Listen for any live title/permission updates
-    supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
-        if(payload.new) window.userCache[payload.new.id] = payload.new;
-    }).subscribe();
+
     window.journal = {
         load: async () => {
             const list = document.getElementById('journal-entries');
