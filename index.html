@@ -1427,15 +1427,49 @@
     setInterval(drawMatrix, 33);
 
     window.audioSys = {
-        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        ctx: null, // Do not create the context immediately
+        init: () => {
+            if (!audioSys.ctx) {
+                audioSys.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioSys.ctx.state === 'suspended') {
+                audioSys.ctx.resume().catch(() => {}); // Catch silent browser blocks
+            }
+        },
         playTone: (freq, type, dur) => {
             if(localStorage.getItem('muteNotifs') === 'true') return;
-            if(audioSys.ctx.state==='suspended') audioSys.ctx.resume();
-            const o = audioSys.ctx.createOscillator(); const g = audioSys.ctx.createGain();
-            o.type = type; o.frequency.value = freq; o.connect(g); g.connect(audioSys.ctx.destination);
-            o.start(); g.gain.exponentialRampToValueAtTime(0.0001, audioSys.ctx.currentTime + dur); o.stop(audioSys.ctx.currentTime + dur);
+            
+            // Ensure context exists
+            if (!audioSys.ctx) audioSys.init();
+            
+            // If the browser is still locking the audio, abort the sound silently instead of throwing a red error
+            if (audioSys.ctx.state === 'suspended') {
+                audioSys.ctx.resume().catch(() => {});
+                if (audioSys.ctx.state === 'suspended') return; 
+            }
+
+            const o = audioSys.ctx.createOscillator(); 
+            const g = audioSys.ctx.createGain();
+            o.type = type; 
+            o.frequency.value = freq; 
+            o.connect(g); 
+            g.connect(audioSys.ctx.destination);
+            
+            o.start(); 
+            g.gain.exponentialRampToValueAtTime(0.0001, audioSys.ctx.currentTime + dur); 
+            o.stop(audioSys.ctx.currentTime + dur);
         }
     };
+
+    // SYSTEM UNLOCK: Listen for the user's first interaction to wake up the audio engine
+    const unlockAudioEngine = () => {
+        if (window.audioSys) audioSys.init();
+        // Once unlocked, we don't need these listeners anymore
+        document.removeEventListener('click', unlockAudioEngine);
+        document.removeEventListener('keydown', unlockAudioEngine);
+    };
+    document.addEventListener('click', unlockAudioEngine);
+    document.addEventListener('keydown', unlockAudioEngine);
 
     window.deviceDetect = { getInfo: () => "Encrypted Client" };
 
