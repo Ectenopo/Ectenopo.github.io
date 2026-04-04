@@ -1427,47 +1427,50 @@
     setInterval(drawMatrix, 33);
 
     window.audioSys = {
-        ctx: null, // Do not create the context immediately
-        init: () => {
-            if (!audioSys.ctx) {
-                audioSys.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioSys.ctx.state === 'suspended') {
-                audioSys.ctx.resume().catch(() => {}); // Catch silent browser blocks
-            }
-        },
+        // Create the context so other functions don't crash looking for it
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        unlocked: false, // THE HARD BLOCK FLAG
+        
         playTone: (freq, type, dur) => {
-            if(localStorage.getItem('muteNotifs') === 'true') return;
+            if (localStorage.getItem('muteNotifs') === 'true') return;
             
-            // Ensure context exists
-            if (!audioSys.ctx) audioSys.init();
+            // BULLETPROOF CHECK: If the user hasn't clicked yet, completely ignore the beep command. 
+            // No context resumes, no oscillators, no Chrome warnings.
+            if (!audioSys.unlocked) return; 
             
-            // If the browser is still locking the audio, abort the sound silently instead of throwing a red error
             if (audioSys.ctx.state === 'suspended') {
                 audioSys.ctx.resume().catch(() => {});
-                if (audioSys.ctx.state === 'suspended') return; 
+                if (audioSys.ctx.state === 'suspended') return; // Double check
             }
 
-            const o = audioSys.ctx.createOscillator(); 
-            const g = audioSys.ctx.createGain();
-            o.type = type; 
-            o.frequency.value = freq; 
-            o.connect(g); 
-            g.connect(audioSys.ctx.destination);
-            
-            o.start(); 
-            g.gain.exponentialRampToValueAtTime(0.0001, audioSys.ctx.currentTime + dur); 
-            o.stop(audioSys.ctx.currentTime + dur);
+            try {
+                const o = audioSys.ctx.createOscillator(); 
+                const g = audioSys.ctx.createGain();
+                o.type = type; 
+                o.frequency.value = freq; 
+                o.connect(g); 
+                g.connect(audioSys.ctx.destination);
+                
+                o.start(); 
+                g.gain.exponentialRampToValueAtTime(0.0001, audioSys.ctx.currentTime + dur); 
+                o.stop(audioSys.ctx.currentTime + dur);
+            } catch (e) {
+                // Fail silently if browser still throws a fit
+            }
         }
     };
 
-    // SYSTEM UNLOCK: Listen for the user's first interaction to wake up the audio engine
+    // SYSTEM UNLOCK: Wake up the engine only when the user interacts
     const unlockAudioEngine = () => {
-        if (window.audioSys) audioSys.init();
-        // Once unlocked, we don't need these listeners anymore
+        window.audioSys.unlocked = true;
+        if (window.audioSys.ctx.state === 'suspended') {
+            window.audioSys.ctx.resume().catch(() => {});
+        }
+        // Remove the listeners so this only runs once
         document.removeEventListener('click', unlockAudioEngine);
         document.removeEventListener('keydown', unlockAudioEngine);
     };
+    
     document.addEventListener('click', unlockAudioEngine);
     document.addEventListener('keydown', unlockAudioEngine);
 
