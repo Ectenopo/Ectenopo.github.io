@@ -1386,7 +1386,10 @@
         listenDoc: async (table, id, callback) => {
             const fetch = async () => { const {data} = await supabase.from(table).select('*').eq('id', id).maybeSingle(); callback(data||{}); };
             await fetch();
-            const chan = supabase.channel(`doc_${table}_${id}`).on('postgres_changes', {event:'*', schema:'public', table, filter:`id=eq.${id}`}, fetch).subscribe();
+            
+            // FIX: Added _${Date.now()} to make the channel name mathematically unique every single time
+            const chan = supabase.channel(`doc_${table}_${id}_${Date.now()}`).on('postgres_changes', {event:'*', schema:'public', table, filter:`id=eq.${id}`}, fetch).subscribe();
+            
             return () => supabase.removeChannel(chan);
         },
         listenQuery: async (table, filterCol, filterVal, orderCol, limitCount, callback, onAdded) => {
@@ -1401,7 +1404,7 @@
             await fetch();
             const opts = {event:'*', schema:'public', table};
             if (filterCol) opts.filter = `${filterCol}=eq.${filterVal}`;
-            const chan = supabase.channel(`q_${table}_${filterVal||'all'}`).on('postgres_changes', opts, (p) => {
+            const chan = supabase.channel(`q_${table}_${filterVal||'all'}_${Date.now()}`).on('postgres_changes', opts, (p) => {
                 if (p.eventType === 'INSERT' && onAdded) onAdded(p.new);
                 fetch();
             }).subscribe();
@@ -2066,8 +2069,19 @@
         },
 
         initHub: async () => {
-            loading(true); document.getElementById('device-info').innerText="DEVICE: "+deviceDetect.getInfo();
-            const { data: ud } = await supabase.from('users').select('*').eq('id', state.user).single();
+            loading(true); 
+            document.getElementById('device-info').innerText="DEVICE: "+deviceDetect.getInfo();
+            
+            // Add error handling and use maybeSingle() instead of single()
+            const { data: ud, error } = await supabase.from('users').select('*').eq('id', state.user).maybeSingle();
+            
+            // SAFETY CHECK: If no data comes back, stop the crash and hide the loading screen
+            if (error || !ud) {
+                loading(false);
+                console.error("Hub Load Error:", error);
+                return alert("DATABASE BLOCKED THE REQUEST. Go to Supabase > Authentication > Policies and allow the 'anon' role to read the 'users' table.");
+            }
+
             document.getElementById('hub-user').innerHTML=`${ud.displayName||state.user} ${app.getCustomBadge(state.user)}`;
             
             // Show SOC button if they have permission
@@ -2086,9 +2100,24 @@
                 document.getElementById('btn-journal').classList.add('hidden');
             }
             const setupClan=(data)=>{
-                state.friends = data.friends||[]; state.blocks = data.blocks||[];
-                if(data.clan){ state.clan=data.clan; if(app.clanUnsub)app.clanUnsub(); app.listenToClan(data.clan); document.getElementById('panel-no-clan').classList.add('hidden'); document.getElementById('panel-in-clan').classList.remove('hidden'); }
-                else{ state.clan=null; document.getElementById('panel-no-clan').classList.remove('hidden'); document.getElementById('panel-in-clan').classList.add('hidden'); }
+                state.friends = data.friends||[]; 
+                state.blocks = data.blocks||[];
+                
+                if(data.clan){ 
+                    // ONLY restart the listener if the clan changed, or if it isn't running yet
+                    if(state.clan !== data.clan || !app.clanChatUnsub) {
+                        state.clan=data.clan; 
+                        if(app.clanUnsub)app.clanUnsub(); 
+                        app.listenToClan(data.clan); 
+                    }
+                    document.getElementById('panel-no-clan').classList.add('hidden'); 
+                    document.getElementById('panel-in-clan').classList.remove('hidden'); 
+                }
+                else{ 
+                    state.clan=null; 
+                    document.getElementById('panel-no-clan').classList.remove('hidden'); 
+                    document.getElementById('panel-in-clan').classList.add('hidden'); 
+                }
                 document.getElementById('hub-rep').innerText="REP: "+(data.rep||0);
             };
             setupClan(ud);
@@ -3755,9 +3784,11 @@
         // Terminal Jump
         if(e.key === ' ' && !document.getElementById('screen-minigame').classList.contains('hidden')) { e.preventDefault(); if(game.frame) game.player.v = game.JUMP_VELOCITY; }
         
-        // Maze Controls
-        let k = e.key.toLowerCase();
-        if(['w','a','s','d'].includes(k)) maze.keys[k] = true;
+        // Maze Controls (SAFETY CHECK ADDED HERE)
+        if (e.key) {
+            let k = e.key.toLowerCase();
+            if(['w','a','s','d'].includes(k)) maze.keys[k] = true;
+        }
         
         // Panic Switch Reset
         if(e.key === 'Escape') {
@@ -3776,8 +3807,11 @@
     });
 
     document.addEventListener('keyup', (e) => {
-        let k = e.key.toLowerCase();
-        if(['w','a','s','d'].includes(k)) maze.keys[k] = false;
+        // SAFETY CHECK ADDED HERE
+        if (e.key) {
+            let k = e.key.toLowerCase();
+            if(['w','a','s','d'].includes(k)) maze.keys[k] = false;
+        }
     });
 
 </script>
