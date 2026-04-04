@@ -328,8 +328,13 @@
     </div>
 
     <div class="ad-wrapper" style="margin-top:20px; border:1px dashed currentColor; padding:5px;">
-        <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
-    </div>
+    <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-4002392683798426"
+         data-ad-slot="3528059968"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
 </div>
 
 <div id="screen-emergency" class="screen hidden" style="border-color:var(--err-color);box-shadow:0 0 28px var(--err-color);color:var(--err-color);">
@@ -1013,8 +1018,13 @@
         <div id="feed-polls" style="height:400px;overflow-y:scroll;margin-top:10px;"></div>
     </div>
     <div class="ad-wrapper" style="margin-top:10px; border:1px dashed currentColor; padding:5px;">
-        <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
-    </div>
+    <small style="opacity:0.5; display:block; margin-bottom:5px;">// TRANSMISSION_SPONSORED</small>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-4002392683798426"
+         data-ad-slot="3528059968"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
     <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
@@ -1481,11 +1491,26 @@
     };
     window.nav = {
         to: (id) => {
-            document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden')); document.getElementById('screen-kali').classList.add('hidden');
+            document.querySelectorAll('.screen').forEach(e => e.classList.add('hidden')); 
+            document.getElementById('screen-kali').classList.add('hidden');
+            
             if(window.neural && id !== 'neuralstreams' && neural.activePeerId) neural.stop();
             if(id==='neuralstreams') neural.init();
-            if(id==='kali') document.getElementById('screen-kali').classList.remove('hidden'); else document.getElementById('screen-'+id).classList.remove('hidden');
-            if(id === 'auth' || id === 'social') { try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { } }
+            
+            if(id==='kali') document.getElementById('screen-kali').classList.remove('hidden'); 
+            else document.getElementById('screen-'+id).classList.remove('hidden');
+            
+            // --- SECURE AD INJECTION LOGIC ---
+            if(id === 'auth' || id === 'social') { 
+                const adWrappers = document.querySelectorAll(`#screen-${id} .adsbygoogle`);
+                adWrappers.forEach(ad => {
+                    if (!ad.getAttribute('data-adsbygoogle-status')) {
+                        try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { }
+                    }
+                });
+            }
+            // ---------------------------------
+
             if(id==='hub')      app.initHub();
             if(id==='jobs')     app.loadJobs();
             if(id==='social')   social.loadPosts();
@@ -1501,7 +1526,12 @@
             if(id==='comms')    msgSys.init();
             if(id==='vault')    vault.load();
             if(id==='ghost')    ghost.init();
-            if(id==='feedback'){ if(["user1234","user4321"].includes(state.user?.toLowerCase())) document.getElementById('admin-feedback-panel').classList.remove('hidden'); app.loadFeedback(); }
+            if(id==='feedback'){ 
+                if(["user1234","user4321"].includes(state.user?.toLowerCase())) {
+                    document.getElementById('admin-feedback-panel').classList.remove('hidden'); 
+                }
+                app.loadFeedback(); 
+            }
             if(id==='minigame') game.init();
             if(id==='maze')     maze.init(); 
             if(id==='sniffer')  sniffer.init();
@@ -1516,7 +1546,11 @@
             if(id==='journal') journal.load();
             if(id==='ephemera') ephemera.load();
         },
-        tab: (t) => { document.getElementById('tab-clans').classList.add('hidden'); document.getElementById('tab-global').classList.add('hidden'); document.getElementById('tab-'+t).classList.remove('hidden'); }
+        tab: (t) => { 
+            document.getElementById('tab-clans').classList.add('hidden'); 
+            document.getElementById('tab-global').classList.add('hidden'); 
+            document.getElementById('tab-'+t).classList.remove('hidden'); 
+        }
     };
     window.neural = {
         peer: null, localStream: null, calls: [], activePeerId: null, chatChannel: null, unsubList: null, isHost: false,
