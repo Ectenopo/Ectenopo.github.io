@@ -1026,39 +1026,22 @@
              data-full-width-responsive="true"></ins>
         <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
     </div>
-<div id="screen-radio" class="screen hidden" style="border-color:var(--warn-color);box-shadow:0 0 28px var(--warn-color);color:var(--warn-color);">
+</div> <div id="screen-radio" class="screen hidden" style="border-color:var(--warn-color);box-shadow:0 0 28px var(--warn-color);color:var(--warn-color);">
     <h2>// SIGNAL_INTERCEPT (RADIO)</h2>
     <div class="card" style="border-color:var(--warn-color);text-align:center;">
         <div id="freq-viz" style="height:50px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;margin-bottom:10px;"></div>
-        
-        <div style="font-size:22px;font-family:var(--font-main);margin-bottom:10px;">
-            FREQ: <span id="radio-freq-display">462.5625</span> MHz
+        <div style="font-size:22px;font-family:var(--font-main);margin-bottom:10px;">FREQ: <span id="radio-freq">462.5625</span> MHz</div>
+        <div class="grid-2">
+            <button onclick="radio.toggleNoise()" id="btn-noise" style="color:var(--warn-color);border-color:var(--warn-color);">TOGGLE STATIC</button>
+            <button onclick="radio.scan()"        style="color:var(--warn-color);border-color:var(--warn-color);">SCAN NEXT</button>
         </div>
-
-        <div id="radio-controls" class="grid-2">
-            <button onclick="radio.setFreq()" id="btn-radio-freq" style="color:var(--warn-color);border-color:var(--warn-color);">SET FREQUENCY</button>
-            <button onclick="radio.tuneIn()" id="btn-radio-tune" style="color:var(--warn-color);border-color:var(--warn-color);">TUNE IN</button>
-        </div>
-
-        <button id="btn-radio-ptt" class="hidden" 
-            onmousedown="radio.startPTT()" 
-            onmouseup="radio.stopPTT()" 
-            onmouseleave="radio.stopPTT()" 
-            ontouchstart="radio.startPTT()" 
-            ontouchend="radio.stopPTT()" 
-            style="margin-top:10px; width:100%; height:60px; font-size:1.5em; font-weight:bold; background:var(--warn-color); color:#000; border:none; cursor:pointer; touch-action:manipulation;">
-            [ HOLD TO TRANSMIT ]
-        </button>
-
-        <div id="radio-status" style="margin-top:10px; font-size:10px; opacity:0.7;">STATUS: OFFLINE</div>
     </div>
-
     <h3 style="margin-top:14px;border-color:var(--warn-color);">// LIVE UPLINKS (EXTERNAL)</h3>
     <div class="grid-2" style="margin-top:8px;">
         <a href="https://www.broadcastify.com/listen/" target="_blank" class="news-link" style="color:var(--warn-color);border-color:var(--warn-color);">BROADCASTIFY (POLICE/FIRE)</a>
         <a href="https://tunein.com/radio/Police-Scanners-c100000/" target="_blank" class="news-link" style="color:var(--warn-color);border-color:var(--warn-color);">TUNEIN POLICE RADIO</a>
     </div>
-    <button onclick="radio.tuneOut(); nav.to('hub')" style="margin-top:10px;">BACK</button>
+    <button onclick="nav.to('hub')" style="margin-top:10px;">BACK</button>
 </div>
 
 <div id="screen-news" class="screen hidden" style="border-color:#00FFFF;box-shadow:0 0 28px #00FFFF;color:#00FFFF;">
@@ -3380,160 +3363,15 @@
     };
 
     // ================================================================
-    // RADIO (WebRTC PTT)
+    // RADIO
     // ================================================================
     window.radio = {
-        interval: null,
-        freq: "462.5625",
-        peer: null,
-        localStream: null,
-        calls: [],
-        audioElements: [],
-        channel: null,
-        active: false,
-
-        init: () => { 
-            const viz = document.getElementById('freq-viz'); 
-            viz.innerHTML = ""; 
-            for(let i=0; i<24; i++) viz.innerHTML += `<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*48}px"></div>`; 
-            
-            if(radio.interval) clearInterval(radio.interval); 
-            radio.interval = setInterval(() => { 
-                for(let i=0; i<24; i++){
-                    const el = document.getElementById(`fb-${i}`);
-                    // Only animate equalizer if actively tuned in to save resources
-                    if(el && radio.active) el.style.height = (Math.random()*44+4)+"px";
-                    else if(el) el.style.height = "4px";
-                } 
-            }, 90); 
-            
-            document.getElementById('radio-freq-display').innerText = radio.freq;
-        },
-
-        setFreq: () => { 
-            if(radio.active) return alert("MUST TUNE OUT BEFORE CHANGING FREQUENCY.");
-            const input = prompt("ENTER FREQUENCY (0.1 - 999.9999 MHz):", radio.freq);
-            if(!input) return;
-            const f = parseFloat(input);
-            if(isNaN(f) || f < 0.1 || f > 999.9999) return alert("INVALID FREQUENCY PARAMETERS.");
-            
-            radio.freq = f.toFixed(4);
-            document.getElementById('radio-freq-display').innerText = radio.freq;
-            audioSys.playTone(600, 'square', 0.1);
-        },
-
-        tuneIn: async () => {
-            if(radio.active) {
-                radio.tuneOut();
-                return;
-            }
-
-            document.getElementById('radio-status').innerText = "STATUS: REQUESTING HARDWARE...";
-            
-            try {
-                // Grab the microphone
-                radio.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                // MUTE the track immediately so we only transmit when holding PTT
-                radio.localStream.getAudioTracks().enabled = false; 
-            } catch(e) {
-                return alert("MIC ACCESS DENIED. UPLINK ABORTED.");
-            }
-
-            document.getElementById('radio-status').innerText = "STATUS: ESTABLISHING P2P TUNNEL...";
-            const peerId = 'rad_' + state.user + '_' + Math.floor(Math.random() * 10000);
-            radio.peer = new Peer(peerId);
-
-            radio.peer.on('open', (id) => {
-                radio.active = true;
-                document.getElementById('radio-status').innerText = `STATUS: ONLINE - ${radio.freq} MHz`;
-                document.getElementById('btn-radio-tune').innerText = "TUNE OUT";
-                document.getElementById('btn-radio-tune').classList.add('danger');
-                document.getElementById('btn-radio-freq').disabled = true;
-                document.getElementById('btn-radio-ptt').classList.remove('hidden');
-
-                audioSys.playTone(800, 'sawtooth', 0.1);
-                setTimeout(() => audioSys.playTone(900, 'sawtooth', 0.1), 150);
-
-                // Join a Supabase channel dedicated entirely to this frequency
-                const roomName = `radio_freq_${radio.freq.replace('.', '_')}`;
-                radio.channel = supabase.channel(roomName)
-                    .on('broadcast', { event: 'rad_join' }, payload => {
-                        // When someone else tunes into this frequency, call them automatically
-                        if (payload.payload.peerId !== id) {
-                            const call = radio.peer.call(payload.payload.peerId, radio.localStream);
-                            radio.handleCall(call);
-                        }
-                    })
-                    .subscribe(status => {
-                        if (status === 'SUBSCRIBED') {
-                            // Broadcast our presence to anyone already on the frequency
-                            radio.channel.send({ type: 'broadcast', event: 'rad_join', payload: { peerId: id } });
-                        }
-                    });
-            });
-
-            // Automatically answer incoming connections on this frequency
-            radio.peer.on('call', (call) => {
-                call.answer(radio.localStream);
-                radio.handleCall(call);
-            });
-        },
-
-        handleCall: (call) => {
-            radio.calls.push(call);
-            call.on('stream', (remoteStream) => {
-                const audio = new Audio();
-                audio.srcObject = remoteStream;
-                audio.autoplay = true;
-                radio.audioElements.push(audio);
-                audio.play().catch(e => console.error("Audio block:", e));
-            });
-        },
-
-        tuneOut: () => {
-            if(!radio.active) return;
-            radio.active = false;
-
-            // Kill hardware and connections
-            if(radio.localStream) radio.localStream.getTracks().forEach(t => t.stop());
-            if(radio.peer) radio.peer.destroy();
-            radio.calls.forEach(c => c.close());
-            radio.audioElements.forEach(a => { a.pause(); a.srcObject = null; });
-            if(radio.channel) supabase.removeChannel(radio.channel);
-
-            // Wipe state
-            radio.localStream = null; radio.peer = null; radio.calls = []; radio.audioElements = []; radio.channel = null;
-
-            // Reset UI
-            document.getElementById('btn-radio-tune').innerText = "TUNE IN";
-            document.getElementById('btn-radio-tune').classList.remove('danger');
-            document.getElementById('btn-radio-freq').disabled = false;
-            document.getElementById('btn-radio-ptt').classList.add('hidden');
-            document.getElementById('radio-status').innerText = "STATUS: OFFLINE";
-
-            audioSys.playTone(300, 'sawtooth', 0.2);
-        },
-
-        startPTT: () => {
-            if(!radio.active || !radio.localStream) return;
-            const track = radio.localStream.getAudioTracks();
-            if(track) track.enabled = true; // UNMUTE
-            
-            document.getElementById('btn-radio-ptt').style.background = "#fff";
-            document.getElementById('radio-status').innerText = "STATUS: TRANSMITTING...";
-            audioSys.playTone(600, 'square', 0.05); // Walkie-talkie click
-        },
-
-        stopPTT: () => {
-            if(!radio.active || !radio.localStream) return;
-            const track = radio.localStream.getAudioTracks();
-            if(track) track.enabled = false; // MUTE
-            
-            document.getElementById('btn-radio-ptt').style.background = "var(--warn-color)";
-            document.getElementById('radio-status').innerText = `STATUS: ONLINE - ${radio.freq} MHz`;
-            audioSys.playTone(400, 'square', 0.05); // Walkie-talkie release click
-        }
+        interval:null, noiseNode:null,
+        init: ()=>{ const viz=document.getElementById('freq-viz'); viz.innerHTML=""; for(let i=0;i<24;i++)viz.innerHTML+=`<div class="freq-bar" id="fb-${i}" style="height:${Math.random()*48}px"></div>`; if(radio.interval)clearInterval(radio.interval); radio.interval=setInterval(()=>{ for(let i=0;i<24;i++){const el=document.getElementById(`fb-${i}`);if(el)el.style.height=(Math.random()*44+4)+"px";} },90); },
+        scan: ()=>{ audioSys.playTone(800,'sawtooth',0.1); document.getElementById('radio-freq').innerText=(400+Math.random()*100).toFixed(4); },
+        toggleNoise: ()=>{ if(radio.noiseNode){radio.noiseNode.disconnect();radio.noiseNode=null;document.getElementById('btn-noise').style.cssText="";} else{ const ctx=audioSys.ctx; if(ctx.state==='suspended')ctx.resume(); const wn=ctx.createScriptProcessor(4096,1,1); wn.onaudioprocess=(e)=>{const out=e.outputBuffer.getChannelData(0);for(let i=0;i<4096;i++)out[i]=Math.random()*0.08-0.04;}; wn.connect(ctx.destination); radio.noiseNode=wn; document.getElementById('btn-noise').style.cssText="background:var(--warn-color);color:#000;"; } }
     };
+
     // ================================================================
     // COCKPIT
     // ================================================================
