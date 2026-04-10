@@ -1919,14 +1919,14 @@
             commanderSys.stop();
         }
     };
-    // --- NEW GLOBAL USER CACHE ---
-    window.userCache = {};
-    supabase.from('users').select('*').then(({data}) => {
-        if(data) data.forEach(u => window.userCache[u.id] = u);
-    });
-    supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
-        if(payload.new) window.userCache[payload.new.id] = payload.new;
-    }).subscribe();
+//    // --- NEW GLOBAL USER CACHE ---
+//    window.userCache = {};
+//    supabase.from('users').select('*').then(({data}) => {
+//        if(data) data.forEach(u => window.userCache[u.id] = u);
+//    });
+//    supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
+//        if(payload.new) window.userCache[payload.new.id] = payload.new;
+//    }).subscribe();
 
     // --- FULL WINDOW.APP LOGIC ---
     window.app = {
