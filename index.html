@@ -1919,14 +1919,14 @@
             commanderSys.stop();
         }
     };
-//    // --- NEW GLOBAL USER CACHE ---
-//    window.userCache = {};
-//    supabase.from('users').select('*').then(({data}) => {
-//        if(data) data.forEach(u => window.userCache[u.id] = u);
-//    });
-//    supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
-//        if(payload.new) window.userCache[payload.new.id] = payload.new;
-//    }).subscribe();
+    // --- NEW GLOBAL USER CACHE ---
+    window.userCache = {};
+    supabase.from('users').select('*').then(({data}) => {
+        if(data) data.forEach(u => window.userCache[u.id] = u);
+    });
+    supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
+        if(payload.new) window.userCache[payload.new.id] = payload.new;
+    }).subscribe();
 
     // --- FULL WINDOW.APP LOGIC ---
     window.app = {
@@ -2103,21 +2103,54 @@
         },
 
         loadNetworkDirectory: async () => {
-            nav.to('directory'); const dir = document.getElementById('dir-content'); dir.innerHTML = "<div style='opacity:0.5;'>>> COMPILING NODE STATISTICS...</div>";
+            nav.to('directory');
+            const dir = document.getElementById('dir-content');
+            dir.innerHTML = "<div style='opacity:0.5;'>>> ACCESSING LOCAL NODE CACHE...</div>";
+        
             try {
+                // 1. Get Total Count (this is cheap/fast)
                 const { count } = await supabase.from('users').select('*', { count: 'exact', head: true });
-                const fiveMinsAgo = new Date(Date.now() - 300000).toISOString();
-                const { data: onlineSnap } = await supabase.from('users').select('id, verified, presence_status, lastSeen').gte('lastSeen', fiveMinsAgo);
-                let onlineTotal = onlineSnap ? onlineSnap.length : 0; let onlineVerified = onlineSnap ? onlineSnap.filter(d => d.verified).length : 0;
+        
+                // 2. Use the Global Cache instead of a new fetch
+                const allUsers = Object.values(window.userCache);
+                const fiveMinsAgo = Date.now() - 300000;
+        
+                // 3. Filter online users from the cache
+                const onlineUsers = allUsers.filter(u => new Date(u.lastSeen).getTime() > fiveMinsAgo);
+                const onlineTotal = onlineUsers.length;
+                const onlineVerified = onlineUsers.filter(u => u.verified).length;
+        
                 let vListHTML = "";
-                state.verifiedUsers.forEach(vUser => {
-                    const uData = (onlineSnap||[]).find(o=>o.id===vUser);
+                state.verifiedUsers.forEach(vUserId => {
+                    // Pull data directly from cache
+                    const uData = window.userCache[vUserId]; 
+                    
                     let sDot = `<div class="status-dot status-offline"></div>`; 
-                    if(uData) sDot = app.getStatusDot(uData.presence_status, uData.lastSeen);
-                    vListHTML += `<div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUser}')">${sDot} @${vUser} ${app.getCustomBadge(vUser)}</div>`;
+                    if(uData) {
+                        sDot = app.getStatusDot(uData.presence_status, uData.lastSeen);
+                    }
+        
+                    vListHTML += `
+                        <div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUserId}')">
+                            ${sDot} @${vUserId} ${app.getCustomBadge(vUserId)}
+                        </div>`;
                 });
-                dir.innerHTML = `<div class="grid-3" style="margin-bottom:15px; text-align:center;"><div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${count||0}</b></div><div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div><div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div></div><h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3><div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS YET</span>"}</div>`;
-            } catch (e) { dir.innerHTML = `[ ERROR: ${e.message} ]`; }
+        
+                // 4. Render UI
+                dir.innerHTML = `
+                    <div class="grid-3" style="margin-bottom:15px; text-align:center;">
+                        <div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${count||0}</b></div>
+                        <div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div>
+                        <div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div>
+                    </div>
+                    <h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3>
+                    <div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">
+                        ${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS YET</span>"}
+                    </div>`;
+        
+            } catch (e) { 
+                dir.innerHTML = `[ ERROR: ${e.message} ]`; 
+            }
         },
         initHub: async () => {
             loading(true); 
