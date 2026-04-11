@@ -1919,14 +1919,34 @@
             commanderSys.stop();
         }
     };
-    // --- NEW GLOBAL USER CACHE ---
+    // --- IMPROVED GLOBAL USER CACHE ---
     window.userCache = {};
-    supabase.from('users').select('*').then(({data}) => {
-        if(data) data.forEach(u => window.userCache[u.id] = u);
+    
+    // We store the fetch in a promise so we can await it later
+    window.cacheLoaded = new Promise(async (resolve) => {
+        try {
+            const { data, error } = await supabase.from('users').select('*');
+            if (error) throw error;
+            
+            if (data) {
+                data.forEach(u => window.userCache[u.id] = u);
+            }
+            console.log(">> CACHE INITIALIZED:", Object.keys(window.userCache).length, "nodes.");
+            resolve(true);
+        } catch (err) {
+            console.error(">> CACHE ERROR:", err);
+            resolve(false);
+        }
     });
-    supabase.channel('public:users_cache').on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
-        if(payload.new) window.userCache[payload.new.id] = payload.new;
-    }).subscribe();
+    
+    // Realtime Listener
+    supabase.channel('public:users_cache')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, payload => {
+            if (payload.new && payload.new.id) {
+                window.userCache[payload.new.id] = payload.new;
+                // Optional: trigger a UI refresh if the user is currently looking at the directory
+            }
+        }).subscribe();
 
     // --- FULL WINDOW.APP LOGIC ---
     window.app = {
@@ -2108,48 +2128,66 @@
             dir.innerHTML = "<div style='opacity:0.5;'>>> ACCESSING LOCAL NODE CACHE...</div>";
         
             try {
-                // 1. Get Total Count (this is cheap/fast)
-                const { count } = await supabase.from('users').select('*', { count: 'exact', head: true });
+                // 1. Wait for the initial cache fetch to complete
+                await window.cacheLoaded;
         
-                // 2. Use the Global Cache instead of a new fetch
+                // 2. Get Total Count from DB (Alternative: use Object.keys(window.userCache).length)
+                const { count, error } = await supabase
+                    .from('users')
+                    .select('*', { count: 'exact', head: true });
+        
+                if (error) console.warn("Count fetch failed, falling back to cache length.");
+        
+                // 3. Process Cache Data
                 const allUsers = Object.values(window.userCache);
                 const fiveMinsAgo = Date.now() - 300000;
         
-                // 3. Filter online users from the cache
-                const onlineUsers = allUsers.filter(u => new Date(u.lastSeen).getTime() > fiveMinsAgo);
-                const onlineTotal = onlineUsers.length;
-                const onlineVerified = onlineUsers.filter(u => u.verified).length;
-        
-                let vListHTML = "";
-                state.verifiedUsers.forEach(vUserId => {
-                    // Pull data directly from cache
-                    const uData = window.userCache[vUserId]; 
-                    
-                    let sDot = `<div class="status-dot status-offline"></div>`; 
-                    if(uData) {
-                        sDot = app.getStatusDot(uData.presence_status, uData.lastSeen);
-                    }
-        
-                    vListHTML += `
-                        <div style="border-bottom:1px solid #004400; padding:4px 0; cursor:pointer;" onclick="app.openProfile('${vUserId}')">
-                            ${sDot} @${vUserId} ${app.getCustomBadge(vUserId)}
-                        </div>`;
+                const onlineUsers = allUsers.filter(u => {
+                    if (!u.lastSeen) return false;
+                    return new Date(u.lastSeen).getTime() > fiveMinsAgo;
                 });
         
-                // 4. Render UI
+                const onlineTotal = onlineUsers.length;
+                const onlineVerified = onlineUsers.filter(u => u.verified).length;
+                
+                // Use the DB count if available, otherwise use the cache size
+                const displayTotal = count !== null ? count : allUsers.length;
+        
+                // 4. Build Verified List
+                let vListHTML = "";
+                // Assuming state.verifiedUsers is an array of IDs
+                if (state.verifiedUsers && state.verifiedUsers.length > 0) {
+                    state.verifiedUsers.forEach(vUserId => {
+                        const uData = window.userCache[vUserId];
+                        
+                        // Fallback UI if user isn't in cache yet
+                        let sDot = `<div class="status-dot status-offline"></div>`;
+                        if (uData) {
+                            sDot = app.getStatusDot(uData.presence_status, uData.lastSeen);
+                        }
+        
+                        vListHTML += `
+                            <div style="border-bottom:1px solid #004400; padding:8px 0; cursor:pointer;" onclick="app.openProfile('${vUserId}')">
+                                ${sDot} <span style="font-family:monospace;">@${vUserId}</span> ${app.getCustomBadge ? app.getCustomBadge(vUserId) : ''}
+                            </div>`;
+                    });
+                }
+        
+                // 5. Render UI
                 dir.innerHTML = `
-                    <div class="grid-3" style="margin-bottom:15px; text-align:center;">
-                        <div class="card" style="border-color:#0f0;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${count||0}</b></div>
-                        <div class="card" style="border-color:#0f0;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div>
-                        <div class="card" style="border-color:#00FFFF;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div>
+                    <div class="grid-3" style="margin-bottom:15px; text-align:center; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                        <div class="card" style="border:1px solid #0f0; padding:10px;">TOTAL IDS<br><b style="font-size:1.5em;color:#0f0;">${displayTotal}</b></div>
+                        <div class="card" style="border:1px solid #0f0; padding:10px;">ONLINE<br><b style="font-size:1.5em;color:#0f0;">${onlineTotal}</b></div>
+                        <div class="card" style="border:1px solid #00FFFF; padding:10px;">ELITE ONLINE<br><b style="font-size:1.5em;color:#00FFFF;">${onlineVerified}</b></div>
                     </div>
-                    <h3 style="border-color:#00FFFF; color:#00FFFF;">// VERIFIED_IDENTITIES</h3>
-                    <div class="card" style="max-height:180px; overflow-y:auto; border-color:#00FFFF;">
-                        ${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS YET</span>"}
+                    <h3 style="border-left:4px solid #00FFFF; padding-left:10px; color:#00FFFF; margin-top:20px;">// VERIFIED_IDENTITIES</h3>
+                    <div class="card" style="max-height:250px; overflow-y:auto; border:1px solid #00FFFF; padding:10px; background: rgba(0,0,0,0.3);">
+                        ${vListHTML || "<span style='opacity:0.5;'>NO VERIFIED USERS IN LOCAL CACHE</span>"}
                     </div>`;
         
-            } catch (e) { 
-                dir.innerHTML = `[ ERROR: ${e.message} ]`; 
+            } catch (e) {
+                console.error(e);
+                dir.innerHTML = `<div style="color:#ff0000; padding:20px;">[ ERROR: ${e.message.toUpperCase()} ]</div>`;
             }
         },
         initHub: async () => {
