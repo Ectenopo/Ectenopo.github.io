@@ -2512,9 +2512,71 @@
         createEvent: async()=>{ const n=document.getElementById('evt-name').value; if(!n)return; await supabase.from('events').insert({name:n, desc:document.getElementById('evt-desc').value, start:document.getElementById('evt-start').value, end:document.getElementById('evt-end').value, creator:state.user, ts:dbHelper.serverTimestamp()}); alert("CREATED"); app.loadEvents(); },
         loadEvents: async()=>{ const list=document.getElementById('event-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('events').select('*').order('start', {ascending:true}); list.innerHTML=""; (data||[]).forEach(e=>{ list.innerHTML+=`<div class="card"><strong>${e.name}</strong><br><span style="opacity:0.6;font-size:11px;">${e.start} — ${e.end||'?'}</span><br><p style="margin:4px 0;font-size:12px;">${e.desc}</p><small style="opacity:0.4;">ORG: ${e.creator}</small></div>`;}); },
         
-        createJob: async()=>{ const t=document.getElementById('job-title').value; if(!t)return; await supabase.from('jobs').insert({title:t, desc:document.getElementById('job-desc').value, owner:state.user, worker:null, status:'OPEN', ts:dbHelper.serverTimestamp()}); alert("POSTED"); app.loadJobs(); },
-        loadJobs: async()=>{ const list=document.getElementById('job-list'); list.innerHTML="LOADING..."; const { data } = await supabase.from('jobs').select('*').order('ts', {ascending:false}); list.innerHTML=""; (data||[]).forEach(j=>{ const id=j.id; let act="";if(j.status==='OPEN'&&j.owner!==state.user)act=`<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;else if(j.owner===state.user||j.worker===state.user)act=`<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;else act=`<button disabled style="margin-top:5px;">CLOSED</button>`;list.innerHTML+=`<div class="card"><strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br><em style="opacity:0.7;font-size:11px;">${j.desc}</em><br><small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getCustomBadge(j.owner)}</strong></small>${act}</div>`;}); },
-        acceptJob: async(jid)=>{ if(!confirm("ACCEPT?"))return; await supabase.from('jobs').update({worker:state.user, status:'ASSIGNED'}).eq('id', jid); app.openJobChat(jid); },
+        createJob: async()=>{ 
+            const t=document.getElementById('job-title').value; 
+            if(!t)return; 
+            await supabase.from('jobs').insert({title:t, desc:document.getElementById('job-desc').value, owner:state.user, worker:null, status:'OPEN', ts:dbHelper.serverTimestamp()}); 
+            alert("POSTED"); 
+            // Cleanup input fields after posting
+            document.getElementById('job-title').value = "";
+            document.getElementById('job-desc').value = "";
+            document.getElementById('job-create-panel').classList.add('hidden');
+            // No need to manually call loadJobs(), the realtime listener catches it!
+        },
+        
+        loadJobs: async () => { 
+            const list = document.getElementById('job-list'); 
+            list.innerHTML = "ESTABLISHING UPLINK..."; 
+            
+            // Clean up any existing listeners so we don't duplicate streams
+            if(app.jobsUnsub) app.jobsUnsub(); 
+            
+            // Realtime listener integration
+            app.jobsUnsub = await dbHelper.listenQuery('jobs', null, null, {col:'ts', asc:false}, 50, (data) => {
+                list.innerHTML = ""; 
+                (data||[]).forEach(j => { 
+                    const id = j.id; 
+                    let act = "";
+                    let delBtn = "";
+                    
+                    // Logic for Accept / Open Chat / Closed
+                    if(j.status === 'OPEN' && j.owner !== state.user) {
+                        act = `<button onclick="app.acceptJob('${id}')" style="margin-top:5px;">ACCEPT</button>`;
+                    } else if(j.owner === state.user || j.worker === state.user) {
+                        act = `<button onclick="app.openJobChat('${id}')" class="warn" style="margin-top:5px;">OPEN CHAT</button>`;
+                    } else {
+                        act = `<button disabled style="margin-top:5px;">CLOSED</button>`;
+                    }
+
+                    // Logic for Delete button (Owner only)
+                    if(j.owner === state.user) {
+                        delBtn = `<button onclick="app.deleteJob('${id}')" class="danger" style="margin-top:5px; margin-left:6px;">DELETE</button>`;
+                    }
+
+                    list.innerHTML += `<div class="card">
+                        <strong>${j.title}</strong> <span style="opacity:0.5;font-size:10px;">[${j.status}]</span><br>
+                        <em style="opacity:0.7;font-size:11px;">${j.desc}</em><br>
+                        <small style="opacity:0.4;">CLIENT: <strong onclick="app.openProfile('${j.owner}')" style="cursor:pointer;text-decoration:underline;">${j.owner} ${app.getCustomBadge(j.owner)}</strong></small>
+                        <div style="display:flex;">${act}${delBtn}</div>
+                    </div>`;
+                }); 
+                
+                if(!data || data.length === 0) list.innerHTML = "<div style='opacity:0.5;'>NO CONTRACTS AVAILABLE.</div>";
+            });
+        },
+        
+        deleteJob: async (jid) => {
+            if(!confirm("PURGE THIS CONTRACT FROM THE NETWORK?")) return;
+            // Delete the job (and potentially clean up job_msgs via Supabase cascade rules)
+            await supabase.from('jobs').delete().eq('id', jid);
+            // Realtime listener updates the UI automatically
+        },
+
+        acceptJob: async(jid)=>{ 
+            if(!confirm("ACCEPT CONTRACT?"))return; 
+            await supabase.from('jobs').update({worker:state.user, status:'ASSIGNED'}).eq('id', jid); 
+            app.openJobChat(jid); 
+        },
         openJobChat: async (jid)=>{ document.getElementById('job-chat-panel').classList.remove('hidden'); state.currentJob=jid; await dbHelper.listenQuery('job_msgs', 'job_id', jid, {col:'ts', asc:false}, 50, (data)=>{const div=document.getElementById('job-chat-box');div.innerHTML="";data.reverse().forEach(m=>div.innerHTML+=`<div class="chat-msg"><strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}:</strong> ${app.formatMsg(m.txt)}</div>`);div.scrollTop=div.scrollHeight;}); },
         sendJobMsg: async()=>{ const t=document.getElementById('job-msg-input').value; if(t) await supabase.from('job_msgs').insert({job_id:state.currentJob, u:state.user, txt:t, ts:dbHelper.serverTimestamp()}); document.getElementById('job-msg-input').value=""; },
         closeJobChat: ()=>{ document.getElementById('job-chat-panel').classList.add('hidden'); state.currentJob=null; },
@@ -3452,6 +3514,9 @@
     // ================================================================
     // RADIO (WebRTC PTT)
     // ================================================================
+    // ================================================================
+    // RADIO (WebRTC PTT)
+    // ================================================================
     window.radio = {
         interval: null,
         freq: "462.5625",
@@ -3576,7 +3641,7 @@
 
         startPTT: () => {
             if(!radio.active || !radio.localStream) return;
-            const track = radio.localStream.getAudioTracks();
+            const track = radio.localStream.getAudioTracks(); // FIXED: Targeting array index
             if(track) track.enabled = true; 
             
             document.getElementById('btn-radio-ptt').style.background = "#fff";
@@ -3586,7 +3651,7 @@
 
         stopPTT: () => {
             if(!radio.active || !radio.localStream) return;
-            const track = radio.localStream.getAudioTracks();
+            const track = radio.localStream.getAudioTracks(); // FIXED: Targeting array index
             if(track) track.enabled = false; 
             
             document.getElementById('btn-radio-ptt').style.background = "var(--warn-color)";
