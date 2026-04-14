@@ -346,7 +346,7 @@
         <button onclick="emergency.switchTab(2)" id="tab-broad-btn">BROAD ACTIVE SCANNER</button>
     </div>
 
-    <!-- TAB 0: LOCAL ACTIVE SCANNER (your GPS area) -->
+    <!-- TAB 0: LOCAL (your GPS area) -->
     <div id="tab-content-0" class="tab-content">
         <div class="card" style="border-color:var(--warn-color); margin-bottom:15px;">
             <h3 style="color:var(--warn-color); border-bottom:1px solid var(--warn-color); margin-bottom:8px;">>> LOCAL_AREA_SCAN</h3>
@@ -355,10 +355,10 @@
                 <span style="opacity:0.5;">WAITING FOR SCAN COMMAND...</span>
             </div>
         </div>
-        <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">SOURCE: NWS (National Weather Service) • Active warnings only</p>
+        <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">SOURCE: NWS • Active warnings only</p>
     </div>
 
-    <!-- TAB 1: GLOBAL LIVE FEED (unchanged, just moved) -->
+    <!-- TAB 1: GLOBAL LIVE FEED -->
     <div id="tab-content-1" class="tab-content hidden">
         <p style="font-size:10px;opacity:0.6;margin-bottom:10px;">SOURCE: UN GDACS (Global Alerts)</p>
         <div id="emergency-feed" style="height:280px;overflow-y:scroll;border:1px solid var(--err-color);padding:10px;background:rgba(255,0,0,0.05);">
@@ -366,11 +366,11 @@
         </div>
     </div>
 
-    <!-- TAB 2: BROAD ACTIVE SCANNER (new - scans entire US / region for active events) -->
+    <!-- TAB 2: BROAD ACTIVE SCANNER (nationwide + real tornadoes, etc.) -->
     <div id="tab-content-2" class="tab-content hidden">
         <div class="card" style="border-color:var(--warn-color);">
             <h3 style="color:var(--warn-color); border-bottom:1px solid var(--warn-color); margin-bottom:8px;">>> BROAD ACTIVE SCANNER</h3>
-            <p style="font-size:11px;opacity:0.8;">Scan the entire United States for **active** events (tornadoes, floods, wildfires, etc.) — not limited to your location.</p>
+            <p style="font-size:11px;opacity:0.8;">Scan the entire United States for <strong>ACTIVE</strong> events (tornadoes, floods, wildfires, etc.).</p>
             
             <div style="display:flex;gap:8px;margin-bottom:10px;">
                 <input type="text" id="broad-state" placeholder="STATE (e.g. MO, KS, TX) or leave blank for ALL US" style="flex:1;">
@@ -4029,27 +4029,33 @@
         switchTab: function(tab) {
             this.currentTab = tab;
             
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            // Safe null check
+            document.querySelectorAll('.tab-content').forEach(t => {
+                if (t) t.classList.add('hidden');
+            });
             
-            // Show selected
-            document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
-            
-            // Update active button styles
-            document.querySelectorAll('#screen-emergency button[id^="tab-"]').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${['local','global','broad'][tab]}-btn`).classList.add('active');
-            
-            // Auto-refresh global feed when switching to it
+            const targetTab = document.getElementById(`tab-content-${tab}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+    
+            // Safe button styling
+            document.querySelectorAll('#screen-emergency button[id^="tab-"]').forEach(b => {
+                if (b) b.classList.remove('active');
+            });
+            const activeBtn = document.getElementById(`tab-${['local','global','broad'][tab]}-btn`);
+            if (activeBtn) activeBtn.classList.add('active');
+    
             if (tab === 1) this.fetchFeed();
         },
     
-        // ====================== TAB 0: LOCAL ACTIVE SCANNER ======================
+        // LOCAL SCANNER (your exact GPS area)
         scanLocal: function() {
             const feed = document.getElementById('local-alert-feed');
-            feed.innerHTML = `<div style="opacity:0.5;animation:blinkAnim 1s infinite;">>> ACQUIRING GPS • SCANNING FOR ACTIVE THREATS...</div>`;
+            if (!feed) return;
             
+            feed.innerHTML = `<div style="opacity:0.5;animation:blinkAnim 1s infinite;">>> ACQUIRING GPS • SCANNING FOR ACTIVE THREATS...</div>`;
+    
             if (!navigator.geolocation) {
-                feed.innerHTML = `<div style="color:var(--err-color);">GEOLOCATION NOT SUPPORTED ON THIS DEVICE.</div>`;
+                feed.innerHTML = `<div style="color:var(--err-color);">GEOLOCATION NOT SUPPORTED.</div>`;
                 return;
             }
     
@@ -4057,13 +4063,12 @@
                 async (pos) => {
                     const lat = pos.coords.latitude.toFixed(2);
                     const lon = pos.coords.longitude.toFixed(2);
-                    
                     feed.innerHTML = `<div style="opacity:0.5;">>> COORDS: ${lat}, ${lon} • QUERYING NWS...</div>`;
-                    
+    
                     try {
                         const res = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`);
                         const data = await res.json();
-                        
+    
                         if (!data.features || data.features.length === 0) {
                             feed.innerHTML = `<div style="color:#00FF00;font-weight:bold;">[ AREA SECURE — NO ACTIVE WARNINGS ]</div>`;
                             return;
@@ -4072,10 +4077,10 @@
                         let html = `<strong style="color:#FF0000;">ACTIVE THREATS IN YOUR AREA:</strong><br><br>`;
                         data.features.forEach(alert => {
                             const p = alert.properties;
-                            const severity = p.severity === "Extreme" || p.severity === "Severe" ? "🔴" : "🟠";
+                            const severity = (p.severity === "Extreme" || p.severity === "Severe") ? "🔴" : "🟠";
                             html += `<div style="margin:8px 0;padding:6px;border-left:4px solid #FF0000;background:rgba(255,0,0,0.1);">
                                 ${severity} <strong>${p.event}</strong><br>
-                                <span style="font-size:10px;">${p.headline || p.description.substring(0,120)}...</span>
+                                <span style="font-size:10px;">${p.headline || p.description.substring(0,140)}...</span>
                             </div>`;
                         });
                         feed.innerHTML = html;
@@ -4083,13 +4088,14 @@
                         feed.innerHTML = `<div style="color:var(--err-color);">[ NWS UPLINK FAILED ]</div>`;
                     }
                 },
-                () => { feed.innerHTML = `<div style="color:var(--err-color);">GEOLOCATION DENIED.</div>`; }
+                () => { if(feed) feed.innerHTML = `<div style="color:var(--err-color);">GEOLOCATION DENIED.</div>`; }
             );
         },
     
-        // ====================== TAB 1: GLOBAL LIVE FEED ======================
+        // GLOBAL LIVE FEED
         fetchFeed: async function() {
             const feedDiv = document.getElementById('emergency-feed');
+            if (!feedDiv) return;
             try {
                 const response = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.gdacs.org%2Fxml%2Frss.xml");
                 const data = await response.json();
@@ -4107,27 +4113,27 @@
             }
         },
     
-        // ====================== TAB 2: BROAD ACTIVE SCANNER (nationwide) ======================
+        // BROAD ACTIVE SCANNER (nationwide — shows real tornadoes, etc.)
         scanBroad: async function() {
             const feed = document.getElementById('broad-alert-feed');
-            const stateInput = document.getElementById('broad-state').value.trim().toUpperCase();
+            if (!feed) return;
             
+            const stateInput = (document.getElementById('broad-state').value || "").trim().toUpperCase();
             feed.innerHTML = `<div style="opacity:0.5;animation:blinkAnim 1s infinite;">>> SCANNING ${stateInput || 'ALL US'} FOR ACTIVE THREATS...</div>`;
-            
+    
             let url = "https://api.weather.gov/alerts/active?status=actual";
             if (stateInput) url += `&area=${stateInput}`;
-            
+    
             try {
                 const res = await fetch(url);
                 const data = await res.json();
-                
+    
                 if (!data.features || data.features.length === 0) {
                     feed.innerHTML = `<div style="color:#00FF00;font-weight:bold;">[ NO ACTIVE THREATS FOUND ${stateInput ? `IN ${stateInput}` : 'NATIONWIDE'} ]</div>`;
                     return;
                 }
     
                 let html = `<strong style="color:#FF0000;">ACTIVE EVENTS (${data.features.length} total):</strong><br><br>`;
-                
                 data.features.forEach(alert => {
                     const p = alert.properties;
                     const severityColor = (p.severity === "Extreme" || p.severity === "Severe") ? "#FF0000" : "#FFAA00";
@@ -4138,7 +4144,6 @@
                         <span style="font-size:11px;">${p.headline || p.description.substring(0,140)}...</span>
                     </div>`;
                 });
-                
                 feed.innerHTML = html;
             } catch (e) {
                 feed.innerHTML = `<div style="color:var(--err-color);">[ BROAD SCAN FAILED ]</div>`;
@@ -4146,9 +4151,8 @@
         },
     
         init: function() {
-            // Default to Local tab on load
-            this.switchTab(0);
-            // Auto-refresh global feed every 5 minutes
+            this.switchTab(0);                    // start on Local tab
+            // Auto-refresh global feed every 5 min
             setInterval(() => {
                 if (this.currentTab === 1) this.fetchFeed();
             }, 300000);
