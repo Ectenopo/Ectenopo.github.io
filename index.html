@@ -3313,7 +3313,7 @@
             const { data } = await supabase.from('users').select('id, presence_status, lastSeen').in('id', state.friends);
             (data||[]).forEach(f => {
                 list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getCustomBadge(f.id)}${app.getBadge(f.id)}</div>
+                    <div onclick="app.openProfile('${f.id}')" style="cursor:pointer; text-decoration:underline;">${app.getStatusDot(f.presence_status, f.lastSeen)} ${f.id} ${app.getCustomBadge(f.id)}</div>
                     <button onclick="msgSys.openDM('${f.id}')" style="width:auto; padding:4px 8px; margin:0; border-color:#FF00FF; color:#FF00FF;">MESSAGE</button>
                 </div>`;
             });
