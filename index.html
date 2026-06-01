@@ -3676,7 +3676,7 @@
         post: async()=>{ const h=document.getElementById('news-headline').value; const l=document.getElementById('news-link-input').value; if(!h)return; await supabase.from('news').insert({title:h, link:l||null, u:state.user, ts:dbHelper.serverTimestamp()}); document.getElementById('news-headline').value=""; document.getElementById('news-link-input').value=""; news.loadInternal(); },
         loadInternal: async()=>{
             const d=document.getElementById('news-feed-internal'); d.innerHTML="Scanning local nodes..."; const { data } = await supabase.from('news').select('*').order('ts', {ascending:false}).limit(10); d.innerHTML="";
-            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getCustomBadge(n.u)}${app.getBadge(n.u)}</small></div>`; });
+            (data||[]).forEach(n=>{ d.innerHTML+=`<div style="border-bottom:1px solid var(--dim);margin-bottom:5px;padding-bottom:5px;"><strong>${n.title}</strong>${n.link?`<br><a href="${n.link}" target="_blank" style="font-size:10px;opacity:0.5;">[SOURCE]</a>`:''}<br><small style="opacity:0.4;cursor:pointer;text-decoration:underline;" onclick="app.openProfile('${n.u}')">@${n.u} ${app.getCustomBadge(n.u)}</small></div>`; });
             if(!data || data.length===0) d.innerHTML="<div style='opacity:0.4;'>No broadcasts yet.</div>";
         }
     };
