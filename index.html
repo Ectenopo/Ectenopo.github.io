@@ -2545,13 +2545,24 @@
                 });
                 d.scrollTop=d.scrollHeight;
             }, (newMsg) => {
-                const now=Date.now(); const mt=newMsg.ts ? new Date(newMsg.ts).getTime() : now;
-                if(now-mt<15000){
-                    // ADD THIS LINE:
-                    if (newMsg.u !== state.user && newMsg.u !== "SYSTEM") notifSys.trigger(`CLAN COMMS: @${newMsg.u}`, newMsg.txt);
+                const now = Date.now(); 
+                const mt = newMsg.ts ? new Date(newMsg.ts).getTime() : now;
+                
+                if(now - mt < 15000) {
+                    // 1. The new notification trigger
+                    if (newMsg.u !== state.user && newMsg.u !== "SYSTEM") {
+                        notifSys.trigger(`CLAN COMMS: @${newMsg.u}`, newMsg.txt);
+                    }
             
-                    if(newMsg.type==='WARN'){audioSys.playTone(800,'sine',0.1); ...}
-                    if(newMsg.type==='ALERT')app.triggerClanRedAlert(newMsg.txt);
+                    // 2. Your original alert sounds and triggers
+                    if(newMsg.type === 'WARN'){
+                        audioSys.playTone(800,'sine',0.1);
+                        setTimeout(()=>audioSys.playTone(800,'sine',0.1),200);
+                        setTimeout(()=>audioSys.playTone(800,'sine',0.1),400);
+                    }
+                    if(newMsg.type === 'ALERT'){
+                        app.triggerClanRedAlert(newMsg.txt);
+                    }
                 }
             }
             app.listenToVoiceUsers();
