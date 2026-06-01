@@ -135,7 +135,39 @@
         .voice-user-indicator { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 5px currentColor; animation: pulseAnim 2s infinite; }
         @keyframes pulseAnim { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes shakeAnim { 0% { transform: translateX(0); } 25% { transform: translateX(3px); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
-
+        /* ============================================================
+           NOTIFICATION SUBSYSTEM
+           ============================================================ */
+        #notif-toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100000;
+            pointer-events: none; /* Lets you click through the empty container */
+        }
+        
+        .notif-toast {
+            background: rgba(0, 4, 0, 0.95);
+            border: 1px solid currentColor;
+            box-shadow: 0 0 15px currentColor;
+            padding: 12px;
+            width: 320px;
+            transform: translateY(150%);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease-out;
+            pointer-events: all;
+            font-family: var(--font-main);
+            color: inherit;
+            border-left: 4px solid currentColor;
+        }
+        
+        .notif-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 5px 8px; border: 1px solid var(--dim, #003300); margin-bottom: 5px; }
         .switch-label { font-size: 0.75em; opacity: 0.7; }
         .toggle-switch { position: relative; width: 38px; height: 18px; background: #111; cursor: pointer; border: 1px solid var(--dim, #003300); }
@@ -262,7 +294,7 @@
 </head>
 
 <body class="color-green">
-
+<div id="notif-toast-container"></div>
 <!-- PANIC OVERLAY -->
 <div id="panic-overlay" class="hidden">
     <h1>The Industrial Revolution</h1>
@@ -423,7 +455,7 @@
         <button onclick="nav.tab('global')">GLOBAL COMMS</button>
         <button onclick="nav.to('news')"  style="color:#00FFFF;border-color:#00FFFF;">[ WORLD_WIRE ]</button>
         <button onclick="nav.to('radio')" style="color:var(--warn-color);border-color:var(--warn-color);">[ SIGNAL_INTERCEPT ]</button>
-        
+        <button onclick="nav.to('notifs')" style="color:#00FF00; border-color:#00FF00; grid-column:span 2; border-style:double;">[ NOTIFICATION_CENTER <span id="notif-badge" style="color:#fff;">(0)</span> ]</button>
         <button onclick="nav.to('vault')">[ THE_VAULT ]</button>
         <button onclick="app.panicSwitch()" style="background:var(--err-color); color:#000; font-weight:bold; border-color:var(--err-color);">[ PANIC_SWITCH ]</button>
         
@@ -627,7 +659,15 @@
     <button onclick="nav.to('hub2')" style="margin-top:10px; border-color:#00FF00; color:#00FF00;">EXIT NODE</button>
 </div>
 <!-- ================= NEW FEATURE SCREENS ================= -->
-
+<div id="screen-notifs" class="screen hidden" style="border-color:#00FF00; color:#00FF00;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid currentColor; padding-bottom:10px; margin-bottom:12px;">
+        <h2 style="margin:0; border:none; padding:0;">// NOTIFICATION_LOGS</h2>
+        <button onclick="notifSys.clearAll()" class="danger" style="width:auto; padding:4px 10px; margin:0; font-size:10px;">PURGE LOGS</button>
+    </div>
+    <div id="notifs-list" style="height:350px; overflow-y:auto; border:1px solid var(--dim); padding:10px; background:rgba(0,255,0,0.05);">
+        </div>
+    <button onclick="nav.to('hub')" style="margin-top:10px; border-color:#00FF00;">BACK TO HUB</button>
+</div>
 <!-- THE LEDGER SCREEN -->
 <div id="screen-ledger" class="screen hidden">
     <h2>// THE_LEDGER (SCRIPT & MACRO REPOSITORY)</h2>
@@ -1606,6 +1646,7 @@
             if(id==='emergency') emergency.init();
             if(id==='comms')    msgSys.init();
             if(id==='vault')    vault.load();
+            if(id==='notifs') notifSys.loadScreen();
             if(id==='ghost')    ghost.init();
             if(id==='feedback'){ 
                 if(["user1234","user4321"].includes(state.user?.toLowerCase())) {
@@ -1973,7 +2014,86 @@
                 // Optional: trigger a UI refresh if the user is currently looking at the directory
             }
         }).subscribe();
-
+    window.notifSys = {
+        logs: [],
+        
+        trigger: (title, body) => {
+            if (localStorage.getItem('muteNotifs') === 'true') return;
+    
+            // Play alert tone
+            if (typeof audioSys !== 'undefined') audioSys.playTone(850, 'square', 0.1);
+    
+            // Save to state
+            notifSys.logs.unshift({ title, body, ts: Date.now(), read: false });
+            if (notifSys.logs.length > 50) notifSys.logs.pop(); // Keep array light
+            notifSys.updateBadge();
+    
+            // Construct sliding toast
+            const container = document.getElementById('notif-toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'notif-toast';
+            toast.innerHTML = `
+                <strong style="display:block; font-size:11px; margin-bottom:4px; opacity:0.8; border-bottom:1px solid currentColor; padding-bottom:4px;">>> ${title}</strong>
+                <span style="font-size:12px; line-height:1.4;">${body}</span>
+            `;
+            
+            container.appendChild(toast);
+    
+            // Trigger slide up
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => toast.classList.add('show'));
+            });
+    
+            // Trigger slide down after 4.5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400); // Wait for CSS transition to finish
+            }, 4500);
+        },
+    
+        updateBadge: () => {
+            const unreadCount = notifSys.logs.filter(n => !n.read).length;
+            const badge = document.getElementById('notif-badge');
+            if (badge) {
+                badge.innerText = `(${unreadCount})`;
+                badge.style.color = unreadCount > 0 ? "red" : "#fff";
+                if (unreadCount > 0) badge.style.animation = "pulseAnim 1s infinite";
+                else badge.style.animation = "none";
+            }
+        },
+    
+        loadScreen: () => {
+            const list = document.getElementById('notifs-list');
+            list.innerHTML = "";
+            
+            if (notifSys.logs.length === 0) {
+                list.innerHTML = "<div style='opacity:0.5;'>NO NEW TRANSMISSIONS DETECTED.</div>";
+                return;
+            }
+    
+            notifSys.logs.forEach(n => {
+                const time = new Date(n.ts).toLocaleTimeString();
+                const newTag = n.read ? "" : `<span style="color:red; font-size:9px; margin-right:6px; animation:blinkAnim 1s infinite;">[NEW]</span>`;
+                
+                list.innerHTML += `
+                    <div class="card" style="border-color:${n.read ? 'var(--dim)' : 'currentColor'}; margin-bottom:6px;">
+                        <div style="font-size:10px; opacity:0.6; margin-bottom:4px;">${time}</div>
+                        <strong style="display:block; margin-bottom:4px;">${newTag}${n.title}</strong>
+                        <div style="font-size:11px; opacity:0.8;">${n.body}</div>
+                    </div>`;
+                n.read = true; // Mark read
+            });
+            
+            notifSys.updateBadge();
+        },
+    
+        clearAll: () => {
+            if (!confirm("PURGE ALL NOTIFICATION LOGS?")) return;
+            notifSys.logs = [];
+            notifSys.loadScreen();
+            notifSys.updateBadge();
+        }
+    };
     // --- FULL WINDOW.APP LOGIC ---
     window.app = {
         encMode:false, dictMode:false, clanUnsub:null, clanChatUnsub:null, alertInterval:null,
@@ -2250,7 +2370,10 @@
             const setupClan=(data)=>{
                 state.friends = data.friends||[]; 
                 state.blocks = data.blocks||[];
-                
+                // NEW: Check if friends list grew
+                if (state.friends && data.friends && data.friends.length > state.friends.length) {
+                    notifSys.trigger("NETWORK UPDATE", "A new user was added to your friends list.");
+                }
                 if(data.clan){ 
                     // ONLY restart the listener if the clan changed, or if it isn't running yet
                     if(state.clan !== data.clan || !app.clanChatUnsub) {
@@ -2267,7 +2390,9 @@
                     document.getElementById('panel-in-clan').classList.add('hidden'); 
                 }
                 document.getElementById('hub-rep').innerText="REP: "+(data.rep||0);
+                state.friends = data.friends || [];
             };
+            
             setupClan(ud);
             if(app.userUnsub) app.userUnsub(); app.userUnsub = await dbHelper.listenDoc('users', state.user, setupClan); loading(false);
             if(app.globalChatUnsub) app.globalChatUnsub();
@@ -2422,10 +2547,13 @@
             }, (newMsg) => {
                 const now=Date.now(); const mt=newMsg.ts ? new Date(newMsg.ts).getTime() : now;
                 if(now-mt<15000){
-                    if(newMsg.type==='WARN'){audioSys.playTone(800,'sine',0.1);setTimeout(()=>audioSys.playTone(800,'sine',0.1),200);setTimeout(()=>audioSys.playTone(800,'sine',0.1),400);}
+                    // ADD THIS LINE:
+                    if (newMsg.u !== state.user && newMsg.u !== "SYSTEM") notifSys.trigger(`CLAN COMMS: @${newMsg.u}`, newMsg.txt);
+            
+                    if(newMsg.type==='WARN'){audioSys.playTone(800,'sine',0.1); ...}
                     if(newMsg.type==='ALERT')app.triggerClanRedAlert(newMsg.txt);
                 }
-            });
+            }
             app.listenToVoiceUsers();
         },
 
@@ -3225,6 +3353,11 @@
                     actions += `</div>`;
 
                     box.innerHTML += `<div class="chat-msg">${actions} ${threadHtml}${pinnedFlag}<strong onclick="app.openProfile('${m.u}')" style="cursor:pointer;text-decoration:underline;">${m.u} ${app.getCustomBadge(m.u)}</strong>: ${content} ${editedFlag} <div style="margin-top:2px;">${rxHTML} <span style="float:right;">${readStatus}</span></div></div>`;
+                }, (newMsg) => {
+                    // THIS IS THE NEW PART:
+                    if(newMsg.u !== state.user) {
+                        notifSys.trigger(`SECURE DM: @${newMsg.u}`, newMsg.txt.length > 30 ? newMsg.txt.substring(0,30) + '...' : newMsg.txt);
+                    }
                 });
                 box.scrollTop = box.scrollHeight;
 
